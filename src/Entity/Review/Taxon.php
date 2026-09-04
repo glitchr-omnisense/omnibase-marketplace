@@ -1,0 +1,49 @@
+<?php
+
+namespace Base\Market\Entity\Review;
+
+use Base\Market\Entity\Store;
+use Base\Market\Repository\Review\TaxonRepository;
+use Base\Database\Annotation\Cache;
+use Base\Database\Annotation\DiscriminatorEntry;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity(repositoryClass=TaxonRepository::class)
+ *
+ * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
+ *
+ * @DiscriminatorEntry
+ */
+class Taxon extends \Base\Entity\Thread\Taxon
+{
+    public static function __iconizeStatic(): ?array
+    {
+        return ['fa-solid fa-search'];
+    }
+
+    public function __construct(?string $label = null, ?string $slug = null, ?Store $store = null)
+    {
+        parent::__construct($label, $slug);
+        $this->store = $store;
+    }
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Store::class, inversedBy="reviewTaxa")
+     *
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     */
+    protected $store;
+
+    public function getStore(): ?Store
+    {
+        return $this->store ?? ($this->getParent() ? $this->getParent()->getStore() : null);
+    }
+
+    public function setStore(?Store $store): self
+    {
+        $this->store = $store;
+
+        return $this;
+    }
+}

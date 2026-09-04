@@ -1,0 +1,30 @@
+{
+    "name": "glitchr/base-bundle-market",
+    "type": "symfony-bundle",
+    "description": "Marketplace for base-bundle: products, orders, stores, sales rules and payment",
+    "keywords": ["symfony", "marketplace", "ecommerce", "shop", "product", "order"],
+    "homepage": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/marketplace",
+    "license": "LGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Marco Meyer",
+            "email": "marco.meyer@glitchr.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Base\\Market\\": "./src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Base\\Market\\": "./tests"
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "glitchr/base-bundle": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
