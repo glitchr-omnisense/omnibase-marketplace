@@ -5,7 +5,7 @@ namespace Base\Market\Entity;
 use Base\Market\Entity\Product\Taxon as ProductTaxon;
 use Base\Market\Entity\Review\Taxon as ReviewTaxon;
 use Base\Market\Entity\Sales\Region;
-use App\Entity\User\Merchant;
+use Base\Market\Model\MerchantInterface;
 use Base\Market\Repository\StoreRepository;
 use Base\Annotations\Annotation\Hierarchify;
 use Base\Database\Annotation\Cache;
@@ -43,7 +43,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this->getRouter()->generate('app_store', $routeParameters, $referenceType);
     }
 
-    public function __construct(?Merchant $merchant = null)
+    public function __construct(?MerchantInterface $merchant = null)
     {
         parent::__construct($merchant);
         $this->regions = new ArrayCollection();

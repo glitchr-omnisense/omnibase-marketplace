@@ -5,7 +5,7 @@ namespace Base\Market\Entity\Order;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Product;
 use Base\Market\Entity\Sales\Region;
-use App\Entity\User;
+use Base\Entity\User;
 use Base\Market\Repository\Order\OrderItemRepository;
 use Base\Database\Annotation\Cache;
 use Base\Traits\BaseTrait;

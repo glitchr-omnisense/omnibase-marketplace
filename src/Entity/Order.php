@@ -2,7 +2,7 @@
 
 namespace Base\Market\Entity;
 
-use App\Annotation\OrderReference;
+use Base\Market\Annotation\OrderReference;
 use Base\Market\Entity\Order\Address\BillingAddress;
 use Base\Market\Entity\Order\Address\ShippingAddress;
 use Base\Market\Entity\Order\Method\PaymentMethod;
@@ -14,10 +14,10 @@ use Base\Market\Entity\Sales\Discount;
 use Base\Market\Entity\Sales\Fee;
 use Base\Market\Entity\Sales\Region;
 use Base\Market\Entity\Sales\Tax;
-use App\Entity\User;
-use App\Entity\User\Merchant;
-use App\Enum\OrderState;
-use App\Model\ShippingUnitInterface;
+use Base\Entity\User;
+use Base\Market\Model\MerchantInterface;
+use Base\Market\Enum\OrderState;
+use Base\Market\Model\ShippingUnitInterface;
 use Base\Market\Repository\OrderRepository;
 use Base\Annotations\Annotation\Timestamp;
 use Base\Database\Annotation\Cache;
@@ -105,11 +105,11 @@ class Order implements IconizeInterface, LinkableInterface
     }
 
     /**
-     * @ORM\ManyToMany(targetEntity=Merchant::class, inversedBy="ordersInCharge")
+     * @ORM\ManyToMany(targetEntity=MerchantInterface::class, inversedBy="ordersInCharge")
      */
     protected $managers;
 
-    public function getManager(): ?Merchant
+    public function getManager(): ?MerchantInterface
     {
         return $this->getManagers()->first() ? $this->getManagers()->first() : null;
     }
@@ -119,7 +119,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->managers;
     }
 
-    public function addManager(Merchant $manager): self
+    public function addManager(MerchantInterface $manager): self
     {
         if (!$this->managers->contains($manager)) {
             $this->managers[] = $manager;
@@ -128,7 +128,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    public function removeManager(Merchant $manager): self
+    public function removeManager(MerchantInterface $manager): self
     {
         $this->managers->removeElement($manager);
 

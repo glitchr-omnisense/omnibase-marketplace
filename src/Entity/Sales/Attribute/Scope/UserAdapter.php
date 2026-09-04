@@ -3,7 +3,7 @@
 namespace Base\Market\Entity\Sales\Attribute\Scope;
 
 use Base\Market\Entity\Order;
-use App\Entity\User;
+use Base\Entity\User;
 use Base\Market\Repository\Sales\Attribute\Scope\UserAdapterRepository;
 use Base\Database\Annotation\Cache;
 use Base\Database\Annotation\DiscriminatorEntry;

@@ -3,7 +3,7 @@
 namespace Base\Market\Entity\Sales\Discount;
 
 use Base\Market\Entity\Sales\Discount;
-use App\Entity\User;
+use Base\Entity\User;
 use Base\Market\Repository\Sales\Discount\CouponRepository;
 use Base\Database\Annotation\Cache;
 use Base\Database\Annotation\DiscriminatorEntry;

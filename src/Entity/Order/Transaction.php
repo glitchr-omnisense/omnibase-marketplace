@@ -3,7 +3,7 @@
 namespace Base\Market\Entity\Order;
 
 use Base\Market\Entity\Order;
-use App\Enum\PaymentState;
+use Base\Market\Enum\PaymentState;
 use Base\Market\Repository\Order\TransactionRepository;
 use Base\Annotations\Annotation\Timestamp;
 use Base\Database\Annotation\Cache;

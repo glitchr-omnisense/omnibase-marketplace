@@ -7,7 +7,7 @@ use Base\Market\Entity\Product;
 use Base\Market\Entity\Product\Taxon;
 use Base\Market\Entity\Sales\Region;
 use Base\Market\Entity\Store;
-use App\Entity\User;
+use Base\Entity\User;
 use Base\Market\Repository\Sales\Attribute\Scope\RegionAdapterRepository;
 use Base\Database\Annotation\Cache;
 use Base\Database\Annotation\DiscriminatorEntry;

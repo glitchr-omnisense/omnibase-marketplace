@@ -9,11 +9,10 @@ use Base\Market\Entity\Product\Feature;
 use Base\Market\Entity\Product\Identifier;
 use Base\Market\Entity\Product\Image;
 use Base\Market\Entity\Sales\Channel;
-use App\Entity\User\Artist;
-use App\Entity\User\Merchant;
-use App\Enum\Barcode;
-use App\Enum\ProductAvailability;
-use App\Model\ShippingUnitInterface;
+use Base\Market\Model\MerchantInterface;
+use Base\Market\Enum\Barcode;
+use Base\Market\Enum\ProductAvailability;
+use Base\Market\Model\ShippingUnitInterface;
 use Base\Market\Repository\ProductRepository;
 use Base\Annotations\Annotation\Hierarchify;
 use Base\Annotations\Annotation\Uploader;
@@ -143,7 +142,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->getTitle() ?? ($reference ? ($this->getTranslator()->transEntity(self::class) . ' #' . $reference) : get_class($this));
     }
 
-    public function __construct(Merchant $merchant = null, Store $store = null, int $unitPrice = 0, ?string $currency = null)
+    public function __construct(MerchantInterface $merchant = null, Store $store = null, int $unitPrice = 0, ?string $currency = null)
     {
         parent::__construct($merchant, $store);
 
@@ -172,7 +171,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
             ?? implode('-', array_filter([
                 implode('-', $this->translate($locale)->getKeywords()),
                 $this->translate($locale)->getTitle(),
-                $this->getOwner() instanceof Merchant ? $this->getOwner()->getCompanyName() : null,
+                $this->getOwner() instanceof MerchantInterface ? $this->getOwner()->getCompanyName() : null,
             ]));
     }
 
@@ -185,7 +184,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
     {
         $brand = [];
         foreach ($this->getOwners() as $owner) {
-            $brand[] = $owner instanceof Merchant ? $owner->getCompanyName() : null;
+            $brand[] = $owner instanceof MerchantInterface ? $owner->getCompanyName() : null;
         }
 
         return $brand;
@@ -661,9 +660,39 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->getOwner($i);
     }
 
+    /**
+     * The owners that count as authors of this product.
+     *
+     * Not every owner is one - a product is owned by the merchant selling it
+     * as well as by whoever created it - so this filters, and getAuthorClass()
+     * below decides on what. It used to filter on `instanceof Artist`, a class
+     * belonging to one shop, which is what kept Product out of a bundle.
+     */
     public function getAuthors(): Collection
     {
-        return $this->getOwners()->filter(fn($a) => $a instanceof Artist);
+        return $this->getOwnersOf($this->getAuthorClass());
+    }
+
+    /**
+     * Which kind of owner authored this product.
+     *
+     * Everyone by default, because a marketplace with no separate notion of a
+     * creator should not silently return nothing here. A shop that does have
+     * one - wallpapers have Artists - narrows it by overriding this.
+     *
+     * @return class-string
+     */
+    protected function getAuthorClass(): string
+    {
+        return \Base\Entity\User::class;
+    }
+
+    /**
+     * @param class-string $class
+     */
+    public function getOwnersOf(string $class): Collection
+    {
+        return $this->getOwners()->filter(fn ($owner) => $owner instanceof $class);
     }
 
     public function getEAN(): ?string

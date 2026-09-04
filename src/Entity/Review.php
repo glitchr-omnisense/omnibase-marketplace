@@ -2,7 +2,7 @@
 
 namespace Base\Market\Entity;
 
-use App\Entity\User;
+use Base\Entity\User;
 use Base\Market\Repository\ReviewRepository;
 use Base\Annotations\Annotation\Hierarchify;
 use Base\Annotations\Annotation\Uploader;
