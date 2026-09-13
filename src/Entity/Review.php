@@ -4,10 +4,10 @@ namespace Base\Market\Entity;
 
 use Base\Entity\User;
 use Base\Market\Repository\ReviewRepository;
-use Base\Annotations\Annotation\Hierarchify;
-use Base\Annotations\Annotation\Uploader;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Hierarchify;
+use Base\Database\Attribute\Uploader;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Thread;
 use Base\Service\Model\AutocompleteInterface;
 use Base\Service\Model\IconizeInterface;
@@ -18,21 +18,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Typesense\Bundle\TypesenseInterface;
-use Typesense\Bundle\TypesenseTrait;
 
-/**
- * @ORM\Entity(repositoryClass=ReviewRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- *
- * @Hierarchify(hierarchy = {"store", "reviews"}, separator = "/" );
- */
-class Review extends Thread implements IconizeInterface, AutocompleteInterface, LinkableInterface, TypesenseInterface
+#[ORM\Entity(repositoryClass: ReviewRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
+#[\Base\Database\Attribute\Hierarchify(hierarchy: ['store', 'reviews'], separator: '/')]
+class Review extends Thread implements IconizeInterface, AutocompleteInterface, LinkableInterface
 {
-    use TypesenseTrait;
 
     public function __toKey(mixed ...$variadic): string
     {
@@ -97,7 +89,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
      * @param $rating
      * @param array $pictures
      */
-    public function __construct(User $reviewer = null, $rating = 1.0, array $pictures = [])
+    public function __construct(?User $reviewer = null, $rating = 1.0, array $pictures = [])
     {
         parent::__construct($reviewer);
         $this->rating = $rating;
@@ -105,9 +97,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         $this->taxa = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Column(type="float")
-     */
+    #[ORM\Column(type: 'float')]
     protected $rating;
 
     public function getRating(): ?float
@@ -122,13 +112,9 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="array", nullable=true)
-     *
-     * @Uploader(storage="local.storage", max_size="20MB", mime_types={"image/*"}, fetch=true)
-     *
-     * @AssertBase\File(max_size="20MB", mime_types={"image/*"}, groups={"new", "edit"})
-     */
+    #[ORM\Column(type: 'array', nullable: true)]
+    #[\Base\Database\Attribute\Uploader(max_size: '20MB', mime_types: ['image/*'], fetch: true)]
+    #[AssertBase\File(max_size: '20MB', mime_types: ['image/*'], groups: ['new', 'edit'])]
     protected $pictures;
 
     /**
@@ -145,7 +131,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
      */
     public function getPictures()
     {
-        return Uploader::getPublic($this, 'pictures');
+        return \Base\Database\Attribute\Uploader::getPublic($this, 'pictures');
     }
 
     /**
@@ -153,7 +139,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
      */
     public function getPictureFiles()
     {
-        return Uploader::get($this, 'pictures');
+        return \Base\Database\Attribute\Uploader::get($this, 'pictures');
     }
 
     /**
@@ -171,11 +157,8 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="reviews")
-     *
-     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", onDelete="CASCADE")
-     */
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'reviews')]
     protected $product;
 
     public function getProduct(): ?Product
@@ -209,9 +192,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         return $this->getProduct()?->getAuthors();
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Store::class, inversedBy="reviews")
-     */
+    #[ORM\ManyToOne(targetEntity: Store::class, inversedBy: 'reviews')]
     protected $store;
 
     public function getStore(): ?Store
@@ -226,11 +207,8 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Order::class, inversedBy="reviews")
-     *
-     * @ORM\JoinColumn(onDelete="SET NULL")
-     */
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'reviews')]
     protected $order;
 
     public function getOrder(): ?Order

@@ -14,16 +14,16 @@ use Base\Market\Enum\Barcode;
 use Base\Market\Enum\ProductAvailability;
 use Base\Market\Model\ShippingUnitInterface;
 use Base\Market\Repository\ProductRepository;
-use Base\Annotations\Annotation\Hierarchify;
-use Base\Annotations\Annotation\Uploader;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\Cascade;
-use Base\Database\Annotation\ColumnAlias;
-use Base\Database\Annotation\DiscriminatorEntry;
-use Base\Database\Annotation\OrderColumn;
-use Base\Database\Annotation\OrphanRemoval;
-use Base\Database\Traits\TranslatableTrait;
-use Base\Database\TranslatableInterface;
+use Base\Database\Attribute\Hierarchify;
+use Base\Database\Attribute\Uploader;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\Cascade;
+use Base\Database\Attribute\Alias;
+use Base\Database\Attribute\DiscriminatorEntry;
+use Base\Database\Attribute\OrderColumn;
+use Base\Database\Attribute\OrphanRemoval;
+use Base\Database\Entity\Extension\TranslatableTrait;
+use Base\Database\Entity\Extension\TranslatableInterface;
 use Base\Entity\Layout\Attribute\Adapter\ColorAdapter;
 use Base\Entity\Layout\Attribute\Adapter\HyperpatternAdapter;
 use Base\Entity\Layout\Attribute\Adapter\ScalarAdapter;
@@ -40,26 +40,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Typesense\Bundle\TypesenseInterface;
-use Typesense\Bundle\TypesenseTrait;
 
-/**
- * @ORM\Entity(repositoryClass=ProductRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- *
- * @AssertBase\UniqueEntity(fields={"identifiers.barcodes.value"}, groups={"new", "edit"})
- *
- * @Hierarchify(hierarchy = {"store", "products"}, separator = "/" )
- */
-class Product extends Thread implements TypesenseInterface, TranslatableInterface, AutocompleteInterface, LinkableInterface, ShippingUnitInterface
+#[ORM\Entity(repositoryClass: ProductRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
+#[AssertBase\UniqueEntity(fields: ['identifiers.barcodes.value'], groups: ['new', 'edit'])]
+#[\Base\Database\Attribute\Hierarchify(hierarchy: ['store', 'products'], separator: '/')]
+class Product extends Thread implements \Base\Database\Entity\Extension\TranslatableInterface, AutocompleteInterface, LinkableInterface, ShippingUnitInterface
 {
     use BaseTrait;
-    use TranslatableTrait;
+    use \Base\Database\Entity\Extension\TranslatableTrait;
     use CacheableTrait;
-    use TypesenseTrait;
 
     public function __toKey(mixed ...$variadic): string
     {
@@ -142,7 +133,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->getTitle() ?? ($reference ? ($this->getTranslator()->transEntity(self::class) . ' #' . $reference) : get_class($this));
     }
 
-    public function __construct(MerchantInterface $merchant = null, Store $store = null, int $unitPrice = 0, ?string $currency = null)
+    public function __construct(?MerchantInterface $merchant = null, ?Store $store = null, int $unitPrice = 0, ?string $currency = null)
     {
         parent::__construct($merchant, $store);
 
@@ -150,7 +141,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         $this->stock = null;
 
         $this->unitPrice = $unitPrice;
-        $this->currency = $currency ?? $this->getSettingBag()->getScalar('app.marketplace.default_currency') ?? 'USD';
+        $this->currency = $currency ?? $this->getParameterBag('market.default_currency') ?? 'USD';
 
         $this->rating = 0;
 
@@ -216,9 +207,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return strtoupper($reference);
     }
 
-    /**
-     * @ColumnAlias(column = "parent")
-     */
+    #[Alias(column: 'parent')]
     protected $store;
 
     /**
@@ -235,13 +224,9 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->getParent();
     }
 
-    /**
-     * @ColumnAlias(column = "children")
-     *
-     * @Cascade(value = {"persist", "remove"})
-     *
-     * @OrphanRemoval(value = true)
-     */
+    #[Alias(column: 'children')]
+    #[\Base\Database\Attribute\Cascade(value: ['persist', 'remove'])]
+    #[\Base\Database\Attribute\OrphanRemoval(value: true)]
     protected $variants;
 
     /**
@@ -276,9 +261,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     protected $rating;
 
     protected function getRating(): ?int
@@ -309,9 +292,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $unitPrice;
 
     public function getPriceRange(): array
@@ -339,9 +320,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $currency;
 
     public function getCurrency(): ?string
@@ -411,9 +390,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return 1;
     }
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     protected $stock;
 
     public function getStock(): ?int
@@ -428,9 +405,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="product_availability")
-     */
+    #[ORM\Column(type: 'product_availability')]
     protected $availability;
 
     /**
@@ -471,11 +446,8 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="product", cascade={"persist", "remove"}, orphanRemoval=true)
-     *
-     * @OrderColumn
-     */
+    #[ORM\OneToMany(targetEntity: Attribute::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[\Base\Database\Attribute\OrderColumn]
     protected $attributes;
 
     public function getAttributes(?string $code = null, ?string $abstractAttributeClassName = null): Collection
@@ -497,7 +469,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->attributes;
     }
 
-    public function getAttribute(string $code, string $abstractAttributeClassName = null): ?Attribute
+    public function getAttribute(string $code, ?string $abstractAttributeClassName = null): ?Attribute
     {
         return $this->getAttributes($code, $abstractAttributeClassName)?->first() ?: null;
     }
@@ -524,11 +496,8 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Hyperlink::class, mappedBy="product", cascade={"persist", "remove"}, orphanRemoval=true)
-     *
-     * @OrderColumn
-     */
+    #[ORM\OneToMany(targetEntity: Hyperlink::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[\Base\Database\Attribute\OrderColumn]
     protected $exports;
 
     public function getExports(?string $code = null): Collection
@@ -579,9 +548,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ColumnAlias(column = "tags")
-     */
+    #[Alias(column: 'tags')]
     protected $features;
 
     public function getFeatures(): Collection
@@ -599,9 +566,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this->removeTag($feature);
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=OrderItem::class, mappedBy="product")
-     */
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'product')]
     protected $orderItems;
 
     public function getOrderItems(): Collection
@@ -631,9 +596,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Identifier::class, mappedBy="product", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: Identifier::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $identifiers;
 
     public function getIdentifiers(): Collection
@@ -723,11 +686,8 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Image::class, mappedBy="product", orphanRemoval=true, cascade={"persist", "remove"})
-     *
-     * @OrderColumn
-     */
+    #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'product', orphanRemoval: true, cascade: ['persist', 'remove'])]
+    #[\Base\Database\Attribute\OrderColumn]
     protected $images;
 
     public function getImage(?int $i = null): ?Image
@@ -777,15 +737,10 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="array", nullable=true)
-     *
-     * @Uploader(storage="local.storage", mime_types={"image/*"})
-     *
-     * @AssertBase\File(mime_types={"image/*"}, groups={"new", "edit"}, max_size="10MB")
-     *
-     * @OrderColumn
-     */
+    #[ORM\Column(type: 'array', nullable: true)]
+    #[\Base\Database\Attribute\Uploader(mime_types: ['image/*'])]
+    #[AssertBase\File(mime_types: ['image/*'], groups: ['new', 'edit'], max_size: '10MB')]
+    #[\Base\Database\Attribute\OrderColumn]
     protected $imageMarketplaces;
 
     /**
@@ -793,7 +748,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
      */
     public function getImageMarketplaces()
     {
-        return Uploader::getPublic($this, 'imageMarketplaces') ?? [];
+        return \Base\Database\Attribute\Uploader::getPublic($this, 'imageMarketplaces') ?? [];
     }
 
     /**
@@ -801,7 +756,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
      */
     public function getImageMarketplaceFiles()
     {
-        return Uploader::get($this, 'imageMarketplaces') ?? [];
+        return \Base\Database\Attribute\Uploader::get($this, 'imageMarketplaces') ?? [];
     }
 
     /**
@@ -819,9 +774,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Review::class, mappedBy="product", cascade={"persist"})
-     */
+    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'product', cascade: ['persist'])]
     protected $reviews;
 
     public function getReviews(): Collection
@@ -851,9 +804,7 @@ class Product extends Thread implements TypesenseInterface, TranslatableInterfac
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Channel::class, inversedBy="products")
-     */
+    #[ORM\ManyToMany(targetEntity: Channel::class, inversedBy: 'products')]
     protected $channels;
 
     public function getChannels(): Collection

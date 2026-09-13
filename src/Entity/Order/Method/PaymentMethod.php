@@ -7,23 +7,18 @@ use Base\Market\Entity\Sales\Attribute\PaymentMethodRule;
 use Base\Market\Entity\Sales\Attribute\PaymentMethodScope;
 use Base\Market\Entity\Sales\Fee;
 use Base\Market\Repository\Order\Method\PaymentMethodRepository;
-use Base\Annotations\Annotation\Uploader;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Uploader;
+use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Base\Traits\BaseTrait;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Payum\Core\GatewayInterface;
-use Payum\Core\PayumBuilder;
 use Symfony\Component\HttpFoundation\File\File;
 
-/**
- * @ORM\Entity(repositoryClass=PaymentMethodRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: PaymentMethodRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class PaymentMethod implements IconizeInterface
 {
     use BaseTrait;
@@ -52,13 +47,9 @@ class PaymentMethod implements IconizeInterface
         $this->scopes = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -69,9 +60,7 @@ class PaymentMethod implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $slug;
 
     public function getSlug(): ?string
@@ -86,9 +75,7 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected $label;
 
     public function getLabel(): ?string
@@ -111,13 +98,9 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     *
-     * @Uploader(storage="local.storage", max_size="1024K", mime_types={"image/*"})
-     *
-     * @AssertBase\File(max_size="1024K", mime_types={"image/*"}, groups={"new", "edit"})
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[\Base\Database\Attribute\Uploader(max_size: '1024K', mime_types: ['image/*'])]
+    #[AssertBase\File(max_size: '1024K', mime_types: ['image/*'], groups: ['new', 'edit'])]
     protected $thumbnail;
 
     /**
@@ -125,7 +108,7 @@ class PaymentMethod implements IconizeInterface
      */
     public function getThumbnail()
     {
-        return Uploader::getPublic($this, 'thumbnail');
+        return \Base\Database\Attribute\Uploader::getPublic($this, 'thumbnail');
     }
 
     /**
@@ -133,7 +116,7 @@ class PaymentMethod implements IconizeInterface
      */
     public function getThumbnailFile()
     {
-        return Uploader::get($this, 'thumbnail');
+        return \Base\Database\Attribute\Uploader::get($this, 'thumbnail');
     }
 
     /**
@@ -151,9 +134,7 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="paymentMethod")
-     */
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'paymentMethod')]
     protected $orders;
 
     public function getOrders(): Collection
@@ -183,9 +164,7 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Fee::class)
-     */
+    #[ORM\ManyToOne(targetEntity: Fee::class)]
     protected $refundFee;
 
     public function getRefundFee(): ?Fee
@@ -200,9 +179,7 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $gatewayFactory;
 
     public function getGatewayFactory(): ?string
@@ -222,28 +199,16 @@ class PaymentMethod implements IconizeInterface
         return array_merge($this->getGatewayParameters(), ['factory' => $this->getGatewayFactory()]);
     }
 
+    /** The gateway's own settings, from the market.gateways.<slug> parameter. */
     public function getGatewayParameters(): array
     {
-        $parameters = $this->getParameterBag()->get('payum.gateways.' . str_replace('-', '_', $this->getSlug()));
+        $parameters = $this->getParameterBag('market.gateways.' . str_replace('-', '_', (string) $this->getSlug()));
 
         return is_array($parameters) ? $parameters : [];
     }
 
-    public function getGateway(): GatewayInterface
-    {
-        return (new PayumBuilder())
-            ->addDefaultStorages()
-            ->addGateway($this->getSlug(), array_merge(
-                $this->getGatewayParameters(),
-                ['factory' => $this->getGatewayFactory()]
-            ))
-            ->getPayum()
-            ->getGateway($this->getSlug());
-    }
 
-    /**
-     * @ORM\OneToMany(targetEntity=PaymentMethodScope::class, mappedBy="paymentMethod", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: PaymentMethodScope::class, mappedBy: 'paymentMethod', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $scopes;
 
     public function getScopes(): Collection
@@ -273,9 +238,7 @@ class PaymentMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=PaymentMethodRule::class, mappedBy="paymentMethod", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: PaymentMethodRule::class, mappedBy: 'paymentMethod', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $rules;
 
     public function getRules(): Collection

@@ -8,19 +8,15 @@ use Base\Market\Entity\Product\Taxon;
 use Base\Market\Entity\Sales\Region;
 use Base\Market\Entity\Store;
 use Base\Market\Repository\Sales\Attribute\Scope\StoreAdapterRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\Type\SelectType;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=StoreAdapterRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "scope_store" )
- */
+#[ORM\Entity(repositoryClass: StoreAdapterRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'scope_store')]
 class StoreAdapter extends AbstractScopeAdapter
 {
     public static function __iconizeStatic(): ?array

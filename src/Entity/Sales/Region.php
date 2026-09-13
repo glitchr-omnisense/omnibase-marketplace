@@ -5,22 +5,18 @@ namespace Base\Market\Entity\Sales;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Store;
 use Base\Market\Repository\Sales\RegionRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\ColumnAlias;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\Alias;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Thread\Tag;
 use Base\Service\Model\IconizeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=RegionRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- */
+#[ORM\Entity(repositoryClass: RegionRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
 class Region extends Tag implements IconizeInterface
 {
     public function __iconize(): ?array
@@ -41,9 +37,7 @@ class Region extends Tag implements IconizeInterface
     }
 
 
-    /**
-     * @ColumnAlias(column = "threads")
-     */
+    #[Alias(column: 'threads')]
     protected $stores;
 
     public function getStores(): Collection
@@ -61,9 +55,7 @@ class Region extends Tag implements IconizeInterface
         return $this->removeThread($stores);
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $currency;
 
     public function getCurrency(): ?string
@@ -78,9 +70,7 @@ class Region extends Tag implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     protected $enabled;
 
     public function isEnabled(): ?bool
@@ -95,9 +85,7 @@ class Region extends Tag implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="json")
-     */
+    #[ORM\Column(type: 'json')]
     protected $countries = [];
 
     public function getCountries(): ?array
@@ -112,9 +100,7 @@ class Region extends Tag implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="region")
-     */
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'region')]
     protected $orders;
 
     public function getOrders(): Collection

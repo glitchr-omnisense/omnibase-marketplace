@@ -5,19 +5,15 @@ namespace Base\Market\Entity\Sales\Discount;
 use Base\Market\Entity\Sales\Discount;
 use Base\Entity\User;
 use Base\Market\Repository\Sales\Discount\CouponRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints\Length;
 
-/**
- * @ORM\Entity(repositoryClass=CouponRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry("marketplace_sales_coupon")
- */
+#[ORM\Entity(repositoryClass: CouponRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry('marketplace_sales_coupon')]
 class Coupon extends Discount implements IconizeInterface
 {
     /**
@@ -38,11 +34,8 @@ class Coupon extends Discount implements IconizeInterface
         return ['fa-solid fa-tags'];
     }
 
-    /**
-     * @ORM\Column(type="string", length=16, unique=true)
-     *
-     * @Length(min=1, max=16, groups={"new", "edit"})
-     */
+    #[ORM\Column(type: 'string', length: 16, unique: true)]
+    #[Length(min: 1, max: 16, groups: ['new', 'edit'])]
     protected $code;
 
     public function getCode(): ?string
@@ -57,9 +50,7 @@ class Coupon extends Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     protected $quota;
 
     public function getQuota(): ?int
@@ -74,9 +65,7 @@ class Coupon extends Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     protected $quotaPerCustomer;
 
     public function getQuotaPerCustomer(): ?int
@@ -91,9 +80,7 @@ class Coupon extends Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     protected $individualUse = false;
 
     public function isIndividualUse(): ?bool
@@ -108,9 +95,7 @@ class Coupon extends Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="coupons")
-     */
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'coupons')]
     protected $owner;
 
     public function getOwner(): ?User

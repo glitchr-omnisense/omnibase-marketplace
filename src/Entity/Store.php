@@ -7,12 +7,12 @@ use Base\Market\Entity\Review\Taxon as ReviewTaxon;
 use Base\Market\Entity\Sales\Region;
 use Base\Market\Model\MerchantInterface;
 use Base\Market\Repository\StoreRepository;
-use Base\Annotations\Annotation\Hierarchify;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\ColumnAlias;
-use Base\Database\Annotation\DiscriminatorEntry;
-use Base\Database\Traits\TranslatableTrait;
-use Base\Database\TranslatableInterface;
+use Base\Database\Attribute\Hierarchify;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\Alias;
+use Base\Database\Attribute\DiscriminatorEntry;
+use Base\Database\Entity\Extension\TranslatableTrait;
+use Base\Database\Entity\Extension\TranslatableInterface;
 use Base\Entity\Thread;
 use Base\Service\Model\LinkableInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,18 +20,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @ORM\Entity(repositoryClass=StoreRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- *
- * @Hierarchify(hierarchy = {"store"}, separator = "/" );
- */
-class Store extends Thread implements TranslatableInterface, LinkableInterface
+#[ORM\Entity(repositoryClass: StoreRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
+#[\Base\Database\Attribute\Hierarchify(hierarchy: ['store'], separator: '/')]
+class Store extends Thread implements \Base\Database\Entity\Extension\TranslatableInterface, LinkableInterface
 {
-    use TranslatableTrait;
+    use \Base\Database\Entity\Extension\TranslatableTrait;
 
     public static function __iconizeStatic(): ?array
     {
@@ -51,15 +46,13 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         $this->reviews = new ArrayCollection();
         $this->products = new ArrayCollection();
 
-        $this->currency = $this->getSettingBag()->getScalar('app.marketplace.default_currency');
+        $this->currency = $this->getParameterBag('market.default_currency');
 
         $this->productTaxa = new ArrayCollection();
         $this->reviewTaxa = new ArrayCollection();
     }
 
-    /**
-     * @ColumnAlias(column = "children")
-     */
+    #[Alias(column: 'children')]
     protected $products;
 
     public function getProducts(): Collection
@@ -77,9 +70,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this->removeChild($product);
     }
 
-    /**
-     * @ColumnAlias(column = "tags")
-     */
+    #[Alias(column: 'tags')]
     protected $regions;
 
     public function getRegions(): Collection
@@ -97,9 +88,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this->removeChild($region);
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="store")
-     */
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'store')]
     protected $orders;
 
     public function getOrders(): Collection
@@ -129,9 +118,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Review::class, mappedBy="store")
-     */
+    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'store')]
     protected $reviews;
 
     public function getReviews(): Collection
@@ -161,9 +148,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $currency;
 
     public function getCurrency(): ?string
@@ -178,9 +163,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=ProductTaxon::class, mappedBy="store")
-     */
+    #[ORM\OneToMany(targetEntity: ProductTaxon::class, mappedBy: 'store')]
     protected $productTaxa;
 
     public function getProductTaxa(): Collection
@@ -198,9 +181,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=ReviewTaxon::class, mappedBy="store")
-     */
+    #[ORM\OneToMany(targetEntity: ReviewTaxon::class, mappedBy: 'store')]
     protected $reviewTaxa;
 
     public function removeProductTaxon(ProductTaxon $productTaxon): self
@@ -242,9 +223,7 @@ class Store extends Thread implements TranslatableInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     protected $open;
 
     public function isOpen(): ?bool

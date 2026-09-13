@@ -2,7 +2,7 @@
 
 namespace Base\Market\Entity;
 
-use Base\Market\Annotation\OrderReference;
+use Base\Market\Attribute\OrderReference;
 use Base\Market\Entity\Order\Address\BillingAddress;
 use Base\Market\Entity\Order\Address\ShippingAddress;
 use Base\Market\Entity\Order\Method\PaymentMethod;
@@ -19,9 +19,9 @@ use Base\Market\Model\MerchantInterface;
 use Base\Market\Enum\OrderState;
 use Base\Market\Model\ShippingUnitInterface;
 use Base\Market\Repository\OrderRepository;
-use Base\Annotations\Annotation\Timestamp;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Timestamp;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;
 use Base\Service\Model\LinkableInterface;
 use Base\Traits\BaseTrait;
@@ -30,17 +30,11 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @ORM\Entity(repositoryClass=OrderRepository::class)
- *
- * @ORM\InheritanceType( "JOINED" )
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @ORM\DiscriminatorColumn( name = "type", type = "string" )
- *
- * @DiscriminatorEntry(value="default")
- */
+#[ORM\Entity(repositoryClass: OrderRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'default')]
 class Order implements IconizeInterface, LinkableInterface
 {
     use BaseTrait;
@@ -81,19 +75,15 @@ class Order implements IconizeInterface, LinkableInterface
         $this->additionalTaxes = new ArrayCollection();
 
         $this->store = $store;
-        $this->_currency = $store?->getCurrency() ?? $this->getSettingBag()->getScalar('app.marketplace.default_currency');
+        $this->_currency = $store?->getCurrency() ?? $this->getParameterBag('market.default_currency');
         $this->managers = new ArrayCollection();
         $this->reviews = new ArrayCollection();
         $this->transactions = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -104,9 +94,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=MerchantInterface::class, inversedBy="ordersInCharge")
-     */
+    #[ORM\ManyToMany(targetEntity: MerchantInterface::class, inversedBy: 'ordersInCharge')]
     protected $managers;
 
     public function getManager(): ?MerchantInterface
@@ -135,11 +123,8 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", unique=true)
-     *
-     * @OrderReference(format="CCC-XXXX-YYY")
-     */
+    #[OrderReference(format: 'CCC-XXXX-YYY')]
+    #[ORM\Column(type: 'string', unique: true)]
     protected $reference;
 
     /**
@@ -150,9 +135,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->reference;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Store::class, inversedBy="orders")
-     */
+    #[ORM\ManyToOne(targetEntity: Store::class, inversedBy: 'orders')]
     protected $store;
 
     public function getStore(): ?Store
@@ -167,11 +150,8 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="orders")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'orders')]
     protected $customer;
 
     public function getCustomer(): ?User
@@ -186,9 +166,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="order_state")
-     */
+    #[ORM\Column(type: 'order_state')]
     protected $state;
 
     public function getState(): string
@@ -266,9 +244,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Shipment::class, mappedBy="order", orphanRemoval=true, cascade={"persist", "remove"})
-     */
+    #[ORM\OneToMany(targetEntity: Shipment::class, mappedBy: 'order', orphanRemoval: true, cascade: ['persist', 'remove'])]
     protected $shipments;
 
     public function getShipments(): Collection
@@ -298,9 +274,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=OrderItem::class, mappedBy="order", orphanRemoval=true, cascade={"persist", "remove"})
-     */
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', orphanRemoval: true, cascade: ['persist', 'remove'])]
     protected $items;
 
     public function isEmpty(): bool
@@ -370,11 +344,8 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on="create")
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: 'create')]
     protected $createdAt;
 
     public function getCreatedAt(): ?\DateTimeInterface
@@ -382,11 +353,8 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->createdAt;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on={"create", "update"})
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: ['create', 'update'])]
     protected $updatedAt;
 
     public function getUpdatedAt(): ?\DateTimeInterface
@@ -394,9 +362,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->updatedAt;
     }
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
     protected $paidAt;
 
     public function getPaidAt(): ?\DateTimeInterface
@@ -404,11 +370,8 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->paidAt;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Region::class, inversedBy="orders")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Region::class, inversedBy: 'orders')]
     protected $region;
 
     public function getRegion(): ?Region
@@ -423,9 +386,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=PaymentMethod::class, inversedBy="orders")
-     */
+    #[ORM\ManyToOne(targetEntity: PaymentMethod::class, inversedBy: 'orders')]
     protected $paymentMethod;
 
     public function getPaymentMethod(): ?PaymentMethod
@@ -440,9 +401,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=ShippingMethod::class, inversedBy="orders")
-     */
+    #[ORM\ManyToOne(targetEntity: ShippingMethod::class, inversedBy: 'orders')]
     protected $shippingMethod;
 
     public function getShippingMethod(): ?ShippingMethod
@@ -483,9 +442,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Discount::class, inversedBy="orders")
-     */
+    #[ORM\ManyToMany(targetEntity: Discount::class, inversedBy: 'orders')]
     protected $discounts;
 
     public function getDiscounts(): Collection
@@ -519,9 +476,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Fee::class)
-     */
+    #[ORM\ManyToMany(targetEntity: Fee::class)]
     protected $additionalFees;
 
     public function getAdditionalFees(): Collection
@@ -545,9 +500,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Tax::class)
-     */
+    #[ORM\ManyToMany(targetEntity: Tax::class)]
     protected $additionalTaxes;
 
     public function getAdditionalTaxes(): Collection
@@ -689,9 +642,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $arrivingTime;
     }
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     protected $_currency;
 
     public function getCurrency(): string
@@ -718,7 +669,7 @@ class Order implements IconizeInterface, LinkableInterface
     {
         $grossPrice = 0;
         foreach ($this->getItems() as $item) {
-            $grossPrice += (int)$this->getTradingMarket()->convert($item->getGrossPrice(), $item->getCurrency(), $this->getCurrency());
+            $grossPrice += (int)$this->getTrading()->convert($item->getGrossPrice(), $item->getCurrency(), $this->getCurrency());
         }
 
         return $grossPrice;
@@ -728,7 +679,7 @@ class Order implements IconizeInterface, LinkableInterface
     {
         $salePrice = 0;
         foreach ($this->getItems() as $item) {
-            $salePrice += (int)$this->getTradingMarket()->convert($item->getSalePrice(), $item->getCurrency(), $this->getCurrency());
+            $salePrice += (int)$this->getTrading()->convert($item->getSalePrice(), $item->getCurrency(), $this->getCurrency());
         }
 
         return $salePrice;
@@ -738,7 +689,7 @@ class Order implements IconizeInterface, LinkableInterface
     {
         $vatCharge = 0;
         foreach ($this->getItems() as $item) {
-            $vatCharge += (int)$this->getTradingMarket()->convert($item->getVatCharge(), $item->getCurrency(), $this->getCurrency());
+            $vatCharge += (int)$this->getTrading()->convert($item->getVatCharge(), $item->getCurrency(), $this->getCurrency());
         }
 
         return $vatCharge;
@@ -761,7 +712,7 @@ class Order implements IconizeInterface, LinkableInterface
     {
         $totalPaid = 0;
         foreach ($this->getTransactions() as $item) {
-            $totalPaid += (int)$this->getTradingMarket()->convert($item->getTotalAmount(), $item->getCurrencyCode(), $this->getCurrency());
+            $totalPaid += (int)$this->getTrading()->convert($item->getTotalAmount(), $item->getCurrencyCode(), $this->getCurrency());
         }
 
         return $totalPaid;
@@ -772,9 +723,7 @@ class Order implements IconizeInterface, LinkableInterface
         return max($this->getNetPrice() - $this->getTotalPaid(), 0);
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $_additionalTaxCharge = 0;
 
     public function getAdditionalTaxCharge(): int
@@ -789,14 +738,12 @@ class Order implements IconizeInterface, LinkableInterface
         }
 
         $currency ??= $this->getCurrency();
-        $this->_additionalTaxCharge = (int)$this->getTradingMarket()->convert(abs($additionalTaxCharge), $currency, $this->getCurrency());
+        $this->_additionalTaxCharge = (int)$this->getTrading()->convert(abs($additionalTaxCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $_shippingCharge = 0;
 
     public function getShippingCharge(): int
@@ -811,14 +758,12 @@ class Order implements IconizeInterface, LinkableInterface
         }
 
         $currency ??= $this->getCurrency();
-        $this->_shippingCharge = (int)$this->getTradingMarket()->convert(abs($shippingCharge), $currency, $this->getCurrency());
+        $this->_shippingCharge = (int)$this->getTrading()->convert(abs($shippingCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $_serviceCharge = 0;
 
     public function getServiceCharge(): int
@@ -833,14 +778,12 @@ class Order implements IconizeInterface, LinkableInterface
         }
 
         $currency ??= $this->getCurrency();
-        $this->_serviceCharge = (int)$this->getTradingMarket()->convert(abs($serviceCharge), $currency, $this->getCurrency());
+        $this->_serviceCharge = (int)$this->getTrading()->convert(abs($serviceCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $_discountCharge = 0;
 
     public function getDiscountCharge(): int
@@ -855,14 +798,12 @@ class Order implements IconizeInterface, LinkableInterface
         }
 
         $currency ??= $this->getCurrency();
-        $this->_discountCharge = (int)$this->getTradingMarket()->convert(abs($discountCharge), $currency, $this->getCurrency());
+        $this->_discountCharge = (int)$this->getTrading()->convert(abs($discountCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\OneToOne(targetEntity=BillingAddress::class, inversedBy="order", cascade={"persist", "remove"})
-     */
+    #[ORM\OneToOne(targetEntity: BillingAddress::class, inversedBy: 'order', cascade: ['persist', 'remove'])]
     protected $billingAddress;
 
     public function getBillingAddress(): ?BillingAddress
@@ -877,9 +818,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToOne(targetEntity=ShippingAddress::class, inversedBy="order", cascade={"persist", "remove"})
-     */
+    #[ORM\OneToOne(targetEntity: ShippingAddress::class, inversedBy: 'order', cascade: ['persist', 'remove'])]
     protected $shippingAddress;
 
     public function getShippingAddress(): ?ShippingAddress
@@ -894,9 +833,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Review::class, mappedBy="order")
-     */
+    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'order')]
     protected $reviews;
 
     public function getReviews(): Collection
@@ -978,9 +915,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $deleteTime ? $this->getTranslator()->transTime($deleteTime) : null;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="order", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'order', orphanRemoval: true)]
     protected $transactions;
 
     public function getTransactions(): Collection

@@ -5,8 +5,8 @@ namespace Base\Market\Entity\Order;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\ShippingMethod;
 use Base\Market\Repository\Order\ShipmentRepository;
-use Base\Annotations\Annotation\Timestamp;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Timestamp;
+use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Base\Service\Model\LinkableInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -14,11 +14,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @ORM\Entity(repositoryClass=ShipmentRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: ShipmentRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class Shipment implements IconizeInterface, LinkableInterface
 {
     /**
@@ -44,13 +41,9 @@ class Shipment implements IconizeInterface, LinkableInterface
         return ['fa-solid fa-fw fa-shipping-fast'];
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -66,11 +59,8 @@ class Shipment implements IconizeInterface, LinkableInterface
         $this->items = new ArrayCollection();
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Order::class, inversedBy="shipments")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'shipments')]
     protected $order;
 
     public function getOrder(): ?Order
@@ -85,11 +75,8 @@ class Shipment implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=ShippingMethod::class)
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: ShippingMethod::class)]
     protected $method;
 
     public function getMethod(): ?ShippingMethod
@@ -104,11 +91,8 @@ class Shipment implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on="create")
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: 'create')]
     protected $createdAt;
 
     public function getCreatedAt(): ?\DateTimeInterface
@@ -116,11 +100,8 @@ class Shipment implements IconizeInterface, LinkableInterface
         return $this->createdAt;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on={"update", "create"})
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: ['update', 'create'])]
     protected $updatedAt;
 
     public function getUpdatedAt(): ?\DateTimeInterface
@@ -128,9 +109,7 @@ class Shipment implements IconizeInterface, LinkableInterface
         return $this->updatedAt;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=OrderItem::class, mappedBy="shipments")
-     */
+    #[ORM\ManyToMany(targetEntity: OrderItem::class, mappedBy: 'shipments')]
     protected $items;
 
     public function getItems(): Collection
@@ -157,9 +136,7 @@ class Shipment implements IconizeInterface, LinkableInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $number;
 
     public function getNumber(): ?string

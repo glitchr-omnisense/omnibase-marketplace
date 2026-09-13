@@ -4,24 +4,19 @@ namespace Base\Market\Entity\Sales;
 
 use Base\Market\Entity\Product;
 use Base\Market\Repository\Sales\ChannelRepository;
-use Base\Annotations\Annotation\Hierarchify;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Hierarchify;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Thread\Tag;
 use Base\Service\Model\IconizeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ChannelRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- *
- * @Hierarchify(hierarchy = {"store", "channels"}, separator = "/" );
- */
+#[ORM\Entity(repositoryClass: ChannelRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
+#[\Base\Database\Attribute\Hierarchify(hierarchy: ['store', 'channels'], separator: '/')]
 class Channel extends Tag implements IconizeInterface
 {
     public static function __iconizeStatic(): ?array
@@ -35,9 +30,7 @@ class Channel extends Tag implements IconizeInterface
         $this->products = new ArrayCollection();
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Product::class, mappedBy="channels")
-     */
+    #[ORM\ManyToMany(targetEntity: Product::class, mappedBy: 'channels')]
     protected $products;
 
     public function getProducts(): Collection

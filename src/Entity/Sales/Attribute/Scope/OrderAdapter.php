@@ -4,19 +4,15 @@ namespace Base\Market\Entity\Sales\Attribute\Scope;
 
 use Base\Market\Entity\Order;
 use Base\Market\Repository\Sales\Attribute\Scope\OrderAdapterRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\Type\SelectType;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=OrderAdapterRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "scope_order" )
- */
+#[ORM\Entity(repositoryClass: OrderAdapterRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'scope_order')]
 class OrderAdapter extends AbstractScopeAdapter
 {
     public static function __iconizeStatic(): ?array

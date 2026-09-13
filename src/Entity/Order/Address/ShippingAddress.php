@@ -4,23 +4,17 @@ namespace Base\Market\Entity\Order\Address;
 
 use Base\Market\Entity\Order;
 use Base\Market\Repository\Order\Address\ShippingAddressRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\User\Address;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ShippingAddressRepository::class)
- *
- * @DiscriminatorEntry( value = "marketplace_shipping_address")
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: ShippingAddressRepository::class)]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'marketplace_shipping_address')]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class ShippingAddress extends Address
 {
-    /**
-     * @ORM\OneToOne(targetEntity=Order::class, mappedBy="shippingAddress", cascade={"persist", "remove"})
-     */
+    #[ORM\OneToOne(targetEntity: Order::class, mappedBy: 'shippingAddress', cascade: ['persist', 'remove'])]
     protected $order;
 
     public function getOrder(): ?Order

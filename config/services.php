@@ -2,15 +2,57 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-return function (ContainerConfigurator $container) {
-    $services = $container->services()
-        ->defaults()
-        ->autowire()
-        ->autoconfigure()
+/*
+ * This file is part of the Glitchr package.
+ *
+ * (c) Marco Meyer <marco.meyer@glitchr.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/*
+ * Plain autowiring over src/, the way an application's own src/ is wired:
+ * repositories get their doctrine.repository_service tag, the payment
+ * gateways their market.payment_gateway tag, the Twig extension its tag,
+ * controllers theirs. Entities, enums, models and attributes are not
+ * services.
+ *
+ * The admin CRUD controllers are loaded only when base-bundle-admin is there.
+ */
+return function (ContainerConfigurator $configurator) {
+
+    $src = dirname(__DIR__) . '/src';
+
+    $services = $configurator->services();
+    $services->defaults()
+        ->autowire(true)
+        ->autoconfigure(true)
         ->public(false);
 
-    // Repositories and the marketplace service are picked up by the app's own
-    // resource block today; declared explicitly here as they are moved, so the
-    // bundle stands on its own rather than relying on the host app's
-    // config/services.yaml globs.
+    $services->instanceof('Base\\Market\\Payment\\PaymentGatewayInterface')
+        ->tag('market.payment_gateway');
+
+    $services->load('Base\\Market\\', $src . '/')
+        ->exclude([
+            $src . '/Attribute/',
+            $src . '/DependencyInjection/',
+            $src . '/Entity/',
+            $src . '/Enum/',
+            $src . '/Model/',
+            $src . '/Controller/Admin/',
+            $src . '/Service/*Exception.php',
+            $src . '/Payment/*Exception.php',
+            $src . '/MarketBundle.php',
+        ]);
+
+    if (is_dir($src . '/Controller/Client')) {
+        $services->load('Base\\Market\\Controller\\Client\\', $src . '/Controller/Client/')
+            ->tag('controller.service_arguments');
+    }
+
+    if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {
+        $services->load('Base\\Market\\Controller\\Admin\\', $src . '/Controller/Admin/')
+            ->tag('controller.service_arguments');
+    }
 };

@@ -5,24 +5,18 @@ namespace Base\Market\Entity\Sales;
 use Base\Market\Entity\Sales\Attribute\FeeScope;
 use Base\Market\Entity\Sales\Attribute\TaxScope;
 use Base\Market\Repository\Sales\TaxRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=TaxRepository::class)
- *
- * @ORM\InheritanceType( "JOINED" )
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @ORM\DiscriminatorColumn( name = "type", type = "string" )
- *
- * @DiscriminatorEntry
- */
+#[ORM\Entity(repositoryClass: TaxRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
 class Tax implements IconizeInterface
 {
     public function __iconize(): ?array
@@ -40,13 +34,9 @@ class Tax implements IconizeInterface
         $this->scopes = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -57,9 +47,7 @@ class Tax implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $label = '';
 
     public function getLabel(): ?string
@@ -82,9 +70,7 @@ class Tax implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=TaxScope::class, mappedBy="tax", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: TaxScope::class, mappedBy: 'tax', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $scopes;
 
     public function getScopes(): Collection
@@ -114,9 +100,7 @@ class Tax implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="float")
-     */
+    #[ORM\Column(type: 'float')]
     protected $rate;
 
     public function getRate(): ?float

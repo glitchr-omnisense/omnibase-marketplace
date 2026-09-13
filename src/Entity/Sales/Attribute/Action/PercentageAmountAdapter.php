@@ -5,19 +5,15 @@ namespace Base\Market\Entity\Sales\Attribute\Action;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Product;
 use Base\Market\Repository\Sales\Attribute\Action\PercentageAmountAdapterRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Field\Type\NumberType;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=PercentageAmountAdapterRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "action_percentageAmount" )
- */
+#[ORM\Entity(repositoryClass: PercentageAmountAdapterRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'action_percentageAmount')]
 class PercentageAmountAdapter extends AbstractActionAdapter
 {
     public static function __iconizeStatic(): ?array
@@ -55,9 +51,7 @@ class PercentageAmountAdapter extends AbstractActionAdapter
         return parent::apply($value, $subject);
     }
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     protected $appliesToItems;
 
     public function appliesToItems(): ?bool

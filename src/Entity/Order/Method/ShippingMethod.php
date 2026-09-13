@@ -7,8 +7,8 @@ use Base\Market\Entity\Sales\Attribute\ShippingMethodRule;
 use Base\Market\Entity\Sales\Attribute\ShippingMethodScope;
 use Base\Market\Entity\Sales\Fee;
 use Base\Market\Repository\Order\Method\ShippingMethodRepository;
-use Base\Annotations\Annotation\Uploader;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Uploader;
+use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Base\Traits\BaseTrait;
 use Base\Validator\Constraints as AssertBase;
@@ -17,11 +17,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
-/**
- * @ORM\Entity(repositoryClass=ShippingMethodRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: ShippingMethodRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class ShippingMethod implements IconizeInterface
 {
     use BaseTrait;
@@ -48,16 +45,12 @@ class ShippingMethod implements IconizeInterface
     {
         $this->rules = new ArrayCollection();
         $this->scopes = new ArrayCollection();
-        $this->currency = $currency ?? $this->getSettingBag()->getScalar('app.marketplace.default_currency') ?? 'USD';
+        $this->currency = $currency ?? $this->getParameterBag('market.default_currency') ?? 'USD';
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -68,9 +61,7 @@ class ShippingMethod implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="shippingMethod")
-     */
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'shippingMethod')]
     protected $orders;
 
     public function getOrders(): Collection
@@ -100,9 +91,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $gatewayName;
 
     public function getGatewayParameters(): array
@@ -145,9 +134,7 @@ class ShippingMethod implements IconizeInterface
         return $gateway;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $slug;
 
     public function getSlug(): ?string
@@ -162,9 +149,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected $label;
 
     public function getLabel(): ?string
@@ -187,9 +172,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $shippingDelay;
 
     public function getShippingDelay(): ?int
@@ -204,9 +187,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $deliveryTime;
 
     public function getDeliveryTime(): ?int
@@ -221,13 +202,9 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     *
-     * @Uploader(storage="local.storage", max_size="1024K", mime_types={"image/*"})
-     *
-     * @AssertBase\File(max_size="1024K", mime_types={"image/*"}, groups={"new", "edit"})
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[\Base\Database\Attribute\Uploader(max_size: '1024K', mime_types: ['image/*'])]
+    #[AssertBase\File(max_size: '1024K', mime_types: ['image/*'], groups: ['new', 'edit'])]
     protected $thumbnail;
 
     /**
@@ -235,7 +212,7 @@ class ShippingMethod implements IconizeInterface
      */
     public function getThumbnail()
     {
-        return Uploader::getPublic($this, 'thumbnail');
+        return \Base\Database\Attribute\Uploader::getPublic($this, 'thumbnail');
     }
 
     /**
@@ -243,7 +220,7 @@ class ShippingMethod implements IconizeInterface
      */
     public function getThumbnailFile()
     {
-        return Uploader::get($this, 'thumbnail');
+        return \Base\Database\Attribute\Uploader::get($this, 'thumbnail');
     }
 
     /**
@@ -261,9 +238,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="shipping_rate")
-     */
+    #[ORM\Column(type: 'shipping_rate')]
     protected $typeRate;
 
     /**
@@ -289,9 +264,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $unitPrice;
 
     public function getUnitPrice(): ?int
@@ -306,9 +279,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $currency;
 
     public function getCurrency(): ?string
@@ -323,9 +294,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Fee::class)
-     */
+    #[ORM\ManyToOne(targetEntity: Fee::class)]
     protected $serviceFee;
 
     public function getServiceFee(): ?Fee
@@ -340,9 +309,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected $trackingUrl;
 
     public function getTrackingUrl(): ?string
@@ -357,9 +324,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=ShippingMethodScope::class, mappedBy="shippingMethod", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: ShippingMethodScope::class, mappedBy: 'shippingMethod', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $scopes;
 
     public function getScopes(): Collection
@@ -389,9 +354,7 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=ShippingMethodRule::class, mappedBy="shippingMethod", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: ShippingMethodRule::class, mappedBy: 'shippingMethod', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $rules;
 
     public function getRules(): Collection

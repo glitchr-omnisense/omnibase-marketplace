@@ -4,10 +4,10 @@ namespace Base\Market\Entity\Product;
 
 use Base\Market\Entity\Product;
 use Base\Market\Repository\Product\FeatureRepository;
-use Base\Annotations\Annotation\Uploader;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\ColumnAlias;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Uploader;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\Alias;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Thread\Tag;
 use Base\Service\Model\IconizeInterface;
 use Base\Validator\Constraints as AssertBase;
@@ -15,13 +15,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
-/**
- * @ORM\Entity(repositoryClass=FeatureRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- */
+#[ORM\Entity(repositoryClass: FeatureRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
 class Feature extends Tag implements IconizeInterface
 {
     public static function __iconizeStatic(): ?array
@@ -29,9 +25,7 @@ class Feature extends Tag implements IconizeInterface
         return ['fa-solid fa-clipboard-list'];
     }
 
-    /**
-     * @ColumnAlias(column = "threads")
-     */
+    #[Alias(column: 'threads')]
     protected $products;
 
     public function getProducts(): Collection
@@ -57,13 +51,9 @@ class Feature extends Tag implements IconizeInterface
         return $this->removeThread($product);
     }
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     *
-     * @AssertBase\File(max_size="5MB", groups={"new", "edit"})
-     *
-     * @Uploader(storage="local.storage", max_size="5MB", mime_types={"image/*"})
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[AssertBase\File(max_size: '5MB', groups: ['new', 'edit'])]
+    #[\Base\Database\Attribute\Uploader(max_size: '5MB', mime_types: ['image/*'])]
     protected $image;
 
     /**
@@ -71,7 +61,7 @@ class Feature extends Tag implements IconizeInterface
      */
     public function getImage()
     {
-        return Uploader::getPublic($this, 'image');
+        return \Base\Database\Attribute\Uploader::getPublic($this, 'image');
     }
 
     /**
@@ -79,7 +69,7 @@ class Feature extends Tag implements IconizeInterface
      */
     public function getImageFile()
     {
-        return Uploader::get($this, 'image');
+        return \Base\Database\Attribute\Uploader::get($this, 'image');
     }
 
     /**

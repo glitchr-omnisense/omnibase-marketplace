@@ -4,18 +4,14 @@ namespace Base\Market\Entity\Sales\Attribute;
 
 use Base\Market\Entity\Sales\Fee;
 use Base\Market\Repository\Sales\Attribute\FeeRuleRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Common\AbstractRule;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=FeeRuleRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "rule_fee" )
- */
+#[ORM\Entity(repositoryClass: FeeRuleRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'rule_fee')]
 class FeeRule extends AbstractRule
 {
     public function get(?string $locale = null): mixed
@@ -33,11 +29,8 @@ class FeeRule extends AbstractRule
         return $this->adapter ? $this->adapter->resolve($this->get($locale)) : null;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Fee::class, inversedBy="rules")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Fee::class, inversedBy: 'rules')]
     protected $fee;
 
     public function getFee(): ?Fee

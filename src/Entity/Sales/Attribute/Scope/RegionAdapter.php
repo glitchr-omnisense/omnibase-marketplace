@@ -9,19 +9,15 @@ use Base\Market\Entity\Sales\Region;
 use Base\Market\Entity\Store;
 use Base\Entity\User;
 use Base\Market\Repository\Sales\Attribute\Scope\RegionAdapterRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\Type\SelectType;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=RegionAdapterRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "scope_region" )
- */
+#[ORM\Entity(repositoryClass: RegionAdapterRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'scope_region')]
 class RegionAdapter extends AbstractScopeAdapter
 {
     public static function __iconizeStatic(): ?array

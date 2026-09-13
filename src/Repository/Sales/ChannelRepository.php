@@ -3,7 +3,7 @@
 namespace Base\Market\Repository\Sales;
 
 use Base\Market\Entity\Sales\Channel;
-use Base\Annotations\Traits\HierarchifyTrait;
+use Base\Attributes\Traits\HierarchifyTrait;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**
@@ -14,5 +14,5 @@ use Base\Database\Repository\ServiceEntityRepository;
  */
 class ChannelRepository extends ServiceEntityRepository
 {
-    use HierarchifyTrait;
+    use \Base\Attributes\Traits\HierarchifyTrait;
 }

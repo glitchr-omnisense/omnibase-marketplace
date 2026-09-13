@@ -4,17 +4,13 @@ namespace Base\Market\Entity\Product;
 
 use Base\Market\Entity\Store;
 use Base\Market\Repository\Product\TaxonRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=TaxonRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- */
+#[ORM\Entity(repositoryClass: TaxonRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
 class Taxon extends \Base\Entity\Thread\Taxon
 {
     public static function __iconizeStatic(): ?array
@@ -28,11 +24,8 @@ class Taxon extends \Base\Entity\Thread\Taxon
         $this->store = $store;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Store::class, inversedBy="productTaxa")
-     *
-     * @ORM\JoinColumn(onDelete="SET NULL")
-     */
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: Store::class, inversedBy: 'productTaxa')]
     protected $store;
 
     public function getStore(): ?Store

@@ -5,28 +5,23 @@ namespace Base\Market\Entity\Product;
 use Base\Market\Entity\Product;
 use Base\Market\Entity\Store;
 use Base\Market\Repository\Product\VariantRepository;
-use Base\Annotations\Annotation\Hierarchify;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
-use Base\Database\Traits\TranslatableTrait;
-use Base\Database\TranslatableInterface;
+use Base\Database\Attribute\Hierarchify;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
+use Base\Database\Entity\Extension\TranslatableTrait;
+use Base\Database\Entity\Extension\TranslatableInterface;
 use Base\Entity\Layout\ImageCrop;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
-/**
- * @ORM\Entity(repositoryClass=VariantRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry
- *
- * @Hierarchify(hierarchy = {"store", "products", "variants"}, separator = "/" );
- */
-class Variant extends Product implements TranslatableInterface
+#[ORM\Entity(repositoryClass: VariantRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
+#[\Base\Database\Attribute\Hierarchify(hierarchy: ['store', 'products', 'variants'], separator: '/')]
+class Variant extends Product implements \Base\Database\Entity\Extension\TranslatableInterface
 {
-    use TranslatableTrait;
+    use \Base\Database\Entity\Extension\TranslatableTrait;
 
     public static function __iconizeStatic(): ?array
     {

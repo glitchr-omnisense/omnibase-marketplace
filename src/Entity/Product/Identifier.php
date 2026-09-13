@@ -5,20 +5,16 @@ namespace Base\Market\Entity\Product;
 use Base\Market\Entity\Product;
 use Base\Market\Entity\Product\Attribute\Barcode;
 use Base\Market\Repository\Product\IdentifierRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\OrderColumn;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\OrderColumn;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=IdentifierRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @AssertBase\UniqueEntity(fields={"barcodes.value"}, groups={"new", "edit"})
- */
+#[ORM\Entity(repositoryClass: IdentifierRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[AssertBase\UniqueEntity(fields: ['barcodes.value'], groups: ['new', 'edit'])]
 class Identifier
 {
     public function __iconize(): ?array
@@ -36,13 +32,9 @@ class Identifier
         $this->barcodes = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     public function getId(): ?int
@@ -50,11 +42,8 @@ class Identifier
         return $this->id;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="identifiers")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'identifiers')]
     protected $product;
 
     public function getProduct(): ?Product
@@ -69,11 +58,8 @@ class Identifier
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=Barcode::class, mappedBy="identifier", cascade={"persist", "remove"}, orphanRemoval=true)
-     *
-     * @OrderColumn
-     */
+    #[ORM\OneToMany(targetEntity: Barcode::class, mappedBy: 'identifier', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[\Base\Database\Attribute\OrderColumn]
     protected $barcodes;
 
     public function getBarcodes(): Collection

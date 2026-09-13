@@ -6,18 +6,15 @@ use Base\Market\Entity\Sales\Attribute\FeeAction;
 use Base\Market\Entity\Sales\Attribute\FeeRule;
 use Base\Market\Entity\Sales\Attribute\FeeScope;
 use Base\Market\Repository\Sales\FeeRepository;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Base\Traits\BaseTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=FeeRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: FeeRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class Fee implements IconizeInterface
 {
     use BaseTrait;
@@ -47,13 +44,9 @@ class Fee implements IconizeInterface
         $this->actions = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -64,9 +57,7 @@ class Fee implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $label = '';
 
     public function getLabel(): ?string
@@ -89,9 +80,7 @@ class Fee implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=FeeScope::class, mappedBy="fee", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: FeeScope::class, mappedBy: 'fee', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $scopes;
 
     public function getScopes(): Collection
@@ -121,9 +110,7 @@ class Fee implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=FeeRule::class, mappedBy="fee", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: FeeRule::class, mappedBy: 'fee', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $rules;
 
     public function getRules(): Collection
@@ -153,9 +140,7 @@ class Fee implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=FeeAction::class, mappedBy="fee", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: FeeAction::class, mappedBy: 'fee', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $actions;
 
     public function getActions(): Collection

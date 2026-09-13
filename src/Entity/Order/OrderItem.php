@@ -7,17 +7,14 @@ use Base\Market\Entity\Product;
 use Base\Market\Entity\Sales\Region;
 use Base\Entity\User;
 use Base\Market\Repository\Order\OrderItemRepository;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Cache;
 use Base\Traits\BaseTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=OrderItemRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: OrderItemRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class OrderItem
 {
     use BaseTrait;
@@ -41,13 +38,9 @@ class OrderItem
         $this->shipments = new ArrayCollection();
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -58,11 +51,8 @@ class OrderItem
         return $this->id;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Order::class, inversedBy="items")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'items')]
     protected $order;
 
     public function getRegion(): ?Region
@@ -87,16 +77,11 @@ class OrderItem
         return $this;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="orderItems")
-     *
-     * @ORM\JoinColumn(onDelete="SET NULL")
-     */
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'orderItems')]
     protected $product;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     protected $productFallback; // Safety parameter in case product association is deleted..
 
     public function getProduct(): ?Product
@@ -114,9 +99,7 @@ class OrderItem
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     protected $comment;
 
     public function getComment(): ?string
@@ -131,9 +114,7 @@ class OrderItem
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     protected $_quantity;
 
     public function getQuantity(): ?int
@@ -152,9 +133,7 @@ class OrderItem
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     protected $_currency;
 
     public function getCurrency(): string
@@ -177,9 +156,7 @@ class OrderItem
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $_unitPrice;
 
     public function getGrossPrice(): int
@@ -219,14 +196,12 @@ class OrderItem
         }
 
         $currency ??= $this->getCurrency();
-        $this->_unitPrice = (int)$this->getTradingMarket()->convert(abs($unitPrice), $currency, $this->getCurrency());
+        $this->_unitPrice = (int)$this->getTrading()->convert(abs($unitPrice), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $_discountCharge = 0;
 
     public function getDiscountCharge(): int
@@ -241,14 +216,12 @@ class OrderItem
         }
 
         $currency ??= $this->getCurrency();
-        $this->_discountCharge = (int)$this->getTradingMarket()->convert(abs($discountCharge), $currency, $this->getCurrency());
+        $this->_discountCharge = (int)$this->getTrading()->convert(abs($discountCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $_vatCharge = 0;
 
     public function getVatCharge(): int
@@ -263,14 +236,12 @@ class OrderItem
         }
 
         $currency ??= $this->getCurrency();
-        $this->_vatCharge = (int)$this->getTradingMarket()->convert(abs($vatCharge), $currency, $this->getCurrency());
+        $this->_vatCharge = (int)$this->getTrading()->convert(abs($vatCharge), $currency, $this->getCurrency());
 
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Shipment::class, inversedBy="items")
-     */
+    #[ORM\ManyToMany(targetEntity: Shipment::class, inversedBy: 'items')]
     private $shipments;
 
     public function getShipments(): Collection

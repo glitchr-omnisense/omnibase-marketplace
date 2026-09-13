@@ -3,16 +3,13 @@
 namespace Base\Market\Entity\Sales;
 
 use Base\Market\Repository\Sales\ForexRepository;
-use Base\Annotations\Annotation\Timestamp;
-use Base\Database\Annotation\Cache;
+use Base\Database\Attribute\Timestamp;
+use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ForexRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- */
+#[ORM\Entity(repositoryClass: ForexRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class Forex implements IconizeInterface
 {
     public function __iconize(): ?array
@@ -25,13 +22,9 @@ class Forex implements IconizeInterface
         return ['fa-solid fa-balance-scale'];
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -42,9 +35,7 @@ class Forex implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $source;
 
     public function getSource(): ?string
@@ -59,9 +50,7 @@ class Forex implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=3)
-     */
+    #[ORM\Column(type: 'string', length: 3)]
     protected $target;
 
     public function getTarget(): ?string
@@ -76,9 +65,7 @@ class Forex implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected $provider;
 
     public function getProvider(): ?string
@@ -86,9 +73,7 @@ class Forex implements IconizeInterface
         return $this->provider;
     }
 
-    /**
-     * @ORM\Column(type="float")
-     */
+    #[ORM\Column(type: 'float')]
     protected $rate;
 
     public function getRate(): ?float
@@ -96,7 +81,7 @@ class Forex implements IconizeInterface
         return $this->rate;
     }
 
-    public function setRate(float $rate, string $provider = null): self
+    public function setRate(float $rate, ?string $provider = null): self
     {
         $this->rate = $rate;
         $this->provider = null;
@@ -104,11 +89,8 @@ class Forex implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on={"create", "update"})
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: ['create', 'update'])]
     protected $createdAt;
 
     public function getCreatedAt(): ?\DateTimeInterface
@@ -116,11 +98,8 @@ class Forex implements IconizeInterface
         return $this->createdAt;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @Timestamp(on={"create", "update"})
-     */
+    #[ORM\Column(type: 'datetime')]
+    #[\Base\Database\Attribute\Timestamp(on: ['create', 'update'])]
     protected $updatedAt;
 
     public function getUpdatedAt(): ?\DateTimeInterface

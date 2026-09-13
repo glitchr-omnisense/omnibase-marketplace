@@ -7,25 +7,19 @@ use Base\Market\Entity\Sales\Attribute\DiscountAction;
 use Base\Market\Entity\Sales\Attribute\DiscountRule;
 use Base\Market\Entity\Sales\Attribute\DiscountScope;
 use Base\Market\Repository\Sales\DiscountRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;
 use Base\Traits\BaseTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=DiscountRepository::class)
- *
- * @ORM\InheritanceType( "JOINED" )
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @ORM\DiscriminatorColumn( name = "type", type = "string" )
- *
- * @DiscriminatorEntry
- */
+#[ORM\Entity(repositoryClass: DiscountRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
+#[\Base\Database\Attribute\DiscriminatorEntry]
 class Discount implements IconizeInterface
 {
     use BaseTrait;
@@ -56,13 +50,9 @@ class Discount implements IconizeInterface
         return ['fa-solid fa-percent'];
     }
 
-    /**
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue
-     *
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
     /**
@@ -73,9 +63,7 @@ class Discount implements IconizeInterface
         return $this->id;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     protected $label;
 
     public function getLabel(): ?string
@@ -98,9 +86,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[ORM\Column(type: 'datetime')]
     protected $validAt;
 
     public function getValidAt(): ?\DateTimeInterface
@@ -115,9 +101,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[ORM\Column(type: 'datetime')]
     protected $expiredAt;
 
     public function getExpiredAt(): ?\DateTimeInterface
@@ -132,9 +116,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Order::class, mappedBy="discounts")
-     */
+    #[ORM\ManyToMany(targetEntity: Order::class, mappedBy: 'discounts')]
     protected $orders;
 
     public function getCountOrders(): int
@@ -172,9 +154,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=DiscountRule::class, mappedBy="discount", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: DiscountRule::class, mappedBy: 'discount', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $rules;
 
     public function getRules(): Collection
@@ -204,9 +184,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=DiscountAction::class, mappedBy="discount", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: DiscountAction::class, mappedBy: 'discount', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $actions;
 
     public function getActions(): Collection
@@ -246,9 +224,7 @@ class Discount implements IconizeInterface
         return $this;
     }
 
-    /**
-     * @ORM\OneToMany(targetEntity=DiscountScope::class, mappedBy="discount", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: DiscountScope::class, mappedBy: 'discount', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $scopes;
 
     public function getScopes(): Collection

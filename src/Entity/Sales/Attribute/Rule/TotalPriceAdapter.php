@@ -4,21 +4,17 @@ namespace Base\Market\Entity\Sales\Attribute\Rule;
 
 use Base\Market\Entity\Order;
 use Base\Market\Repository\Sales\Attribute\Rule\TotalPriceAdapterRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Enum\Operation;
 use Base\Field\Type\MoneyType;
 use Base\Traits\BaseTrait;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=TotalPriceAdapterRepository::class)
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @DiscriminatorEntry( value = "rule_totalPrice" )
- */
+#[ORM\Entity(repositoryClass: TotalPriceAdapterRepository::class)]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'rule_totalPrice')]
 class TotalPriceAdapter extends AbstractRuleAdapter
 {
     use BaseTrait;
@@ -51,7 +47,7 @@ class TotalPriceAdapter extends AbstractRuleAdapter
     public function compliesWith(mixed $value, mixed $subject): bool
     {
         if ($subject instanceof Order) {
-            $salePrice = $this->getTradingMarket()->convert($subject->getGrossPrice(), $subject->getRegion()->getCurrency(), $this->getCurrency());
+            $salePrice = $this->getTrading()->convert($subject->getGrossPrice(), $subject->getRegion()->getCurrency(), $this->getCurrency());
 
             switch ($this->operation) {
                 case Operation::LT:
@@ -73,9 +69,7 @@ class TotalPriceAdapter extends AbstractRuleAdapter
         return false;
     }
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     protected $currency;
 
     public function getCurrency(): string
@@ -98,9 +92,7 @@ class TotalPriceAdapter extends AbstractRuleAdapter
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="operation")
-     */
+    #[ORM\Column(type: 'operation')]
     protected $operation;
 
     /**

@@ -5,27 +5,20 @@ namespace Base\Market\Entity\Product\Attribute;
 use Base\Market\Entity\Product\Attribute\Adapter\BarcodeAdapter;
 use Base\Market\Entity\Product\Identifier;
 use Base\Market\Repository\Product\Attribute\BarcodeRepository;
-use Base\Database\Annotation\Cache;
-use Base\Database\Annotation\DiscriminatorEntry;
+use Base\Database\Attribute\Cache;
+use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractAdapter;
 use Base\Entity\Layout\Attribute\Common\AbstractAttribute;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
-/**
- * @ORM\Entity(repositoryClass=BarcodeRepository::class)
- *
- * @ORM\InheritanceType( "JOINED" )
- *
- * @Cache(usage="NONSTRICT_READ_WRITE", associations="ALL")
- *
- * @AssertBase\UniqueEntity(fields={"value"}, groups={"new", "edit"})
- *
- * @ORM\DiscriminatorColumn( name = "context", type = "string" )
- *
- * @DiscriminatorEntry(value="barcode")
- */
+#[ORM\Entity(repositoryClass: BarcodeRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
+#[AssertBase\UniqueEntity(fields: ['value'], groups: ['new', 'edit'])]
+#[ORM\DiscriminatorColumn(name: 'context', type: 'string')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'barcode')]
 class Barcode extends AbstractAttribute
 {
     public static function __iconizeStatic(): ?array
@@ -54,11 +47,8 @@ class Barcode extends AbstractAttribute
         return $this->adapter->resolve($this->getValue()) ?? null;
     }
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Identifier::class, inversedBy="barcodes")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Identifier::class, inversedBy: 'barcodes')]
     protected $identifier;
 
     public function getIdentifier(): ?Identifier
@@ -73,9 +63,7 @@ class Barcode extends AbstractAttribute
         return $this;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, unique=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
     protected $value;
 
     public function getValue(): ?string
