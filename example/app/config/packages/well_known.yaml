@@ -1,0 +1,15 @@
+# The recipe's bare "enable: true" leaves security_txt's contacts in a shape
+# the factory cannot format; spell the resources out as an application does.
+well_known:
+    enable: true
+    location_uri: /.well-known
+    resources:
+        robots_txt:
+            - {user-agent: ["*"], disallow: ["/"]}
+        change_password: /reset-password
+        security_txt:
+            canonical: /.well-known/security.txt
+            expires: "+1y"
+            contacts:
+                - "mailto:security@example.org"
+            preferred_languages: [en, fr]

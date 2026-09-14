@@ -1,0 +1,19 @@
+# base-bundle notifies with importances of its own (success, info,
+# warning...) that the skeleton's policy does not know. The demo has no
+# mailer or chat: every notice becomes a flash on the next page.
+framework:
+    notifier:
+        channel_policy:
+            urgent: ['browser+']
+            high: ['browser+']
+            medium: ['browser+']
+            low: ['browser+']
+            default: ['browser+']
+            email: ['browser+']
+            notify: ['browser+']
+            info: ['browser+']
+            warning: ['browser+']
+            success: ['browser+']
+            danger: ['browser+']
+        admin_recipients:
+            - { email: admin@example.org }

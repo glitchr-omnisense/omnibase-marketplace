@@ -1,0 +1,19 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+# base-bundle's own controllers: the demo's templates link to security_login,
+# security_register and user_profile, which live there.
+base_controller:
+    resource: "@BaseBundle/Controller"
+    type: attribute
+    prefix: /
+
+# The shop itself. MarketBundle::getPath() returns the package root (modern
+# layout, code under src/), hence the src/ in the resource path.
+market_controller:
+    resource: "@MarketBundle/src/Controller/Client"
+    type: attribute
+    prefix: /

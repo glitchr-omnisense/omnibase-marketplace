@@ -43,6 +43,7 @@ class ShippingMethod implements IconizeInterface
 
     public function __construct()
     {
+        $this->orders = new ArrayCollection();
         $this->rules = new ArrayCollection();
         $this->scopes = new ArrayCollection();
         $this->currency = $currency ?? $this->getParameterBag('market.default_currency') ?? 'USD';

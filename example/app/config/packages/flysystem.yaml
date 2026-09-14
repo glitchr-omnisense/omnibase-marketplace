@@ -1,0 +1,20 @@
+flysystem:
+    storages:
+        local.cache:
+            local:
+                directory: '%kernel.project_dir%/var/cache/%kernel.environment%/images'
+        local.cache.public:
+            local:
+                directory: '%kernel.project_dir%/public/images'
+        local.uploads:
+            local:
+                directory: '%kernel.project_dir%/var/storage/uploads'
+        local.uploads.public:
+            local:
+                directory: '%kernel.project_dir%/public/uploads'
+        local.wysiwyg:
+            local:
+                directory: '%kernel.project_dir%/var/storage/wysiwyg'
+        local.wysiwyg.public:
+            local:
+                directory: '%kernel.project_dir%/public/wysiwyg'

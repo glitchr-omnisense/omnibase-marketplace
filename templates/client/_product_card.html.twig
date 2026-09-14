@@ -1,0 +1,22 @@
+{# A product on a shelf. Variables: product, store. #}
+<article class="market-card{{ not product.forSell ? ' is-unavailable' }}">
+    <a class="market-card-media" href="{{ path('market_product', {store: store.slug, slug: product.slug}) }}">
+        {% include '@Market/client/_product_media.html.twig' with {product: product, size: 'card'} %}
+    </a>
+    <div class="market-card-body">
+        <a class="market-card-title" href="{{ path('market_product', {store: store.slug, slug: product.slug}) }}">{{ product.title }}</a>
+        {% set excerpt = product.excerpt|default('')|striptags|trim %}
+        {% if excerpt %}<p class="market-card-excerpt">{{ excerpt|length > 90 ? excerpt|slice(0, 89) ~ '…' : excerpt }}</p>{% endif %}
+        <div class="market-card-foot">
+            {% include '@Market/client/_price.html.twig' with {amount: product.unitPrice, currency: product.currency} %}
+            {% if product.forSell and is_granted('ROLE_USER') %}
+                <form method="post" action="{{ path('market_cart_add', {id: product.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                    <button class="market-btn market-btn-primary market-btn-sm" type="submit"><i class="fa-solid fa-basket-shopping"></i> {{ '@market.product.add'|trans }}</button>
+                </form>
+            {% elseif not product.forSell %}
+                <span class="market-soldout">{{ '@market.product.unavailable'|trans }}</span>
+            {% endif %}
+        </div>
+    </div>
+</article>

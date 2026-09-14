@@ -1,0 +1,33 @@
+{% extends '@Market/client/layout.html.twig' %}
+
+{% set store = order.store %}
+{% block market_title %}{{ '@market.checkout.title'|trans }}{% endblock %}
+{% block market_crumbs %}<span>›</span> <a href="{{ path('market_cart') }}">{{ '@market.cart.title'|trans }}</a> <span>›</span> <span>{{ '@market.checkout.title'|trans }}</span>{% endblock %}
+
+{% block market_body %}
+<section class="market-checkout">
+    <h2>{{ '@market.checkout.review'|trans }}</h2>
+    <ul class="market-summary">
+        {% for line in order.items %}
+            <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: line.currency} %}</li>
+        {% endfor %}
+        <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
+    </ul>
+
+    <h2>{{ '@market.checkout.pay_with'|trans }}</h2>
+    {% if methods|length == 0 %}
+        <p class="market-empty">{{ '@market.checkout.no_method'|trans }}</p>
+    {% else %}
+    <form method="post" class="market-methods">
+        <input type="hidden" name="_token" value="{{ csrf_token('market_checkout_' ~ order.id) }}">
+        {% for method in methods %}
+            <label class="market-method">
+                <input type="radio" name="method" value="{{ method.id }}" {{ loop.first ? 'checked' }}>
+                <span class="market-method-label">{{ method.label ?? method.slug }}</span>
+            </label>
+        {% endfor %}
+        <button class="market-btn market-btn-primary" type="submit"><i class="fa-solid fa-lock"></i> {{ '@market.checkout.confirm'|trans }}</button>
+    </form>
+    {% endif %}
+</section>
+{% endblock %}

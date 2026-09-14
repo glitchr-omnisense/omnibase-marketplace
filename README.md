@@ -1,92 +1,131 @@
-# Marketplace
+# base-bundle-market
 
+A shop for [glitchr/base-bundle](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of a shop site, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
 
+Namespace `Base\Market`, package `glitchr/base-bundle-market`.
 
-## Getting started
+## What it gives you
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Stores.** A store has a title, a slug, a currency and an open or closed flag. Each store keeps its own cart per member.
+- **Products.** Products belong to a store and carry a price in the currency's smallest unit. Stock is optional, and an empty stock means unlimited. Subclass `Product` for what your shop really sells.
+- **Carts and checkout.** A member gets one cart order per store. Checkout creates a transaction, hands it to a payment gateway, then confirms or cancels the order.
+- **Orders.** Each order gets a readable reference such as `CCC-XXXX-YYY`, a state, a paid date and its transactions.
+- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions.
+- **Admin CRUDs.** Store, Product, Order and PaymentMethod get CRUDs under `Controller/Admin/Crud`, loaded only when base-bundle-admin is installed.
+- **Pages.** Client pages are in French by default:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+| Route | Path |
+|---|---|
+| `market_stores` | `/boutiques` |
+| `market_store` | `/boutique/{slug}` |
+| `market_product` | `/boutique/{store}/{slug}` |
+| `market_cart` | `/panier` |
+| `market_checkout` | `/panier/{order}/commander` |
+| `market_orders` | `/commandes` |
+| `market_order` | `/commandes/{reference}` |
 
-## Add your files
+The promotions, fees, taxes, shipping and review entities come from a shop site and are mapped. The shop pages do not use them yet.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Try it in one command
 
+A self-contained demo ships in the root [Dockerfile](Dockerfile): a bare Symfony skeleton, base-bundle, this checkout and SQLite. Its first page does four things. It seeds a store in euros with three products and two payment methods, and signs you in. It fills a cart, pays one order through the application's own gateway and one by bank transfer. Then it links to the shop itself:
+
+```bash
+docker build -t base-bundle-market-demo .
+docker run --rm -p 8000:8000 base-bundle-market-demo
+# → http://localhost:8000/                   the tour
+# → http://localhost:8000/boutique/boutique  the shop
 ```
-cd existing_repo
-git remote add origin ssh://git@gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/marketplace.git
-git branch -M main
-git push -uf origin main
+
+The demo app under [example/app/](example/app/) doubles as the minimal host. It holds the `bundles.php`, `routes.yaml`, `doctrine.yaml`, `security.yaml` and `market.yaml` an application needs. It adds a gateway of its own in `src/Payment/DemoGateway.php`, and a User with a username. Its `layout1.html.twig` shows the only contract the shop's templates have with their host: the `content`, `aside`, `title`, `stylesheets` and `javascripts` blocks.
+
+## Install
+
+```bash
+composer require glitchr/base-bundle-market:dev-main
 ```
 
-## Integrate with your tools
+Register the bundle in `config/bundles.php`:
 
-- [ ] [Set up project integrations](http://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/marketplace/-/settings/integrations)
+```php
+Base\Market\MarketBundle::class => ['all' => true],
+```
 
-## Collaborate with your team
+Import the client routes. `MarketBundle::getPath()` is the package root, so the path includes `src/`:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```yaml
+# config/routes.yaml
+market_controller:
+    resource: "@MarketBundle/src/Controller/Client"
+    type: attribute
+    prefix: /
+```
 
-## Test and Deploy
+Bind the seller to a class of yours. Products, stores and orders point at `Base\Market\Model\MerchantInterface`, which only asks for `getCompanyName()`:
 
-Use the built-in continuous integration in GitLab.
+```yaml
+# config/packages/doctrine.yaml
+doctrine:
+    orm:
+        resolve_target_entities:
+            Base\Market\Model\MerchantInterface: App\Entity\User
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Then create the tables with a migration, and publish the stylesheet:
 
-***
+```bash
+bin/console assets:install
+```
 
-# Editing this README
+The pages extend `layout1.html.twig` and fill its `content`, `aside`, `title` and `stylesheets` blocks.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Configure
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```yaml
+# config/packages/market.yaml
+market:
+    default_currency: EUR     # a store's currency wins over this
+    products_per_page: 24
+    orders_per_page: 20
+    cart_max_quantity: 99     # per line; Product::getMaxQuantity() can lower it
+    guest_cart: false
+    gateways:                 # settings per payment method, keyed by its slug
+        virement:
+            currencies: [EUR] # keeps the method off orders in other currencies
+            instructions: "IBAN FR76 ..., reference of the order in the label."
+```
 
-## Name
-Choose a self-explaining name for your project.
+A payment method is a row: a slug, a label, and its gateway's `name()` as `gatewayFactory`. Create it in the admin or in fixtures.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Extend
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+**Sell your own things.** Subclass `Product` in your app, with a `#[DiscriminatorEntry]` value of its own. Override `getMaxQuantity()` to return 1 for things that are owned once, such as an avatar item or a licence.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+**Take payment your way.** Implement the gateway interface. The service is picked up by autoconfiguration:
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```php
+final class TokensGateway implements PaymentGatewayInterface
+{
+    public static function name(): string { return 'tokens'; }
+    public function supports(Order $order, PaymentMethod $method): bool { return 'PEP' === $order->getCurrency(); }
+    public function pay(Order $order, Transaction $transaction, PaymentMethod $method): PaymentResult
+    {
+        // debit, then:
+        return PaymentResult::paid(); // or pending(), redirect($url), refused('reason.key', [...])
+    }
+}
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+A refusal reason is a translation key in the `market` domain.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**React to a sale.** Listen for `Base\Market\Event\OrderPaidEvent`. It is dispatched once the order is confirmed and its stock decremented. That is where an app delivers virtual goods, or tells the staff to ship.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+**Restyle.** Every class is `.market-*` and driven by custom properties on `.market`. A store's page also carries `.market-store-<slug>`. Override any template under `templates/bundles/MarketBundle/client/`. `_price`, `_product_media` and `_banner` exist for exactly that. Call the original with `@!Market/client/…`.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Requirements
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, glitchr/base-bundle 3.x and glitchr/base-bundle-admin.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Licence
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+See the repository.

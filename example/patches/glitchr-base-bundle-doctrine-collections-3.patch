@@ -1,0 +1,26 @@
+--- a/src/Database/Common/Collections/OrderedArrayCollection.php
++++ b/src/Database/Common/Collections/OrderedArrayCollection.php
+@@ -260,7 +260,22 @@
+         return parent::slice($offset, $length);
+     }
+ 
+-    public function matching(Criteria $criteria): ReadableCollection&Selectable
++    // Return type is Collection, NOT ReadableCollection&Selectable, so this
++    // class compiles against doctrine/collections 2.x AND 3.x:
++    //
++    //   2.x  ArrayCollection::matching(Criteria): (no declared return type)
++    //   3.x  ArrayCollection::matching(Criteria): Collection
++    //
++    // PHP only allows a child to NARROW a return type. Against 3.x,
++    // ReadableCollection&Selectable is not a subtype of Collection - an
++    // intersection of those two does not imply Collection - so the old
++    // signature was a fatal compile error the moment collections 3 was
++    // installed. Collection is identical to 3.x's declaration, and under 2.x
++    // the parent declares nothing at all, so any type is accepted. The value
++    // itself is unaffected: parent::matching() hands back createFrom()/new
++    // static(), i.e. an OrderedArrayCollection, which implements Collection
++    // under both majors.
++    public function matching(Criteria $criteria): Collection
+     {
+         $this->reorder();
+         return parent::matching($criteria);

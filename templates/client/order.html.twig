@@ -1,0 +1,23 @@
+{% extends '@Market/client/layout.html.twig' %}
+
+{% set store = order.store %}
+{% block market_title %}{{ '@market.orders.one'|trans({reference: order.reference}) }}{% endblock %}
+{% block market_crumbs %}<span>›</span> <a href="{{ path('market_orders') }}">{{ '@market.orders.title'|trans }}</a> <span>›</span> <span>{{ order.reference }}</span>{% endblock %}
+
+{% block market_body %}
+<section class="market-order">
+    <h2>{{ '@market.orders.one'|trans({reference: order.reference}) }} <span class="market-state market-state-{{ order.state|lower }}">{{ ('@market.state.' ~ order.state|lower)|trans }}</span></h2>
+    <p class="market-order-meta">{{ order.store ? order.store.title }} · {{ order.createdAt|date('d/m/Y H:i') }}{% if order.paidAt %} · {{ '@market.orders.paid_at'|trans({date: order.paidAt|date('d/m/Y H:i')}) }}{% endif %}{% if order.paymentMethod %} · {{ order.paymentMethod.label ?? order.paymentMethod.slug }}{% endif %}</p>
+    <ul class="market-summary">
+        {% for line in order.items %}
+            <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: line.currency} %}</li>
+        {% endfor %}
+        <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
+    </ul>
+    {% for transaction in order.transactions %}
+        {% if transaction.details.instructions is defined and transaction.details.instructions %}
+            <div class="market-instructions"><b>{{ '@market.orders.instructions'|trans }}</b><br>{{ transaction.details.instructions }}</div>
+        {% endif %}
+    {% endfor %}
+</section>
+{% endblock %}

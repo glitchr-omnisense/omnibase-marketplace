@@ -1,0 +1,11 @@
+# base-bundle's entities carry #[ApiResource], and its App\ <-> Base\ class
+# aliases make every one of them reachable under two names: scanning the
+# whole class map would declare each API operation twice. Only the host's own
+# entities are scanned - the same setting every base-bundle application uses.
+api_platform:
+    title: base-bundle demo
+    version: 1.0.0
+    defaults:
+        stateless: true
+    mapping:
+        paths: ['%kernel.project_dir%/src/Entity']

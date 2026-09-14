@@ -1,0 +1,37 @@
+{#
+ # The host application's page chrome.
+ #
+ # The shop's own templates extend "layout1.html.twig" and fill two blocks,
+ # `content` and `aside` - that, plus a `title` block and a `javascripts`
+ # block, is the whole contract between the bundle and its host. This file is
+ # the minimum that satisfies it; a real site puts its header, menu and footer
+ # here instead.
+ #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Shop{% endblock %} — base-bundle-market</title>
+    <style>
+        body { margin: 0; background: #eef2f5; font: 14px/1.5 system-ui, sans-serif; color: #284555; }
+        .demo-bar { background: #006699; color: #fff; padding: .5rem 1rem; font-size: 13px; }
+        .demo-bar a { color: #fff; }
+        .demo-cols { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.5rem; max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
+        @media (max-width: 860px) { .demo-cols { grid-template-columns: 1fr; } }
+    </style>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    <div class="demo-bar">
+        base-bundle-market demo — signed in as <b>{{ app.user ? app.user.username : 'nobody' }}</b> ·
+        <a href="{{ path('demo_index') }}">tour</a> ·
+        <a href="{{ path('market_stores') }}">/boutiques</a> · <a href="{{ path('market_cart') }}">/panier</a> · <a href="{{ path('market_orders') }}">/commandes</a>
+    </div>
+    <div class="demo-cols">
+        <main>{% block content %}{% endblock %}</main>
+        <aside>{% block aside %}{% endblock %}</aside>
+    </div>
+    {% block javascripts %}{% endblock %}
+</body>
+</html>

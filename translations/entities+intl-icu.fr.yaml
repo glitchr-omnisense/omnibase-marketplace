@@ -1,0 +1,17 @@
+market:
+  store:
+    _singular: "boutique"
+    _plural: "boutiques"
+  product:
+    _singular: "produit"
+    _plural: "produits"
+  order:
+    _singular: "commande"
+    _plural: "commandes"
+    method:
+      paymentMethod:
+        _singular: "moyen de paiement"
+        _plural: "moyens de paiement"
+      payment_method:
+        _singular: "moyen de paiement"
+        _plural: "moyens de paiement"

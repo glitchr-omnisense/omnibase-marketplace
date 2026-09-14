@@ -1,0 +1,7 @@
+{# A product's picture. Override to draw products that are not photographs (a site may draw avatar items). #}
+{% set image = product.image is defined ? product.image : null %}
+{% if image %}
+    <img src="{{ asset(image.source ?? '') }}" alt="{{ product.title }}" loading="lazy">
+{% else %}
+    <span class="market-media-placeholder"><i class="fa-solid fa-box-open"></i></span>
+{% endif %}

@@ -1,0 +1,9 @@
+market:
+    default_currency: EUR
+    products_per_page: 12
+    cart_max_quantity: 5
+    gateways:
+        # A bank transfer: the order waits, the page shows how to pay.
+        virement:
+            currencies: [EUR]
+            instructions: "Transfer the amount to FR76 0000 0000 0000 0000 0000 000, with the order reference as label."

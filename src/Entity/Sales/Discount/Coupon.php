@@ -95,7 +95,7 @@ class Coupon extends Discount implements IconizeInterface
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'coupons')]
+    #[ORM\ManyToOne(targetEntity: User::class)]
     protected $owner;
 
     public function getOwner(): ?User

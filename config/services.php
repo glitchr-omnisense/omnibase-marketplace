@@ -39,10 +39,12 @@ return function (ContainerConfigurator $configurator) {
             $src . '/DependencyInjection/',
             $src . '/Entity/',
             $src . '/Enum/',
+            $src . '/Event/',
             $src . '/Model/',
             $src . '/Controller/Admin/',
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
+            $src . '/Payment/PaymentResult.php',
             $src . '/MarketBundle.php',
         ]);
 

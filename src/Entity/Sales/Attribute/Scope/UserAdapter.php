@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserAdapterRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
-#[\Base\Database\Attribute\DiscriminatorEntry(value: 'scope_user')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'scope_customer')]
 class UserAdapter extends AbstractScopeAdapter
 {
     public static function __iconizeStatic(): ?array

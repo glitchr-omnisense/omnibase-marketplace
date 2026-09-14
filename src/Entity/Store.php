@@ -35,7 +35,7 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        return $this->getRouter()->generate('app_store', $routeParameters, $referenceType);
+        return $this->getRouter()->generate('market_store', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
     }
 
     public function __construct(?MerchantInterface $merchant = null)

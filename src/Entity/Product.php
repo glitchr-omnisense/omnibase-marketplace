@@ -93,10 +93,10 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
             return null;
         }
 
-        $routeName = 'app_product';
+        $routeName = 'market_product';
         $routeParameters = array_merge($routeParameters, [
             'store' => $this->getStore()->getSlug(),
-            'product' => $this->getSlug(),
+            'slug' => $this->getSlug(),
         ]);
 
         return $this->getRouter()->generate($routeName, $routeParameters, $referenceType);
@@ -225,9 +225,18 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     #[Alias(column: 'children')]
-    #[\Base\Database\Attribute\Cascade(value: ['persist', 'remove'])]
     #[\Base\Database\Attribute\OrphanRemoval(value: true)]
     protected $variants;
+
+    /**
+     * How many of this product one order may hold; null leaves it to the
+     * shop's cart_max_quantity. A subclass selling something owned once (an
+     * avatar item, a licence) returns 1.
+     */
+    public function getMaxQuantity(): ?int
+    {
+        return null;
+    }
 
     /**
      * @return false
@@ -447,8 +456,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     #[ORM\OneToMany(targetEntity: Attribute::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[\Base\Database\Attribute\OrderColumn]
+    #[\Base\Database\Attribute\OrderColumn(orderBy: 'attributePositions')]
     protected $attributes;
+    protected $attributePositions;
 
     public function getAttributes(?string $code = null, ?string $abstractAttributeClassName = null): Collection
     {
@@ -497,8 +507,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     #[ORM\OneToMany(targetEntity: Hyperlink::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[\Base\Database\Attribute\OrderColumn]
+    #[\Base\Database\Attribute\OrderColumn(orderBy: 'exportPositions')]
     protected $exports;
+    protected $exportPositions;
 
     public function getExports(?string $code = null): Collection
     {
@@ -687,8 +698,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'product', orphanRemoval: true, cascade: ['persist', 'remove'])]
-    #[\Base\Database\Attribute\OrderColumn]
+    #[\Base\Database\Attribute\OrderColumn(orderBy: 'imagePositions')]
     protected $images;
+    protected $imagePositions;
 
     public function getImage(?int $i = null): ?Image
     {
@@ -740,8 +752,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     #[ORM\Column(type: 'array', nullable: true)]
     #[\Base\Database\Attribute\Uploader(mime_types: ['image/*'])]
     #[AssertBase\File(mime_types: ['image/*'], groups: ['new', 'edit'], max_size: '10MB')]
-    #[\Base\Database\Attribute\OrderColumn]
+    #[\Base\Database\Attribute\OrderColumn(orderBy: 'imageMarketplacePositions')]
     protected $imageMarketplaces;
+    protected $imageMarketplacePositions;
 
     /**
      * @return array|mixed|File

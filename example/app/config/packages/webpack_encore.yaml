@@ -1,0 +1,4 @@
+webpack_encore:
+    # The demo ships an empty entrypoints.json - no node build is needed.
+    output_path: '%kernel.project_dir%/public/assets'
+    strict_mode: false

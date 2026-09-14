@@ -47,6 +47,11 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
 
     public function load(array $configs, ContainerBuilder $container): void
     {
+        // Tag every gateway, the application's included: the instanceof rule
+        // in config/services.php only reaches services defined in that file.
+        $container->registerForAutoconfiguration(\Base\Market\Payment\PaymentGatewayInterface::class)
+            ->addTag('market.payment_gateway');
+
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
 

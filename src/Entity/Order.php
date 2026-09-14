@@ -41,9 +41,9 @@ class Order implements IconizeInterface, LinkableInterface
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        $routeName = 'app_order';
+        $routeName = 'market_order';
         $routeParameters = array_merge($routeParameters, [
-            'hash' => $this->getObfuscator()->encode([$this->getReference()]),
+            'reference' => $this->getReference(),
         ]);
 
         return $this->getRouter()->generate($routeName, $routeParameters, $referenceType);
@@ -94,7 +94,7 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->id;
     }
 
-    #[ORM\ManyToMany(targetEntity: MerchantInterface::class, inversedBy: 'ordersInCharge')]
+    #[ORM\ManyToMany(targetEntity: MerchantInterface::class)]
     protected $managers;
 
     public function getManager(): ?MerchantInterface
@@ -151,7 +151,7 @@ class Order implements IconizeInterface, LinkableInterface
     }
 
     #[ORM\JoinColumn(nullable: false)]
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'orders')]
+    #[ORM\ManyToOne(targetEntity: User::class)]
     protected $customer;
 
     public function getCustomer(): ?User
@@ -929,8 +929,19 @@ class Order implements IconizeInterface, LinkableInterface
             $this->transactions[] = $transaction;
             $transaction->setOrder($this);
 
-            $this->paidAt = new \DateTime('now');
         }
+
+        return $this;
+    }
+
+    /**
+     * When the money came in. Set by the checkout once a gateway says so -
+     * attaching a transaction is not being paid: a bank transfer is attached
+     * the day it is announced and paid the day it arrives.
+     */
+    public function markAsPaidAt(?\DateTimeInterface $at = null): self
+    {
+        $this->paidAt = $at ?? new \DateTime('now');
 
         return $this;
     }

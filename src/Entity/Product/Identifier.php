@@ -59,8 +59,9 @@ class Identifier
     }
 
     #[ORM\OneToMany(targetEntity: Barcode::class, mappedBy: 'identifier', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[\Base\Database\Attribute\OrderColumn]
+    #[\Base\Database\Attribute\OrderColumn(orderBy: 'barcodePositions')]
     protected $barcodes;
+    protected $barcodePositions;
 
     public function getBarcodes(): Collection
     {

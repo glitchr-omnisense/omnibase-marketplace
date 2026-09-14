@@ -1,0 +1,5 @@
+google:
+    analytics:
+        enable: false
+    maps:
+        enable: false

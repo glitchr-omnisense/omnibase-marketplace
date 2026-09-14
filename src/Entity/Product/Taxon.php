@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaxonRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
-#[\Base\Database\Attribute\DiscriminatorEntry]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'market_product_taxon')]
 class Taxon extends \Base\Entity\Thread\Taxon
 {
     public static function __iconizeStatic(): ?array

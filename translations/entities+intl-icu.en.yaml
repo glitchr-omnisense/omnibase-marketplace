@@ -1,0 +1,17 @@
+market:
+  store:
+    _singular: "store"
+    _plural: "stores"
+  product:
+    _singular: "product"
+    _plural: "products"
+  order:
+    _singular: "order"
+    _plural: "orders"
+    method:
+      paymentMethod:
+        _singular: "payment method"
+        _plural: "payment methods"
+      payment_method:
+        _singular: "payment method"
+        _plural: "payment methods"

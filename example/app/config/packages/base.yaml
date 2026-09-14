@@ -1,0 +1,23 @@
+# The smallest base config a host needs. The parameter_bag flags are not
+# optional: with use_hot_bag unset, the decorated parameter bag resolves
+# every lookup - even a plain container parameter - to null.
+base:
+    parameter_bag:
+        use_hot_bag: true
+        use_setting_bag: true
+    database:
+        use_custom: true
+    router:
+        use_custom: true
+    attributes:
+        use_custom: true
+    twig:
+        use_custom: true
+        use_form2: true
+        use_bootstrap: true
+        editor:
+            storage: "local.wysiwyg"
+    uploader:
+        storage: "local.uploads"
+    site:
+        index: demo_index

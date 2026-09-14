@@ -1,0 +1,111 @@
+/*
+ * The shop's look, in the same family as base-bundle-forum: a pale blue page
+ * panel, a pink accent, rounded cards. Everything is namespaced .market-* and
+ * driven by the custom properties below, so a host restyles a store by
+ * overriding them on .market or on .market-store-<slug>.
+ */
+.market {
+    --market-accent: #FF3399;
+    --market-primary: #006699;
+    --market-primary-soft: #6090BE;
+    --market-pale: #EEF5FA;
+    --market-panel: #DCEAF5;
+    --market-text: #284555;
+    --market-muted: #6d8296;
+    --market-line: #D1D7DC;
+    --market-ok: #3a9d23;
+    --market-warn: #DD6900;
+    --market-danger: #c0392b;
+    --market-radius: 12px;
+    color: var(--market-text);
+    font-size: 14px;
+    line-height: 1.45;
+}
+.market a { color: var(--market-primary); text-decoration: none; }
+.market a:hover { color: var(--market-warn); text-decoration: underline; }
+
+.market-title { margin: 0 0 .75rem; font: bold 30px/1.1 "Display Heavy", "Trebuchet MS", Verdana, sans-serif; color: var(--market-accent); letter-spacing: 1px; }
+.market-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; margin: 0 0 1.25rem; font-size: 12.5px; color: var(--market-muted); }
+.market-bar > * { display: inline-flex; align-items: center; gap: .3rem; }
+.market-bar-end { margin-left: auto; display: flex; gap: 1rem; }
+.market-badge { display: inline-block; min-width: 1.4em; padding: 0 .35em; border-radius: 999px; background: var(--market-accent); color: #fff; font-size: 11px; font-weight: bold; text-align: center; }
+.market-intro { margin: 0 0 1rem; padding: .8rem 1rem; border-radius: var(--market-radius); background: var(--market-panel); }
+.market-empty, .market-closed { padding: 1rem; border-radius: var(--market-radius); background: var(--market-pale); color: var(--market-muted); text-align: center; }
+.market-closed { color: var(--market-warn); }
+
+/* buttons */
+.market-btn { display: inline-flex; align-items: center; gap: .4rem; border: 0; border-radius: 999px; padding: .5rem 1.1rem; font: bold 13px Verdana, sans-serif; cursor: pointer; text-decoration: none; }
+.market-btn:hover { text-decoration: none; filter: brightness(1.08); }
+.market .market-btn-primary { background: var(--market-accent); color: #fff; }
+.market .market-btn-ghost { background: var(--market-pale); color: var(--market-primary); }
+.market .market-btn-danger { background: transparent; color: var(--market-danger); }
+.market-btn-sm { padding: .3rem .7rem; font-size: 12px; }
+
+/* store list */
+.market-stores { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; }
+.market-store-card { display: flex; flex-direction: column; gap: .4rem; padding: 1.1rem 1.2rem; border-radius: var(--market-radius); background: #fff; border: 1px solid var(--market-line); border-top: 6px solid var(--market-accent); }
+.market .market-store-card:hover { text-decoration: none; box-shadow: 0 4px 14px rgba(0, 60, 110, .15); }
+.market-store-name { font: bold 18px Verdana, sans-serif; color: var(--market-primary); }
+.market-store-excerpt { color: var(--market-muted); }
+.market-store-go { margin-top: auto; color: var(--market-accent); font-weight: bold; }
+
+/* product grid */
+.market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.market-card { display: flex; flex-direction: column; border-radius: var(--market-radius); background: #fff; border: 1px solid var(--market-line); overflow: hidden; }
+.market-card.is-unavailable { opacity: .6; }
+.market-card-media { display: grid; place-items: center; aspect-ratio: 1; max-width: 100%; background: var(--market-pale); }
+.market-card-media img, .market-card-media svg, .market-card-media canvas { max-width: 85%; max-height: 85%; }
+.market-media-placeholder { font-size: 42px; color: var(--market-primary-soft); }
+.market-card-body { display: flex; flex-direction: column; gap: .35rem; padding: .7rem .8rem .8rem; flex: 1; }
+.market-card-title { font-weight: bold; }
+.market-card-excerpt { margin: 0; color: var(--market-muted); font-size: 12px; }
+.market-card-foot { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+.market-price { font-weight: bold; color: var(--market-accent); white-space: nowrap; }
+.market-soldout { font-size: 12px; color: var(--market-muted); }
+
+/* product page */
+.market-product { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 1.5rem; align-items: start; }
+.market-product-media { display: grid; place-items: center; aspect-ratio: 1; max-width: 100%; border-radius: var(--market-radius); background: var(--market-pale); }
+.market-product-media img, .market-product-media svg, .market-product-media canvas { max-width: 85%; max-height: 85%; }
+.market-product h2 { margin: 0 0 .3rem; font-size: 22px; color: var(--market-primary); }
+.market-product-headline { margin: 0 0 .6rem; color: var(--market-muted); }
+.market-product-price { font-size: 20px; margin: 0 0 .5rem; }
+.market-product-stock { margin: 0 0 .8rem; color: var(--market-muted); font-size: 12.5px; }
+.market-add { margin: 0 0 1rem; }
+@media (max-width: 640px) { .market-product { grid-template-columns: 1fr; } }
+
+/* cart, orders */
+.market-cart { margin-bottom: 1.5rem; }
+.market-cart h2, .market-checkout h2, .market-order h2 { font-size: 17px; margin: 0 0 .6rem; color: var(--market-primary); }
+.market-lines { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--market-line); border-radius: var(--market-radius); overflow: hidden; display: block; overflow-x: auto; }
+.market-lines th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #fff; background: var(--market-primary); padding: .5rem .75rem; }
+.market-lines td { padding: .55rem .75rem; border-top: 1px solid var(--market-line); vertical-align: middle; }
+.market-lines tbody tr:nth-child(even) td { background: var(--market-pale); }
+.market-lines tfoot th { background: var(--market-panel); color: var(--market-text); font-size: 13px; }
+.market-lines .num { text-align: right; white-space: nowrap; }
+.market-qty { display: inline-flex; gap: .3rem; align-items: center; }
+.market-qty input { width: 4rem; padding: .25rem .4rem; border: 1px solid var(--market-line); border-radius: 6px; font: inherit; }
+.market-actions { text-align: right; margin: .75rem 0 0; }
+
+.market-summary { list-style: none; margin: 0 0 1.25rem; padding: 0; border: 1px solid var(--market-line); border-radius: var(--market-radius); background: #fff; }
+.market-summary li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-top: 1px solid var(--market-line); }
+.market-summary li:first-child { border-top: 0; }
+.market-summary-total { font-weight: bold; background: var(--market-panel); }
+
+.market-methods { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+.market-method { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .7rem .9rem; border: 1px solid var(--market-line); border-radius: var(--market-radius); background: #fff; cursor: pointer; }
+.market-method:has(input:checked) { border-color: var(--market-accent); background: var(--market-pale); }
+.market-method-label { font-weight: bold; }
+
+.market-state { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: 11px; font-weight: bold; background: var(--market-panel); color: var(--market-primary); vertical-align: middle; }
+.market-state-confirmed, .market-state-completed, .market-state-delivered, .market-state-shipped { background: #e1f3dc; color: var(--market-ok); }
+.market-state-pending { background: #fdebd9; color: var(--market-warn); }
+.market-state-cancelled, .market-state-refunded { background: #f6dede; color: var(--market-danger); }
+.market-order-meta { color: var(--market-muted); margin: 0 0 1rem; }
+.market-instructions { padding: .8rem 1rem; border-radius: var(--market-radius); background: #fdebd9; }
+
+/* aside */
+.market-box { border: 1px solid var(--market-line); border-radius: var(--market-radius); overflow: hidden; background: #fff; margin-bottom: 1rem; }
+.market-box-title { padding: .5rem .8rem; font: bold 13px Verdana, sans-serif; color: #fff; background: var(--market-primary); }
+.market-box-body { padding: .7rem .8rem; }
+.market-box-body p { margin: 0 0 .6rem; }

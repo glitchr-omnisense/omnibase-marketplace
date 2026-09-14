@@ -1,0 +1,30 @@
+{% extends '@Market/client/layout.html.twig' %}
+
+{% block market_title %}{{ store.title }}{% endblock %}
+{% block market_crumbs %}<span>›</span> <span>{{ store.title }}</span>{% endblock %}
+
+{% block market_body %}
+    {% if store.excerpt or store.content %}<div class="market-intro">{{ (store.excerpt ?: store.content)|striptags }}</div>{% endif %}
+    {% if not store.open %}<p class="market-closed"><i class="fa-solid fa-door-closed"></i> {{ '@market.store.closed'|trans }}</p>{% endif %}
+
+    {% if products|length == 0 %}
+        <p class="market-empty">{{ '@market.store.empty'|trans }}</p>
+    {% else %}
+        <div class="market-grid">
+            {% for product in products %}{% include '@Market/client/_product_card.html.twig' with {product: product, store: store} %}{% endfor %}
+        </div>
+        {{ paginator(products, 'market_store', {slug: store.slug}) }}
+    {% endif %}
+{% endblock %}
+
+{% block market_aside %}
+    {% if cart %}
+    <div class="market-box">
+        <div class="market-box-title"><i class="fa-solid fa-basket-shopping"></i> {{ '@market.cart.title'|trans }}</div>
+        <div class="market-box-body">
+            <p>{{ '@market.cart.lines'|trans({count: cart.items|length}) }} · {% include '@Market/client/_price.html.twig' with {amount: cart.netPrice, currency: cart.currency} %}</p>
+            <a class="market-btn market-btn-primary" href="{{ path('market_checkout', {order: cart.id}) }}">{{ '@market.cart.checkout'|trans }}</a>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

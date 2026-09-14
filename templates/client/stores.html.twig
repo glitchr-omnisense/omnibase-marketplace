@@ -1,0 +1,17 @@
+{% extends '@Market/client/layout.html.twig' %}
+
+{% block market_body %}
+{% if stores|length == 0 %}
+    <p class="market-empty">{{ '@market.stores.empty'|trans }}</p>
+{% else %}
+<div class="market-stores">
+    {% for store in stores %}
+        <a class="market-store-card" href="{{ path('market_store', {slug: store.slug}) }}">
+            <span class="market-store-name">{{ store.title }}</span>
+            {% if store.excerpt %}<span class="market-store-excerpt">{{ store.excerpt|striptags }}</span>{% endif %}
+            <span class="market-store-go">{{ '@market.stores.enter'|trans }} →</span>
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

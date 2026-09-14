@@ -1,0 +1,29 @@
+security:
+    password_hashers:
+        Base\Entity\User:
+            algorithm: auto
+
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_USER]
+
+    providers:
+        # The demo's own member (src/Entity/User.php): base-bundle's User
+        # plus a username.
+        users: { entity: { class: App\Entity\User } }
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: users
+            # The demo signs its visitor in through this authenticator
+            # (Security::login(..., 'security.authenticator.form_login.main'));
+            # base-bundle's login page posts to the same route.
+            form_login:
+                login_path: security_login
+                check_path: security_login
+
+    # The demo signs you in without a login form (see DemoController::index);
+    # nothing here is a pattern to copy into a real application.
