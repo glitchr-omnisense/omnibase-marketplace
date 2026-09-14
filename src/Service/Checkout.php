@@ -2,6 +2,7 @@
 
 namespace Base\Market\Service;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
@@ -30,13 +31,18 @@ class Checkout
         private readonly PaymentGatewayRegistry $gateways,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly Cart $cart,
+        #[Autowire('%market.default_gateway%')] private readonly string $defaultGateway = 'stripe',
     ) {
     }
 
     /** @return PaymentMethod[] the methods able to take this order */
     public function methodsFor(Order $order): array
     {
-        return $this->gateways->usableFor($order, $this->entityManager->getRepository(PaymentMethod::class)->findAll());
+        $methods = $this->gateways->usableFor($order, $this->entityManager->getRepository(PaymentMethod::class)->findAll());
+        // The shop's default gateway first: checkout preselects the first method.
+        usort($methods, fn (PaymentMethod $a, PaymentMethod $b) => ($b->getGatewayFactory() === $this->defaultGateway) <=> ($a->getGatewayFactory() === $this->defaultGateway));
+
+        return $methods;
     }
 
     /** @throws CartException */
@@ -109,6 +115,16 @@ class Checkout
         $this->entityManager->flush();
 
         $this->dispatcher->dispatch(new OrderPaidEvent($order));
+    }
+
+    /** The payment did not happen (cancelled, expired, refused later): back to the cart. */
+    public function cancel(Order $order, Transaction $transaction): void
+    {
+        $transaction->markAsCancelled();
+        if (!$order->isConfirmed() && !$order->isCompleted()) {
+            $order->markAsCart();
+        }
+        $this->entityManager->flush();
     }
 
     /** @throws CartException */

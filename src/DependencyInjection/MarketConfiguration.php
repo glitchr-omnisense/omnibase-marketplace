@@ -30,6 +30,7 @@ class MarketConfiguration extends AbstractBaseConfiguration
                 ->integerNode('orders_per_page')->min(1)->defaultValue(20)->end()
                 ->integerNode('cart_max_quantity')->min(1)->defaultValue(99)
                     ->info('How many of one product a cart line may hold.')->end()
+                ->scalarNode('default_gateway')->defaultValue('stripe')->info('The gateway checkout offers first.')->end()
                 ->booleanNode('guest_cart')->defaultFalse()
                     ->info('Whether a visitor who is not signed in may fill a cart.')->end()
                 // Per-gateway settings, keyed by the payment method's slug:

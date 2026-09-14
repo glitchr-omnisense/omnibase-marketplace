@@ -61,3 +61,7 @@ state:
   delivered: "Livrée"
   completed: "Terminée"
   refunded: "Remboursée"
+stripe:
+  unavailable: "Le paiement par carte est indisponible pour le moment. {reason}"
+  cancelled: "Paiement annulé : ta commande t'attend dans ton panier."
+  pending: "Ta commande {reference} est enregistrée ; elle sera confirmée dès que Stripe aura validé le paiement."

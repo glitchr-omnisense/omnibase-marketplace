@@ -45,6 +45,8 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
             $src . '/Payment/PaymentResult.php',
+            // Card payment needs omnipay/stripe; without it the gateway is left out.
+            ...(class_exists('Omnipay\\Stripe\\CheckoutGateway') ? [] : [$src . '/Payment/StripeGateway.php']),
             $src . '/MarketBundle.php',
         ]);
 

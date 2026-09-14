@@ -1,8 +1,9 @@
 {#
  # A price in a currency. Variables: amount (smallest unit: cents, or one of
  # an in-game currency), currency (ISO code or a made-up one).
+ # base-bundle's format_currency takes the smallest unit and scales it
+ # itself; use_rate is off so a price always shows in the currency it is
+ # charged in, never converted to the visitor's.
  # Override to spell a currency of your own - a site may, for a currency of its own.
  #}
-{% set amount = amount|default(0) %}
-{% set currency = currency|default('EUR') %}
-<span class="market-price">{{ (amount / 100)|format_currency(currency) }}</span>
+<span class="market-price">{{ amount|default(0)|format_currency(currency|default('EUR'), {use_rate: false}) }}</span>

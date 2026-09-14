@@ -61,3 +61,7 @@ state:
   delivered: "Delivered"
   completed: "Completed"
   refunded: "Refunded"
+stripe:
+  unavailable: "Card payment is unavailable right now. {reason}"
+  cancelled: "Payment cancelled: your order is waiting in your cart."
+  pending: "Your order {reference} is recorded; it will be confirmed as soon as Stripe clears the payment."

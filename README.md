@@ -10,7 +10,7 @@ Namespace `Base\Market`, package `glitchr/base-bundle-market`.
 - **Products.** Products belong to a store and carry a price in the currency's smallest unit. Stock is optional, and an empty stock means unlimited. Subclass `Product` for what your shop really sells.
 - **Carts and checkout.** A member gets one cart order per store. Checkout creates a transaction, hands it to a payment gateway, then confirms or cancels the order.
 - **Orders.** Each order gets a readable reference such as `CCC-XXXX-YYY`, a state, a paid date and its transactions.
-- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions.
+- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `stripe` (card payment through Stripe Checkout, the default) and `manual`, which records a pending payment and shows the method's instructions.
 - **Admin CRUDs.** Store, Product, Order and PaymentMethod get CRUDs under `Controller/Admin/Crud`, loaded only when base-bundle-admin is installed.
 - **Pages.** Client pages are in French by default:
 
@@ -23,6 +23,8 @@ Namespace `Base\Market`, package `glitchr/base-bundle-market`.
 | `market_checkout` | `/panier/{order}/commander` |
 | `market_orders` | `/commandes` |
 | `market_order` | `/commandes/{reference}` |
+| `market_stripe_return` | `/panier/{order}/stripe` |
+| `market_stripe_webhook` | `/market/stripe/webhook` (POST) |
 
 The promotions, fees, taxes, shipping and review entities come from a shop site and are mapped. The shop pages do not use them yet.
 
@@ -96,6 +98,29 @@ market:
 ```
 
 A payment method is a row: a slug, a label, and its gateway's `name()` as `gatewayFactory`. Create it in the admin or in fixtures.
+
+## Card payment with Stripe
+
+Stripe is the default way to pay real money. The bundle ships a `stripe` gateway on omnipay/stripe's Checkout gateway, like a shop site. The member pays on Stripe's hosted page and comes back to `market_stripe_return`. The webhook `market_stripe_webhook` confirms the order even if they never come back.
+
+```bash
+composer require omnipay/stripe
+```
+
+```yaml
+# config/packages/market.yaml
+market:
+    default_gateway: stripe          # offered first at checkout
+    gateways:
+        stripe:                      # the payment method's slug
+            api_key: '%env(default::STRIPE_API_KEY)%'
+            webhook_secret: '%env(default::STRIPE_WEBHOOK_SECRET)%'
+            currencies: [EUR]
+```
+
+Create a payment method with the slug `stripe` and the gateway `stripe`. While `api_key` is empty, checkout doesn't offer it. In the Stripe dashboard, point a webhook at `https://<host>/market/stripe/webhook` with the `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` events. Every event's signature is checked against `webhook_secret`.
+
+A cancelled or expired payment puts the order back in the cart. A gateway error does the same, and the member sees why.
 
 ## Extend
 
