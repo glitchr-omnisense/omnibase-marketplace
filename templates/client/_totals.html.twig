@@ -1,0 +1,14 @@
+{# An order's totals: lines, discount, shipping, what is paid. Variables: order. #}
+<ul class="market-summary">
+    {% for line in order.items %}
+        <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>
+            <span>{% if line.discountCharge > 0 %}<s class="market-was">{% include '@Market/client/_price.html.twig' with {amount: line.grossPrice, currency: order.currency} %}</s> {% endif %}{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: order.currency} %}</span></li>
+    {% endfor %}
+    {% if order.discountCharge > 0 %}
+        <li class="market-summary-discount"><span>{{ '@market.cart.discount'|trans }}{% for coupon in order.coupons %} <code>{{ coupon.code }}</code>{% endfor %}</span><span>− {% include '@Market/client/_price.html.twig' with {amount: order.discountCharge, currency: order.currency} %}</span></li>
+    {% endif %}
+    {% if order.shippingMethod %}
+        <li><span>{{ '@market.shipping.title'|trans }} : {{ order.shippingMethod.label }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.shippingCharge, currency: order.currency} %}</li>
+    {% endif %}
+    <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
+</ul>

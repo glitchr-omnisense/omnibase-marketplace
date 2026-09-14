@@ -99,6 +99,31 @@ market:
 
 A payment method is a row: a slug, a label, and its gateway's `name()` as `gatewayFactory`. Create it in the admin or in fixtures.
 
+## Promotions and coupons
+
+`Base\Market\Service\Pricing` prices every cart when it is shown and again at checkout, and never reprices a paid order. It works from the discounts the admin defines:
+
+- **Promotions** run by themselves between `validAt` and `expiredAt`, highest `priority` first. Use them for an event or a sale.
+- **Coupons** are codes the member types in the cart. `quota` and `quotaPerCustomer` cap how many paid orders may use one, and `owner` reserves it to one member. A coupon marked `individualUse` stands alone, with no promotion and no other coupon.
+
+Each discount holds three kinds of attributes, edited in the admin:
+
+| Kind | What it does | Adapters |
+|---|---|---|
+| Rules | All must hold for the order. | Total price, cart contains, cart quantity |
+| Scopes | Choose the lines a per-line action touches. With none, it touches every line. | Store, product, taxon, user, region, order |
+| Actions | Take something off. | Percentage, fixed amount |
+
+An action set to apply to items cuts each line in scope. Otherwise it cuts the order. Nothing is ever cut below zero.
+
+## Shipping
+
+A product travels by post unless its class says otherwise: `Product::isShippable()` returns true. Subclass it to return false for goods that live online. Checkout asks for a delivery address and a shipping method only when some line is shippable.
+
+A shipping method in the order's currency is offered with its charge. `RATE_FLAT` costs its unit price once. `RATE_PRIORITY` costs it per shipping unit, where a unit comes from the product's weight, or one per item.
+
+Staff see the paid orders waiting at `/commandes/a-expedier` (`market_shipping_queue`, `ROLE_ADMIN`). They mark one shipped with its tracking number, which creates a Shipment, and later delivered. The member follows the parcel on their order page, and a tracking URL may hold `{number}`.
+
 ## Card payment with Stripe
 
 Stripe is the default way to pay real money. The bundle ships a `stripe` gateway on omnipay/stripe's Checkout gateway, like a shop site. The member pays on Stripe's hosted page and comes back to `market_stripe_return`. The webhook `market_stripe_webhook` confirms the order even if they never come back.

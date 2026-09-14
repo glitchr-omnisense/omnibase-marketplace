@@ -109,3 +109,20 @@
 .market-box-title { padding: .5rem .8rem; font: bold 13px Verdana, sans-serif; color: #fff; background: var(--market-primary); }
 .market-box-body { padding: .7rem .8rem; }
 .market-box-body p { margin: 0 0 .6rem; }
+
+/* discounts, coupons, shipping */
+.market-was { color: var(--market-muted); font-weight: normal; }
+.market-discount, .market-summary-discount { color: var(--market-ok); }
+.market-coupons { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: flex-end; margin: .75rem 0 0; }
+.market-coupon-tag { display: inline-flex; align-items: center; gap: .2rem; padding: .1rem .2rem .1rem .6rem; border-radius: 999px; background: #e1f3dc; }
+.market-coupon-form { display: inline-flex; gap: .4rem; align-items: center; }
+.market-coupon-form input { padding: .3rem .6rem; border: 1px solid var(--market-line); border-radius: 999px; font: inherit; }
+.market-note { color: var(--market-muted); margin-top: -.6rem; }
+.market-address { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: .6rem .8rem; width: 100%; }
+.market-address label { display: flex; flex-direction: column; gap: .2rem; font-weight: bold; font-size: 12.5px; color: var(--market-primary); }
+.market-address label.wide { grid-column: 1 / -1; }
+.market-address input { padding: .45rem .6rem; border: 1px solid var(--market-line); border-radius: 8px; font: 14px Verdana, sans-serif; }
+.market-method-extra { margin-left: auto; color: var(--market-muted); }
+.market-shipping { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 1rem 0; padding: .9rem 1rem; border-radius: var(--market-radius); background: #fff; border: 1px solid var(--market-line); }
+.market-plain { margin: 0; padding-left: 1rem; }
+.market-ship { padding: 1rem; margin-bottom: 1rem; border-radius: var(--market-radius); background: var(--market-pale); }

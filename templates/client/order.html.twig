@@ -8,12 +8,25 @@
 <section class="market-order">
     <h2>{{ '@market.orders.one'|trans({reference: order.reference}) }} <span class="market-state market-state-{{ order.state|lower }}">{{ ('@market.state.' ~ order.state|lower)|trans }}</span></h2>
     <p class="market-order-meta">{{ order.store ? order.store.title }} · {{ order.createdAt|date('d/m/Y H:i') }}{% if order.paidAt %} · {{ '@market.orders.paid_at'|trans({date: order.paidAt|date('d/m/Y H:i')}) }}{% endif %}{% if order.paymentMethod %} · {{ order.paymentMethod.label ?? order.paymentMethod.slug }}{% endif %}</p>
-    <ul class="market-summary">
-        {% for line in order.items %}
-            <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: line.currency} %}</li>
-        {% endfor %}
-        <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
-    </ul>
+    {% include '@Market/client/_totals.html.twig' with {order: order} %}
+
+    {% if order.shippingAddress %}
+    <div class="market-shipping">
+        <div>
+            <b>{{ '@market.shipping.address'|trans }}</b><br>
+            {{ order.shippingAddress.name }}<br>{{ order.shippingAddress.streetAddress }}{% if order.shippingAddress.affix %}<br>{{ order.shippingAddress.affix }}{% endif %}<br>{{ order.shippingAddress.zipCode }} {{ order.shippingAddress.city }} · {{ order.shippingAddress.country }}
+        </div>
+        <div>
+            <b>{{ '@market.shipping.title'|trans }}</b><br>{{ order.shippingMethod ? order.shippingMethod.label : '—' }}
+            {% for shipment in order.shipments %}
+                <br>{{ '@market.shipping.tracking'|trans }} :
+                {% set url = market_tracking_url(shipment.method, shipment.number) %}
+                {% if url %}<a href="{{ url }}" rel="noopener" target="_blank">{{ shipment.number }}</a>{% else %}<code>{{ shipment.number }}</code>{% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     {% for transaction in order.transactions %}
         {% if transaction.details.instructions is defined and transaction.details.instructions %}
             <div class="market-instructions"><b>{{ '@market.orders.instructions'|trans }}</b><br>{{ transaction.details.instructions }}</div>

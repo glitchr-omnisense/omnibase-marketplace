@@ -233,6 +233,16 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
      * shop's cart_max_quantity. A subclass selling something owned once (an
      * avatar item, a licence) returns 1.
      */
+    /**
+     * Whether the product travels by post. Physical goods do; a subclass
+     * selling something that lives online (an avatar item, in-game coins)
+     * returns false and checkout asks for no address.
+     */
+    public function isShippable(): bool
+    {
+        return true;
+    }
+
     public function getMaxQuantity(): ?int
     {
         return null;

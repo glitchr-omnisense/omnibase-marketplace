@@ -7,19 +7,41 @@
 {% block market_body %}
 <section class="market-checkout">
     <h2>{{ '@market.checkout.review'|trans }}</h2>
-    <ul class="market-summary">
-        {% for line in order.items %}
-            <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: line.currency} %}</li>
-        {% endfor %}
-        <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
-    </ul>
+    {% include '@Market/client/_totals.html.twig' with {order: order} %}
+    {% if needs_shipping and not order.shippingMethod %}<p class="market-note">{{ '@market.shipping.plus'|trans }}</p>{% endif %}
 
-    <h2>{{ '@market.checkout.pay_with'|trans }}</h2>
     {% if methods|length == 0 %}
         <p class="market-empty">{{ '@market.checkout.no_method'|trans }}</p>
     {% else %}
     <form method="post" class="market-methods">
         <input type="hidden" name="_token" value="{{ csrf_token('market_checkout_' ~ order.id) }}">
+
+        {% if needs_shipping %}
+        <h2>{{ '@market.shipping.address'|trans }}</h2>
+        <div class="market-address">
+            <label class="wide">{{ '@market.shipping.field.name'|trans }}<input type="text" name="address[name]" value="{{ address.name }}" required maxlength="128" autocomplete="name"></label>
+            <label class="wide">{{ '@market.shipping.field.street'|trans }}<input type="text" name="address[street]" value="{{ address.street }}" required maxlength="255" autocomplete="address-line1"></label>
+            <label class="wide">{{ '@market.shipping.field.additional'|trans }}<input type="text" name="address[additional]" value="{{ address.additional }}" maxlength="255" autocomplete="address-line2"></label>
+            <label>{{ '@market.shipping.field.zip'|trans }}<input type="text" name="address[zip]" value="{{ address.zip }}" required maxlength="16" autocomplete="postal-code"></label>
+            <label>{{ '@market.shipping.field.city'|trans }}<input type="text" name="address[city]" value="{{ address.city }}" required maxlength="128" autocomplete="address-level2"></label>
+            <label>{{ '@market.shipping.field.country'|trans }}<input type="text" name="address[country]" value="{{ address.country }}" required maxlength="2" autocomplete="country"></label>
+            <label>{{ '@market.shipping.field.phone'|trans }}<input type="tel" name="address[phone]" value="{{ address.phone }}" maxlength="32" autocomplete="tel"></label>
+        </div>
+
+        <h2>{{ '@market.shipping.title'|trans }}</h2>
+        {% if shipping_options|length == 0 %}
+            <p class="market-empty">{{ '@market.shipping.none'|trans }}</p>
+        {% endif %}
+        {% for option in shipping_options %}
+            <label class="market-method">
+                <input type="radio" name="shipping" value="{{ option.method.id }}" {{ (order.shippingMethod and order.shippingMethod.id == option.method.id) or (not order.shippingMethod and loop.first) ? 'checked' }} required>
+                <span class="market-method-label">{{ option.method.label }}</span>
+                <span class="market-method-extra">{% include '@Market/client/_price.html.twig' with {amount: option.charge, currency: order.currency} %}{% if option.method.deliveryTime %} · {{ '@market.shipping.days'|trans({count: option.method.deliveryTime}) }}{% endif %}</span>
+            </label>
+        {% endfor %}
+        {% endif %}
+
+        <h2>{{ '@market.checkout.pay_with'|trans }}</h2>
         {% for method in methods %}
             <label class="market-method">
                 <input type="radio" name="method" value="{{ method.id }}" {{ loop.first ? 'checked' }}>

@@ -10,6 +10,8 @@ use Base\Market\Payment\PaymentResult;
 use Base\Market\Service\Cart;
 use Base\Market\Service\CartException;
 use Base\Market\Service\Checkout;
+use Base\Market\Service\Pricing;
+use Base\Market\Service\Shipping;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,9 +33,15 @@ class CartController extends AbstractController
     }
 
     #[Route('/panier', name: 'market_cart')]
-    public function Index(): Response
+    public function Index(Pricing $pricing): Response
     {
-        return $this->render('@Market/client/cart.html.twig', ['carts' => $this->cart->all()]);
+        $carts = $this->cart->all();
+        foreach ($carts as $cart) {
+            $pricing->reprice($cart);
+        }
+        $this->entityManager->flush();
+
+        return $this->render('@Market/client/cart.html.twig', ['carts' => $carts]);
     }
 
     #[Route('/panier/ajouter/{id}', name: 'market_cart_add', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -71,7 +79,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/panier/{order}/commander', name: 'market_checkout', requirements: ['order' => '\d+'])]
-    public function Checkout(Request $request, int $order): Response
+    public function Checkout(Request $request, int $order, Pricing $pricing, Shipping $shipping): Response
     {
         $cart = $this->entityManager->getRepository(Order::class)->find($order);
         if (!$cart instanceof Order) {
@@ -95,6 +103,17 @@ class CartController extends AbstractController
                 return $this->redirectToRoute('market_checkout', ['order' => $cart->getId()]);
             }
 
+            if ($shipping->needsShipping($cart)) {
+                $error = $shipping->apply($cart, (array) $request->request->all('address'), $request->request->getInt('shipping'));
+                if ($error) {
+                    $this->addFlash('error', $this->translator->trans('@market.'.$error));
+
+                    return $this->redirectToRoute('market_checkout', ['order' => $cart->getId()]);
+                }
+            }
+            $pricing->reprice($cart);
+            $this->entityManager->flush();
+
             try {
                 $result = $this->checkout->pay($cart, $method);
             } catch (CartException $e) {
@@ -109,7 +128,16 @@ class CartController extends AbstractController
             };
         }
 
-        return $this->render('@Market/client/checkout.html.twig', ['order' => $cart, 'methods' => $methods]);
+        $pricing->reprice($cart);
+        $this->entityManager->flush();
+
+        return $this->render('@Market/client/checkout.html.twig', [
+            'order' => $cart,
+            'methods' => $methods,
+            'needs_shipping' => $shipping->needsShipping($cart),
+            'shipping_options' => $shipping->optionsFor($cart),
+            'address' => $shipping->addressOf($cart),
+        ]);
     }
 
     private function done(Order $order, PaymentResult $result): Response
