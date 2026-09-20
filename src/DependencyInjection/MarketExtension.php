@@ -43,6 +43,40 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
         }
         $container->prependExtensionConfig('doctrine', ['dbal' => ['types' => $types]]);
         $container->prependExtensionConfig('base', ['attributes' => ['paths' => [\dirname(__DIR__) . '/Attribute']]]);
+
+        // Doctrine's auto_mapping maps exactly <bundle>/src/Entity, so the
+        // Shopify subtree's own entity is invisible to it. Declared here and
+        // only when the integration is switched on: a host that does not use
+        // Shopify gets no extra table, not even an empty one.
+        if ($this->shopifyEnabled($container)) {
+            $container->prependExtensionConfig('doctrine', ['orm' => ['mappings' => ['MarketShopify' => [
+                'is_bundle' => false,
+                'type' => 'attribute',
+                'dir' => \dirname(__DIR__) . '/Shopify/Entity',
+                'prefix' => 'Base\\Market\\Shopify\\Entity',
+                'alias' => 'MarketShopify',
+            ]]]]);
+        }
+    }
+
+    /**
+     * Whether market.shopify.enabled is a literal true somewhere in the raw,
+     * unprocessed configuration.
+     *
+     * Raw on purpose: prepend() runs before processing, and reading the value
+     * as written is what keeps this honest. An env placeholder is still the
+     * string "%env(...)%" at this point, so only a real boolean matches - see
+     * the note on the node in MarketConfiguration.
+     */
+    private function shopifyEnabled(ContainerBuilder $container): bool
+    {
+        foreach ($container->getExtensionConfig('market') as $config) {
+            if (true === ($config['shopify']['enabled'] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function load(array $configs, ContainerBuilder $container): void
@@ -61,5 +95,20 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
 
         // market.default_currency, market.gateways, market.gateways.<slug>...
         $this->setConfiguration($container, $config, $configuration->getTreeBuilder()->buildTree()->getName());
+
+        // The optional Shopify integration, in its own file so that nothing
+        // about the container above changes when it is off. It must be loaded
+        // here rather than from services.php, which is read before the
+        // configuration exists and can therefore never see a setting.
+        //
+        // The transport check is the same kind of guard as the omnipay/stripe
+        // one in services.php: symfony/http-client is the host's dependency,
+        // not this bundle's. Both names are checked because the contracts
+        // package arrives transitively far more often than the implementation.
+        if (true === ($config['shopify']['enabled'] ?? false)
+            && interface_exists(\Symfony\Contracts\HttpClient\HttpClientInterface::class)
+            && class_exists(\Symfony\Component\HttpClient\HttpClient::class)) {
+            $loader->load('shopify.php');
+        }
     }
 }

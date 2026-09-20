@@ -1,0 +1,58 @@
+# The Shopify demo, with credentials from a .env file beside this one:
+#
+#   SHOPIFY_ENABLED=1
+#   SHOPIFY_SHOP_DOMAIN=your-dev-store.myshopify.com
+#   SHOPIFY_ADMIN_TOKEN=shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#   SHOPIFY_WEBHOOK_SECRET=shpss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#
+#   docker compose -f docker-compose.shopify.yml up --build
+#   -> http://localhost:8000/
+#
+# Webhooks need a public https URL. Run a tunnel at the host and point the
+# subscriptions at it:
+#
+#   cloudflared tunnel --url http://localhost:8000
+#   docker compose -f docker-compose.shopify.yml exec demo \
+#     php bin/console market:shopify:webhooks --install --callback=https://<tunnel>/market/shopify/webhook
+#
+# Without a tunnel the checkout still settles: market:shopify:orders:reconcile
+# polls Shopify for draft orders that were paid. That is what the `reconciler`
+# service below runs, and it is why this works on a laptop at all.
+
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.shopify
+    ports:
+      - "8000:8000"
+    environment:
+      SHOPIFY_ENABLED: "${SHOPIFY_ENABLED:-}"
+      SHOPIFY_SHOP_DOMAIN: "${SHOPIFY_SHOP_DOMAIN:-}"
+      SHOPIFY_ADMIN_TOKEN: "${SHOPIFY_ADMIN_TOKEN:-}"
+      SHOPIFY_WEBHOOK_SECRET: "${SHOPIFY_WEBHOOK_SECRET:-}"
+      SHOPIFY_API_VERSION: "${SHOPIFY_API_VERSION:-2026-07}"
+
+  # The safety net, on the schedule a crontab would use in production. A
+  # Shopify invoice checkout never redirects back, so without either a webhook
+  # or this, a paid order would sit as PENDING for ever.
+  reconciler:
+    build:
+      context: .
+      dockerfile: Dockerfile.shopify
+    depends_on:
+      - demo
+    environment:
+      SHOPIFY_ENABLED: "${SHOPIFY_ENABLED:-}"
+      SHOPIFY_SHOP_DOMAIN: "${SHOPIFY_SHOP_DOMAIN:-}"
+      SHOPIFY_ADMIN_TOKEN: "${SHOPIFY_ADMIN_TOKEN:-}"
+      SHOPIFY_WEBHOOK_SECRET: "${SHOPIFY_WEBHOOK_SECRET:-}"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        sed -i 's/^        enabled: false$/        enabled: true/' config/packages/market.yaml
+        while true; do
+          php bin/console market:shopify:orders:reconcile --minutes=1 || true
+          sleep 600
+        done
+    profiles: ["reconcile"]

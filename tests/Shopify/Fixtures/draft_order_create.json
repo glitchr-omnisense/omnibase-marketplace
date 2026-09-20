@@ -1,0 +1,21 @@
+{
+  "data": {
+    "draftOrderCreate": {
+      "draftOrder": {
+        "id": "gid://shopify/DraftOrder/990011",
+        "name": "#D12",
+        "invoiceUrl": "https://example.myshopify.com/12345/invoices/abc123def456",
+        "status": "OPEN",
+        "totalPrice": "27.00"
+      },
+      "userErrors": []
+    }
+  },
+  "extensions": {
+    "cost": {
+      "requestedQueryCost": 10,
+      "actualQueryCost": 10,
+      "throttleStatus": { "maximumAvailable": 1000.0, "currentlyAvailable": 990.0, "restoreRate": 50.0 }
+    }
+  }
+}

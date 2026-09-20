@@ -47,6 +47,10 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Payment/PaymentResult.php',
             // Card payment needs omnipay/stripe; without it the gateway is left out.
             ...(class_exists('Omnipay\\Stripe\\CheckoutGateway') ? [] : [$src . '/Payment/StripeGateway.php']),
+            // The Shopify subtree is wired by config/shopify.php, loaded only
+            // when market.shopify.enabled is true. This load() is recursive
+            // over src/, so without this line the subtree is never dormant.
+            $src . '/Shopify/',
             $src . '/MarketBundle.php',
         ]);
 

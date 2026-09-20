@@ -104,3 +104,10 @@ shipping:
     method: "Choisis un mode de livraison."
     tracking: "Il faut le numéro de suivi."
     state: "Cette commande n'est pas prête à partir."
+shopify:
+  pay: "Payer sur Shopify"
+  redirect: "Vous allez etre redirige vers Shopify pour payer."
+  check: "J'ai paye - verifier maintenant"
+  pending: "Votre paiement pour {reference} ne nous est pas encore parvenu. Shopify le traite peut-etre encore : reessayez dans un instant."
+  cancelled: "Le paiement Shopify a ete annule."
+  unavailable: "Shopify n'a pas pu prendre ce paiement pour le moment. {reason}"

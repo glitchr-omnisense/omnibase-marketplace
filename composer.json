@@ -9,7 +9,8 @@
         "shop",
         "product",
         "order",
-        "cart"
+        "cart",
+        "shopify"
     ],
     "homepage": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/marketplace",
     "license": "LGPL-3.0-or-later",
@@ -72,7 +73,10 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.6",
+        "symfony/console": "^6.0|^7.0|^8.0",
         "symfony/framework-bundle": "^6.0|^7.0|^8.0",
+        "symfony/http-client": "^6.0|^7.0|^8.0",
+        "symfony/messenger": "^6.0|^7.0|^8.0",
         "symfony/twig-bundle": "^6.0|^7.0|^8.0",
         "symfony/var-dumper": "^6.0|^7.0|^8.0"
     },

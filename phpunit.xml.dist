@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- bootstrap="tests/bootstrap.php" rather than vendor/autoload.php: installed
+     inside a host application, that application's autoloader never picks up
+     this bundle's autoload-dev, so the bootstrap registers the test namespace
+     itself - the same dual-runner pattern as base-bundle and base-bundle-forum. -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" beStrictAboutOutputDuringTests="true" bootstrap="tests/bootstrap.php">
+  <testsuites>
+    <testsuite name="unit">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <coverage>
+    <include>
+      <directory>src</directory>
+    </include>
+  </coverage>
+</phpunit>

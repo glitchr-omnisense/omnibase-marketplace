@@ -147,6 +147,65 @@ Create a payment method with the slug `stripe` and the gateway `stripe`. While `
 
 A cancelled or expired payment puts the order back in the cart. A gateway error does the same, and the member sees why.
 
+## Shopify (optional)
+
+An existing Shopify shop can be plugged in as a catalogue, as a checkout, as a fulfilment desk, or as all three. It is **off unless you ask for it**: `src/Shopify/` is excluded from the container, its entity is not mapped, and no dependency is added — an application that does not set `market.shopify` gets exactly the bundle it had before.
+
+```bash
+composer require symfony/http-client   # required; symfony/messenger for the order push
+```
+
+```yaml
+# config/packages/market.yaml
+market:
+    shopify:
+        enabled: true                                   # a literal true — see the note below
+        shop_domain: '%env(default::SHOPIFY_SHOP_DOMAIN)%'
+        api_version: '2026-07'
+        admin_token: '%env(default::SHOPIFY_ADMIN_TOKEN)%'
+        webhook_secret: '%env(default::SHOPIFY_WEBHOOK_SECRET)%'
+
+        catalogue:                      # role 1: products and stock come from Shopify
+            enabled: true
+            store: boutique             # the Store slug they attach to
+        checkout:                       # role 2: the member pays on Shopify
+            enabled: true
+        export:                         # role 3: paid orders go to Shopify to be shipped
+            enabled: false
+```
+
+`enabled` must be a literal boolean, never an env placeholder. The extension branches on it while compiling the container, where `%env(...)%` is still an unresolved string — so an env var there would read as "on" for every host that merely declared it. Secrets stay env vars as usual; an unset one resolves to an empty string and every consumer treats that as "not configured" and declines quietly.
+
+In the Shopify admin, create a **custom app** (Settings → Apps → Develop apps) with the narrowest scopes for the roles you turned on — `read_products` and `read_inventory` for the catalogue, `write_draft_orders` and `read_orders` for the checkout, `write_orders` for the push. Do not grant `write_products`: the sync is one way. Copy the Admin API access token and the app's API secret key into your env.
+
+```bash
+bin/console market:shopify:ping                              # domain, token and version, in one call
+bin/console market:shopify:catalogue:sync --dry-run --limit=5 # read-only: prints what would change
+bin/console market:shopify:catalogue:sync                     # then for real
+bin/console market:shopify:webhooks --install                 # subscribe to the seven topics
+bin/console market:shopify:orders:reconcile                   # cron, every 10 minutes
+```
+
+**The catalogue** is read one way, Shopify → shop, one row per variant. Only the fields under `catalogue.owned_fields` are ever written, so taxa, channels, owners and anything your own `Product` subclass adds survive untouched. A product whose owned fields have not moved is skipped without a write, which keeps `updatedAt` — and every cache keyed on it — still. Tag a product `shopify-unmanaged` in the admin to pin it and have the sync leave it alone entirely. Nothing is ever deleted: a product that goes away in Shopify is marked `DISCONTINUED`, because `Product` is the inverse side of `OrderItem` and deleting one would tear a hole in order history.
+
+**The checkout** creates a Shopify draft order and sends the member to its invoice page. Draft orders rather than a Storefront cart because their line items take *your* prices: `Pricing` has just applied promotions, coupons, fees, shipping and VAT, and a Storefront cart would throw all that away and recompute. It also means the checkout works before any catalogue sync — a custom line item needs no variant id.
+
+Note there is **no return leg**: a Shopify invoice checkout ends on Shopify's own thank-you page and never comes back. The `orders/paid` webhook is the real confirmation; `market_shopify_check` ("I have paid — check now") lets an impatient member poll from their pending order, and `market:shopify:orders:reconcile` sweeps up anything a lost webhook left behind. That last one is also what makes the whole thing usable with no webhooks at all, which is what local development needs.
+
+**The order push** listens to `OrderPaidEvent` and goes through Messenger rather than calling Shopify inline — `Checkout::confirm()` runs inside somebody else's webhook, and a failed synchronous call there would be retried by the payment provider, hit `confirm()`'s idempotency guard, and be lost silently. Route it and run a worker:
+
+```yaml
+# config/packages/messenger.yaml
+framework:
+    messenger:
+        routing:
+            Base\Market\Shopify\Export\PushOrderMessage: async
+```
+
+Orders Shopify created itself are never pushed back, and neither are orders made entirely of things that do not ship (`export.only_shippable`). Writing customer emails and addresses needs Shopify's **protected customer data** approval — a review with a lead time, so apply for it before you need it.
+
+**Webhooks** are verified with `X-Shopify-Hmac-Sha256` (base64 of the raw digest, unlike Stripe's hex, and with no timestamp — so there is no freshness window and replay defence is the delivery id plus the fact that every action is idempotent). The shop domain is checked too. An unrecognised topic answers 200: Shopify deletes a subscription after eight hours of continuous failure.
+
 ## Extend
 
 **Sell your own things.** Subclass `Product` in your app, with a `#[DiscriminatorEntry]` value of its own. Override `getMaxQuantity()` to return 1 for things that are owned once, such as an avatar item or a licence.

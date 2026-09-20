@@ -104,3 +104,10 @@ shipping:
     method: "Pick a shipping method."
     tracking: "The tracking number is required."
     state: "This order is not ready to leave."
+shopify:
+  pay: "Pay on Shopify"
+  redirect: "You are being taken to Shopify to pay."
+  check: "I have paid - check now"
+  pending: "Your payment for {reference} has not reached us yet. Shopify may still be processing it; check again in a moment."
+  cancelled: "The Shopify payment was cancelled."
+  unavailable: "Shopify could not take this payment right now. {reason}"

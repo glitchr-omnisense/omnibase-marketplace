@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+#
+# The bundle's test suite, with nothing else in the picture: no database, no
+# Shopify, no network at test time. Every test here is a unit test - the
+# mappers are pure functions, the transport runs on MockHttpClient, and the
+# dormancy tests build a ContainerBuilder by hand.
+#
+#   docker build -f Dockerfile.test -t base-bundle-market-tests .
+#   docker run --rm base-bundle-market-tests
+#
+# A single test or group:
+#   docker run --rm base-bundle-market-tests vendor/bin/phpunit --filter DormancyTest
+#
+# The first tests to care about are in tests/DependencyInjection/DormancyTest:
+# they are the contract that this bundle is unchanged when Shopify is off.
+
+FROM php:8.4-cli
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git unzip libicu-dev libzip-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install -j"$(nproc)" intl zip bcmath
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+WORKDIR /srv/bundle
+COPY . /srv/bundle
+
+# require-dev carries symfony/http-client and symfony/messenger: the Shopify
+# subtree needs them to be TESTED, while the bundle itself must still install
+# without them. That is the whole shape of the integration in one line of
+# composer.json.
+RUN composer install --no-interaction --no-progress --prefer-dist
+
+CMD ["vendor/bin/phpunit", "--colors=never"]
