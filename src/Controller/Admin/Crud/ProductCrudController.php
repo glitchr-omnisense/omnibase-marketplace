@@ -4,7 +4,7 @@ namespace Base\Market\Controller\Admin\Crud;
 
 use Base\Admin\Controller\AbstractCrudController;
 use Base\Admin\Filter\Filters;
-use Base\Field\AssociationField;
+use Base\Field\SelectField;
 use Base\Field\CurrencyField;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
@@ -39,7 +39,9 @@ class ProductCrudController extends AbstractCrudController
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('title')->setColumns(6);
         yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield AssociationField::new('parent', 'Store')->setColumns(6);
+        // The store it is sold in, chosen from the list: AssociationField would embed the store's own
+        // fields in the product's form, down to properties nothing can read (Thread::$ownerPositions).
+        yield SelectField::new('parent', 'Store')->setColumns(6);
         yield IntegerField::new('unitPrice')->setColumns(3);
         yield CurrencyField::new('currency')->setColumns(3);
         yield IntegerField::new('stock')->setColumns(3);
