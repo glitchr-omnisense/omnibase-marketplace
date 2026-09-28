@@ -78,14 +78,17 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
         return $this->regions->filter(fn ($p) => $p instanceof Region);
     }
 
+    // $regions is an alias of the tags (a Region is a Tag): add and remove
+    // them there. (It went through addChild(), the threads - a Region is no
+    // Thread, so a store could not be given a region.)
     public function addRegion(Region $region): self
     {
-        return $this->addChild($region);
+        return $this->addTag($region);
     }
 
     public function removeRegion(Region $region): self
     {
-        return $this->removeChild($region);
+        return $this->removeTag($region);
     }
 
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'store')]

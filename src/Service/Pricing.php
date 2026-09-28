@@ -7,6 +7,7 @@ use Base\Market\Entity\Order\OrderItem;
 use Base\Market\Entity\Sales\Discount;
 use Base\Market\Entity\Sales\Discount\Coupon;
 use Base\Market\Entity\Sales\Discount\Promotion;
+use Base\Market\Entity\Sales\Tax\Vat;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -74,6 +75,36 @@ final class Pricing
         }
 
         $order->setDiscountCharge(min($orderCut, $order->getSalePrice()));
+
+        // VAT on each line's sale price (after its discounts): the first VAT
+        // whose scopes hold the product or the order's region. The order's
+        // net price adds it (Order::getVatCharge()); it was never set.
+        $vats = $this->entityManager->getRepository(Vat::class)->findAll();
+        foreach ($order->getItems() as $item) {
+            $rate = $this->vatRate($vats, $item->getProduct(), $order->getRegion());
+            $item->setVatCharge((int) round($item->getSalePrice() * $rate));
+        }
+    }
+
+    /** @param Vat[] $vats */
+    private function vatRate(array $vats, ?object $product, ?object $region): float
+    {
+        foreach ($vats as $vat) {
+            if (!$vat->getRate()) {
+                continue;
+            }
+            foreach ($vat->getScopes() as $scope) {
+                try {
+                    if (($product && $scope->contains($product)) || ($region && $scope->contains($region))) {
+                        return (float) $vat->getRate();
+                    }
+                } catch (\Throwable) {
+                    // A scope that cannot judge this subject does not hold it.
+                }
+            }
+        }
+
+        return 0.0;
     }
 
     /**
