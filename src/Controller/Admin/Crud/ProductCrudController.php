@@ -12,6 +12,8 @@ use Base\Field\SlugField;
 use Base\Field\TextareaField;
 use Base\Field\TextField;
 use Base\Market\Entity\Product;
+use Base\Market\Entity\Product\Feature;
+use Base\Market\Entity\Sales\Channel;
 
 /**
  * Admin CRUD for the products. Prices are integers in the currency's
@@ -45,6 +47,10 @@ class ProductCrudController extends AbstractCrudController
         yield IntegerField::new('unitPrice')->setColumns(3);
         yield CurrencyField::new('currency')->setColumns(3);
         yield IntegerField::new('stock')->setColumns(3);
+        yield SelectField::new('availability')->setColumns(3)->hideOnIndex();
+        yield SelectField::new('channels')->setClass(Channel::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        // features are the thread's tags (Product::$features aliases the column)
+        yield SelectField::new('tags', 'Features')->setClass(Feature::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         yield TextField::new('headline')->hideOnIndex();
         yield TextareaField::new('excerpt')->hideOnIndex();
         yield TextareaField::new('content')->hideOnIndex();
