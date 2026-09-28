@@ -5,8 +5,8 @@ namespace Base\Market\Payment;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
+use Base\Market\Payment\Stripe\CheckoutGateway;
 use Omnipay\Omnipay;
-use Omnipay\Stripe\CheckoutGateway;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
@@ -21,6 +21,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  *   api_key         the secret key (sk_live_... / sk_test_...)
  *   webhook_secret  the signing secret of the webhook endpoint (whsec_...)
  *   currencies      optional, the currencies the method takes
+ *   adaptive_pricing  optional, true to let Stripe offer the buyer's own
+ *                   currency (Adaptive Pricing); off, the order's currency only
+ *
+ * The buyer's email is filled in on Stripe's page.
  */
 final class StripeGateway implements PaymentGatewayInterface
 {
@@ -57,6 +61,8 @@ final class StripeGateway implements PaymentGatewayInterface
         $data = $this->gateway($method)->purchase([
             'mode' => 'payment',
             'line_items' => $lines,
+            'customerEmail' => $order->getCustomer()?->getEmail(),
+            'adaptivePricing' => (bool) ($method->getGatewayParameters()['adaptive_pricing'] ?? false),
             // Stripe fills {CHECKOUT_SESSION_ID} in; the braces must survive URL encoding.
             'success_url' => str_replace('SESSION_ID_PLACEHOLDER', '{CHECKOUT_SESSION_ID}', $return(['session' => 'SESSION_ID_PLACEHOLDER'])),
             'cancel_url' => $return(['cancel' => 1]),
@@ -117,7 +123,7 @@ final class StripeGateway implements PaymentGatewayInterface
     private function gateway(PaymentMethod $method): CheckoutGateway
     {
         /** @var CheckoutGateway $gateway */
-        $gateway = Omnipay::create('Stripe\Checkout');
+        $gateway = Omnipay::create('\\'.CheckoutGateway::class);
         $gateway->setApiKey($this->apiKey($method));
 
         return $gateway;
