@@ -451,11 +451,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     /**
-     * @param $availability
      * @return $this
      */
     /**
-     * @param $availability
      * @return $this
      */
     public function setAvailability($availability): self
@@ -783,11 +781,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     /**
-     * @param $imageMarketplaces
      * @return $this
      */
     /**
-     * @param $imageMarketplaces
      * @return $this
      */
     public function setImageMarketplaces($imageMarketplaces)

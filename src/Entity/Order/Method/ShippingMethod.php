@@ -225,11 +225,9 @@ class ShippingMethod implements IconizeInterface
     }
 
     /**
-     * @param $thumbnail
      * @return $this
      */
     /**
-     * @param $thumbnail
      * @return $this
      */
     public function setThumbnail($thumbnail)
@@ -251,11 +249,9 @@ class ShippingMethod implements IconizeInterface
     }
 
     /**
-     * @param $typeRate
      * @return $this
      */
     /**
-     * @param $typeRate
      * @return $this
      */
     public function setTypeRate($typeRate): self

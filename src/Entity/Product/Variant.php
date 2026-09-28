@@ -58,7 +58,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
 
     /**
      * @param int|null $i
-     * @param $inheritIfNotSet
      * @return Image|null
      */
     public function getImage(?int $i = null, $inheritIfNotSet = !Product::INHERITS_FROM): ?Image
@@ -69,7 +68,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     /**
      * @param string $slug
      * @param int|null $i
-     * @param $inheritIfNotSet
      * @return ImageCrop|null
      */
     public function getImageCrop(string $slug, ?int $i = null, $inheritIfNotSet = !Product::INHERITS_FROM): ?ImageCrop
@@ -78,7 +76,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return Collection
      */
     public function getImages($inheritIfNotSet = !Product::INHERITS_FROM): Collection
@@ -87,7 +84,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return array|mixed|File
      */
     public function getImageMarketplaces($inheritIfNotSet = !Product::INHERITS_FROM)
@@ -135,7 +131,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return Collection
      */
     public function getTaxa($inheritIfNotSet = Product::INHERITS_FROM): Collection
@@ -144,7 +139,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return Collection
      */
     public function getTags($inheritIfNotSet = Product::INHERITS_FROM): Collection
@@ -154,7 +148,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
 
     /**
      * @param int $i
-     * @param $inheritIfNotSet
      * @return mixed|null
      */
     public function getOwner(int $i = 0, $inheritIfNotSet = Product::INHERITS_FROM)
@@ -171,7 +164,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return Collection
      */
     public function getOwners($inheritIfNotSet = Product::INHERITS_FROM): Collection
@@ -181,7 +173,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
 
     /**
      * @param int $i
-     * @param $inheritIfNotSet
      * @return mixed|null
      */
     public function getAuthor(int $i = 0, $inheritIfNotSet = Product::INHERITS_FROM)
@@ -190,7 +181,6 @@ class Variant extends Product implements \Base\Database\Entity\Extension\Transla
     }
 
     /**
-     * @param $inheritIfNotSet
      * @return Collection
      */
     public function getAuthors($inheritIfNotSet = Product::INHERITS_FROM): Collection

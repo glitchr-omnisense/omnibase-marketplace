@@ -129,11 +129,9 @@ class Transaction implements IconizeInterface
     }
 
     /**
-     * @param $state
      * @return $this
      */
     /**
-     * @param $state
      * @return $this
      */
     public function setState($state): self

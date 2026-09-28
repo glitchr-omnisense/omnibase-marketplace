@@ -69,7 +69,6 @@ class Identifier
     }
 
     /**
-     * @param $std
      * @return Barcode|null
      */
     public function getBarcode($std): ?Barcode

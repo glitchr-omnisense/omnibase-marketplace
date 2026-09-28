@@ -104,11 +104,9 @@ class TotalPriceAdapter extends AbstractRuleAdapter
     }
 
     /**
-     * @param $operation
      * @return $this
      */
     /**
-     * @param $operation
      * @return $this
      */
     public function setOperation($operation)

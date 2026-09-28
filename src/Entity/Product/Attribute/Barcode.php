@@ -74,11 +74,9 @@ class Barcode extends AbstractAttribute
     }
 
     /**
-     * @param $value
      * @return $this
      */
     /**
-     * @param $value
      * @return $this
      */
     public function setValue($value)

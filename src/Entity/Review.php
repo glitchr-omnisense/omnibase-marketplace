@@ -86,7 +86,6 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
 
     /**
      * @param User|null $reviewer
-     * @param $rating
      * @param array $pictures
      */
     public function __construct(?User $reviewer = null, $rating = 1.0, array $pictures = [])

@@ -121,11 +121,9 @@ class PaymentMethod implements IconizeInterface
     }
 
     /**
-     * @param $thumbnail
      * @return $this
      */
     /**
-     * @param $thumbnail
      * @return $this
      */
     public function setThumbnail($thumbnail)

@@ -73,11 +73,9 @@ class Feature extends Tag implements IconizeInterface
     }
 
     /**
-     * @param $image
      * @return $this
      */
     /**
-     * @param $image
      * @return $this
      */
     public function setImage($image): self

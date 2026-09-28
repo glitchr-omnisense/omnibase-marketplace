@@ -47,11 +47,9 @@ class BarcodeAdapter extends AbstractAdapter implements IconizeInterface
     }
 
     /**
-     * @param $standard
      * @return $this
      */
     /**
-     * @param $standard
      * @return $this
      */
     public function setStandard($standard): self
