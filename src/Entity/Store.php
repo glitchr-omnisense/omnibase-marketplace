@@ -224,7 +224,8 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
     }
 
     #[ORM\Column(type: 'boolean')]
-    protected $open;
+    // Open unless closed: Cart::add() only refuses a store explicitly closed.
+    protected $open = true;
 
     public function isOpen(): ?bool
     {

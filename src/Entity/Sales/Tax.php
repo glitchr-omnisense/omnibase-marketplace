@@ -78,22 +78,23 @@ class Tax implements IconizeInterface
         return $this->scopes;
     }
 
-    public function addScope(FeeScope $scope): self
+    /** (It took a FeeScope and set its fee: copied from Fee, a VAT could not be scoped.) */
+    public function addScope(TaxScope $scope): self
     {
         if (!$this->scopes->contains($scope)) {
             $this->scopes[] = $scope;
-            $scope->setFee($this);
+            $scope->setTax($this);
         }
 
         return $this;
     }
 
-    public function removeScope(FeeScope $scope): self
+    public function removeScope(TaxScope $scope): self
     {
         if ($this->scopes->removeElement($scope)) {
             // set the owning side to null (unless already changed)
-            if ($scope->getFee() === $this) {
-                $scope->setFee(null);
+            if ($scope->getTax() === $this) {
+                $scope->setTax(null);
             }
         }
 

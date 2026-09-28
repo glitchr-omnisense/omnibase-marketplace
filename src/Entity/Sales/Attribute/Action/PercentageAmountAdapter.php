@@ -52,7 +52,7 @@ class PercentageAmountAdapter extends AbstractActionAdapter
     }
 
     #[ORM\Column(type: 'boolean')]
-    protected $appliesToItems;
+    protected $appliesToItems = false;
 
     public function appliesToItems(): ?bool
     {
