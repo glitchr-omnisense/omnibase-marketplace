@@ -93,7 +93,7 @@ class ShopifyController extends AbstractController
         $order = $this->entityManager->getRepository(Order::class)->find($order);
         $transaction = $order ? $this->pending($order) : null;
 
-        if (!$this->reconciler || !$order || !$transaction || $order->getCustomer() !== $this->getUser()) {
+        if (!$this->reconciler || !$order || !$transaction || !$order->isCustomer($this->getUser())) {
             return $this->redirectToRoute('market_cart');
         }
 

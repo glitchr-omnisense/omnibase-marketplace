@@ -122,7 +122,7 @@ final class Pricing
         if (in_array($coupon, $order->getCoupons(), true)) {
             throw new CartException('coupon.error.already', ['{code}' => $code]);
         }
-        if ($coupon->getOwner() && $coupon->getOwner() !== $customer) {
+        if ($coupon->getOwner() && $coupon->getOwner()->getId() !== $customer?->getId()) {
             throw new CartException('coupon.error.not_yours', ['{code}' => $code]);
         }
         if (!$this->isRunning($coupon, new \DateTimeImmutable())) {
@@ -133,7 +133,7 @@ final class Pricing
             throw new CartException('coupon.error.quota', ['{code}' => $code]);
         }
         if (null !== $coupon->getQuotaPerCustomer() && $customer
-            && count(array_filter($paid, fn (Order $o) => $o->getCustomer() === $customer)) >= $coupon->getQuotaPerCustomer()) {
+            && count(array_filter($paid, fn (Order $o) => $o->isCustomer($customer))) >= $coupon->getQuotaPerCustomer()) {
             throw new CartException('coupon.error.quota', ['{code}' => $code]);
         }
         if (!$this->holds($coupon, $order)) {

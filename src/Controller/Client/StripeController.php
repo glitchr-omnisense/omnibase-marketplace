@@ -35,7 +35,7 @@ class StripeController extends AbstractController
     {
         $order = $this->entityManager->getRepository(Order::class)->find($order);
         $transaction = $order ? $this->pending($order) : null;
-        if (!$this->stripe || !$order || !$transaction || $order->getCustomer() !== $this->getUser()) {
+        if (!$this->stripe || !$order || !$transaction || !$order->isCustomer($this->getUser())) {
             return $this->redirectToRoute('market_cart');
         }
 

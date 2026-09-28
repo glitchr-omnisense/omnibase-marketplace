@@ -77,7 +77,9 @@
 /* cart, orders */
 .market-cart { margin-bottom: 1.5rem; }
 .market-cart h2, .market-checkout h2, .market-order h2 { font-size: 17px; margin: 0 0 .6rem; color: var(--market-primary); }
-.market-lines { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--market-line); border-radius: var(--market-radius); overflow: hidden; display: block; overflow-x: auto; }
+.market-lines { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid var(--market-line); border-radius: var(--market-radius); overflow: hidden; }
+/* A table only scrolls sideways as a block, and a block table no longer spans its box: narrow screens only. */
+@media (max-width: 640px) { .market-lines { display: block; overflow-x: auto; } }
 .market-lines th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #fff; background: var(--market-primary); padding: .5rem .75rem; }
 .market-lines td { padding: .55rem .75rem; border-top: 1px solid var(--market-line); vertical-align: middle; }
 .market-lines tbody tr:nth-child(even) td { background: var(--market-pale); }
@@ -98,9 +100,9 @@
 .market-method-label { font-weight: bold; }
 
 .market-state { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: 11px; font-weight: bold; background: var(--market-panel); color: var(--market-primary); vertical-align: middle; }
-.market-state-confirmed, .market-state-completed, .market-state-delivered, .market-state-shipped { background: #e1f3dc; color: var(--market-ok); }
-.market-state-pending { background: #fdebd9; color: var(--market-warn); }
-.market-state-cancelled, .market-state-refunded { background: #f6dede; color: var(--market-danger); }
+.market-state-order_confirm, .market-state-order_confirm_partial, .market-state-order_shipped, .market-state-order_complete, .market-state-order_complete_review, .market-state-order_return_received { background: #e1f3dc; color: var(--market-ok); }
+.market-state-order_pending, .market-state-order_processing, .market-state-order_delayed, .market-state-order_returning { background: #fdebd9; color: var(--market-warn); }
+.market-state-order_cancel, .market-state-order_cart_abandon, .market-state-order_refund, .market-state-order_return_partial { background: #f6dede; color: var(--market-danger); }
 .market-order-meta { color: var(--market-muted); margin: 0 0 1rem; }
 .market-instructions { padding: .8rem 1rem; border-radius: var(--market-radius); background: #fdebd9; }
 

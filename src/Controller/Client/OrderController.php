@@ -42,7 +42,7 @@ class OrderController extends AbstractController
     public function Show(string $reference): Response
     {
         $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]);
-        if (!$order instanceof Order || ($order->getCustomer() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN'))) {
+        if (!$order instanceof Order || (!$order->isCustomer($this->getUser()) && !$this->isGranted('ROLE_ADMIN'))) {
             throw $this->createNotFoundException('Unknown order.');
         }
 

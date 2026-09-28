@@ -144,7 +144,7 @@ class Cart
     /** @throws CartException */
     public function assertMine(Order $order): void
     {
-        if ($order->getCustomer() !== $this->customer() || OrderState::CART !== $order->getState()) {
+        if (!$order->isCustomer($this->customer()) || OrderState::CART !== $order->getState()) {
             throw new CartException('cart.error.not_yours');
         }
     }

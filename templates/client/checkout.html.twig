@@ -13,7 +13,8 @@
     {% if methods|length == 0 %}
         <p class="market-empty">{{ '@market.checkout.no_method'|trans }}</p>
     {% else %}
-    <form method="post" class="market-methods">
+    {# "reload": a real submission, which a page-swapping script (Transparent) leaves alone - the answer can be a redirect to the payment provider's own site, which a script cannot follow. #}
+    <form method="post" class="market-methods reload">
         <input type="hidden" name="_token" value="{{ csrf_token('market_checkout_' ~ order.id) }}">
 
         {% if needs_shipping %}

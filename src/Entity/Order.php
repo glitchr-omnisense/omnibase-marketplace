@@ -159,6 +159,16 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->customer;
     }
 
+    /**
+     * Whether $user is this order's customer. Compared by id, never by
+     * instance: the order and the logged-in member can come out of the
+     * second-level cache as two objects for the same row.
+     */
+    public function isCustomer(mixed $user): bool
+    {
+        return $user instanceof User && null !== $user->getId() && $user->getId() === $this->customer?->getId();
+    }
+
     public function setCustomer(?User $customer): self
     {
         $this->customer = $customer;

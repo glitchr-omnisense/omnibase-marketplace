@@ -49,6 +49,20 @@ class Checkout
     public function pay(Order $order, PaymentMethod $method): PaymentResult
     {
         $this->cart->assertMine($order);
+
+        return $this->settle($order, $method);
+    }
+
+    /**
+     * pay() without asking who is logged in: for a payment the application
+     * makes on the customer's behalf, where nobody is - a purchase that a
+     * webhook completes, say. The caller vouches that the order is the
+     * customer's own and still a cart.
+     *
+     * @throws CartException
+     */
+    public function settle(Order $order, PaymentMethod $method): PaymentResult
+    {
         $this->assertBuyable($order);
 
         $gateway = $this->gateways->for($method);

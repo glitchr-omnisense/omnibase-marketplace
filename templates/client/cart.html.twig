@@ -8,7 +8,7 @@
     <p class="market-empty">{{ '@market.cart.empty'|trans }} <a href="{{ path('market_stores') }}">{{ '@market.stores.title'|trans }}</a></p>
 {% endif %}
 {% for cart in carts %}
-<section class="market-cart">
+<section class="market-cart market-cart-{{ cart.store.slug }}">
     <h2><a href="{{ path('market_store', {slug: cart.store.slug}) }}">{{ cart.store.title }}</a></h2>
     <table class="market-lines">
         <thead><tr><th>{{ '@market.cart.product'|trans }}</th><th class="num">{{ '@market.cart.unit'|trans }}</th><th class="num">{{ '@market.cart.quantity'|trans }}</th><th class="num">{{ '@market.cart.total'|trans }}</th><th></th></tr></thead>
