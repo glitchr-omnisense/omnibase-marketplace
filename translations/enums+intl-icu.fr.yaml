@@ -1,0 +1,167 @@
+# Labels of the market's enums (Base\Market\Enum\*), singular and plural.
+product_availability:
+  aval_backorder:
+    _singular: "réapprovisionnement"
+    _plural: "réapprovisionnements"
+  aval_discontinued:
+    _singular: "indisponible"
+    _plural: "indisponibles"
+  aval_instock:
+    _singular: "disponible"
+    _plural: "disponibles"
+  aval_instore_only:
+    _singular: "magasin uniquement"
+    _plural: "magasins uniquement"
+  aval_limited :
+    _singular: "quantité limitée"
+    _plural: "quantités limitées"
+  aval_online_only :
+    _singular: "exclusivité web"
+    _plural: "exclusivité web"
+  aval_out_of_stock:
+    _singular: "rupture de stock"
+    _plural: "rupture de stock"
+  aval_preorder:
+    _singular: "pré-commande"
+    _plural: "pré-commandes"
+  aval_presale :
+    _singular: "pré-vente"
+    _plural: "pré-ventes"
+  aval_soldout :
+    _singular: "solde"
+    _plural: "soldes"
+
+payment_state:
+  payment_awaiting:
+    _singular: paiement en attente
+    _plural: paiements en attente
+  payment_cancel:
+    _singular: annulé
+    _plural: annulé
+  payment_authorize_partial:
+    _singular: partiellement autorisé
+    _plural: partiellement autorisé
+  payment_authorize:
+    _singular: autorisé
+    _plural: autorisé
+  payment_paid_partial:
+    _singular: partiellement payé
+    _plural: partiellement payé
+  payment_paid:
+    _singular: payé
+    _plural: payé
+  payment_refund_partial:
+    _singular: partiellement remboursé
+    _plural: partiellement remboursé
+  payment_refund:
+    _singular: remboursé
+    _plural: remboursé
+
+order_state:
+  order_cart:
+    _singular: panier
+    _plural: paniers
+  order_archive:
+    _singular: archivée
+    _plural: archivées
+  order_shipped:
+    _singular: envoyée
+    _plural: envoyées
+  order_pending:
+    _singular: en attente
+    _plural: en attente
+  order_confirm:
+    _singular: paiement confirmé
+    _plural: paiement confirmés
+  order_confirm_partial :
+    _singular: paiement partiellement confirmé
+    _plural: paiement partiellement confirmés
+  order_processing:
+    _singular: en cours
+    _plural: en cours
+  order_delayed:
+    _singular: retardée
+    _plural: retardée
+  order_cancel:
+    _singular: annulée
+    _plural: annulée
+  order_complete:
+    _singular: terminée
+    _plural: terminée
+  order_cart_abandon:
+    _singular: abandonné
+    _plural: abandonnés
+  order_return:
+    _singular: retour
+    _plural: retours
+  order_returning:
+    _singular: en attente de retour
+    _plural: en attente de retours
+  order_complete_review:
+    _singular: avis client reçu
+    _plural: avis client reçus
+  order_refund:
+    _singular: remboursée
+    _plural: remboursées
+  order_return_received:
+    _singular: retournée
+    _plural: retournées
+  order_return_partial:
+    _singular: partiellement retournée
+    _plural: partiellement retournées
+
+barcode:
+  gtin:
+    _singular: GTIN
+    _plural: GTINs
+  upc:
+    _singular: UPC
+    _plural: UPCs
+  ean:
+    _singular: EAN
+    _plural: EANs
+  isbn:
+    _singular: ISBN
+    _plural: ISBNs
+  sku:
+    _singular: SKU
+    _plural: SKU
+  asin:
+    _singular: ASIN
+    _plural: ASIN
+  gcid:
+    _singular: GCID
+    _plural: GCIDs
+  fnsku:
+    _singular: FNSKU
+    _plural: FNSKUs
+  epid:
+    _singular: EPID
+    _plural: EPID
+  gln:
+    _singular: GLN
+    _plural: GLNs
+
+  barcode:
+    _singular: "code barre"
+    _plural: "code barres"
+  qrcode:
+    _singular: QR code
+    _plural: QR codes
+  datamatrix:
+    _singular: "data matrix"
+    _plural: "data matrices"
+  dotcode:
+    _singular: "dot code"
+    _plural: "dot codes"
+
+shipping_rate:
+  rate_flat:
+    _singular: "taux fixe"
+    _plural: "taux fixe"
+  rate_international:
+    _singular: "international"
+    _plural: "internationaux"
+  rate_priority:
+    _singular: "prioritaire"
+    _plural: "prioritaires"
