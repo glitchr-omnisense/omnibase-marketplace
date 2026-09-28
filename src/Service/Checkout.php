@@ -7,6 +7,7 @@ use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
 use Base\Market\Event\OrderPaidEvent;
+use Base\Market\Event\PaymentCancelledEvent;
 use Base\Market\Payment\PaymentGatewayRegistry;
 use Base\Market\Payment\PaymentResult;
 use Doctrine\ORM\EntityManagerInterface;
@@ -131,14 +132,19 @@ class Checkout
         $this->dispatcher->dispatch(new OrderPaidEvent($order));
     }
 
-    /** The payment did not happen (cancelled, expired, refused later): back to the cart. */
-    public function cancel(Order $order, Transaction $transaction): void
+    /**
+     * The payment did not happen (cancelled, expired, refused later): back to
+     * the cart - unless the application takes it from there (the event).
+     */
+    public function cancel(Order $order, Transaction $transaction): PaymentCancelledEvent
     {
         $transaction->markAsCancelled();
         if (!$order->isConfirmed() && !$order->isCompleted()) {
             $order->markAsCart();
         }
         $this->entityManager->flush();
+
+        return $this->dispatcher->dispatch(new PaymentCancelledEvent($order, $transaction));
     }
 
     /** @throws CartException */

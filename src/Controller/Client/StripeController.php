@@ -40,7 +40,10 @@ class StripeController extends AbstractController
         }
 
         if ($request->query->getBoolean('cancel')) {
-            $this->checkout->cancel($order, $transaction);
+            $cancelled = $this->checkout->cancel($order, $transaction);
+            if ($cancelled->getResponse()) {
+                return $cancelled->getResponse();
+            }
             $this->addFlash('error', $this->translator->trans('@market.stripe.cancelled'));
 
             return $this->redirectToRoute('market_checkout', ['order' => $order->getId()]);
