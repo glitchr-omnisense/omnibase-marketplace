@@ -86,7 +86,10 @@ class StripeController extends AbstractController
                 break;
             case 'checkout.session.expired':
             case 'checkout.session.async_payment_failed':
-                if ($order->isPending()) {
+                // Only the session the order is being paid with now: an older
+                // one expiring must not send back to the cart an order paid,
+                // or being paid, through a newer one.
+                if ($order->isPending() && $this->pending($order) === $transaction) {
                     $this->checkout->cancel($order, $transaction);
                 }
                 break;

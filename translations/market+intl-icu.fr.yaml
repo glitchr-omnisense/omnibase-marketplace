@@ -42,6 +42,7 @@ checkout:
   error:
     empty: "Ton panier est vide."
     method: "Choisis un moyen de paiement."
+    pending: "Un paiement est déjà en cours pour ce panier."
     refused: "Le paiement a été refusé."
 orders:
   title: "Mes commandes"

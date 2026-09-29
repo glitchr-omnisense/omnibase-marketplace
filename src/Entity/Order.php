@@ -643,10 +643,9 @@ class Order implements IconizeInterface, LinkableInterface
      */
     public function getArrivingTime()
     {
-        $this->paidAt ??= new \DateTime('now');
-
+        // Not ??= on the field: reading an estimate must not mark an unpaid order paid.
         $delay = $this->getShippingMethod()->getShippingDelay() + $this->getShippingMethod()->getDeliveryTime();
-        $arrivingTime = clone $this->paidAt;
+        $arrivingTime = $this->paidAt ? clone $this->paidAt : new \DateTime('now');
         $arrivingTime->modify('+' . $delay . ' days');
 
         return $arrivingTime;

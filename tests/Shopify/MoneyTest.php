@@ -3,6 +3,7 @@
 namespace Tests\Base\Market\Shopify;
 
 use Base\Market\Shopify\Api\Money;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class MoneyTest extends TestCase
 {
-    /** @dataProvider amounts */
+    #[DataProvider('amounts')]
     public function testToMinor(string $amount, string $currency, int $expected): void
     {
         self::assertSame($expected, Money::toMinor($amount, $currency));
@@ -38,7 +39,7 @@ final class MoneyTest extends TestCase
         self::assertSame(0, Money::toMinor('', 'EUR'));
     }
 
-    /** @dataProvider roundTrips */
+    #[DataProvider('roundTrips')]
     public function testRoundTrip(int $minor, string $currency, string $decimal): void
     {
         self::assertSame($decimal, Money::toDecimal($minor, $currency));

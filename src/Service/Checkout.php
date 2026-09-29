@@ -6,10 +6,13 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
+use Base\Market\Enum\OrderState;
+use Base\Market\Enum\PaymentState;
 use Base\Market\Event\OrderPaidEvent;
 use Base\Market\Event\PaymentCancelledEvent;
 use Base\Market\Payment\PaymentGatewayRegistry;
 use Base\Market\Payment\PaymentResult;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -71,19 +74,40 @@ class Checkout
             throw new CartException('checkout.error.method');
         }
 
-        $customer = $order->getCustomer();
-        $transaction = new Transaction();
-        $transaction->setTotalAmount($order->getNetPrice());
-        $transaction->setCurrencyCode($order->getCurrency());
-        $transaction->setDescription((string) $order->getStore());
-        $transaction->setClientId($customer ? (string) $customer->getId() : null);
-        $transaction->setClientEmail($customer?->getEmail());
+        // One payment at a time: the order's row locked, its state read from
+        // the database - a double click opened two payments (two Stripe
+        // sessions, two Shopify drafts) on the same cart.
+        // By hand, not wrapInTransaction(): that closes the EntityManager on any
+        // exception, and a buyer's double click is not a reason to break the
+        // rest of the request.
+        $this->entityManager->beginTransaction();
+        try {
+            if (null !== $order->getId()) {
+                $this->entityManager->lock($order, LockMode::PESSIMISTIC_WRITE);
+                if (!str_starts_with((string) $this->stored($order, 'state'), OrderState::CART)) {
+                    throw new CartException('checkout.error.pending');
+                }
+            }
 
-        $order->setPaymentMethod($method);
-        $order->addTransaction($transaction);
-        $order->markAsPending();
-        $this->entityManager->persist($transaction);
-        $this->entityManager->flush(); // the order gets its reference here
+            $customer = $order->getCustomer();
+            $transaction = new Transaction();
+            $transaction->setTotalAmount($order->getNetPrice());
+            $transaction->setCurrencyCode($order->getCurrency());
+            $transaction->setDescription((string) $order->getStore());
+            $transaction->setClientId($customer ? (string) $customer->getId() : null);
+            $transaction->setClientEmail($customer?->getEmail());
+
+            $order->setPaymentMethod($method);
+            $order->addTransaction($transaction);
+            $order->markAsPending();
+            $this->entityManager->persist($transaction);
+            $this->entityManager->flush(); // the order gets its reference here
+            $this->entityManager->commit();
+        } catch (\Throwable $e) {
+            $this->entityManager->rollback();
+
+            throw $e;
+        }
 
         $transaction->setNumber($order->getReference());
         try {
@@ -111,25 +135,51 @@ class Checkout
         return $result;
     }
 
-    /** The money is in: confirm, take the stock, tell the application. */
+    /**
+     * The money is in: confirm, take the stock, tell the application - once.
+     *
+     * Confirmations come in pairs: the return page and the webhook arrive
+     * together, a webhook is retried, a buyer comes back from their history,
+     * an order already shipped or refunded is reported paid again. So the
+     * order's row is locked and whether it is already paid is read from the
+     * database, not from memory or the second-level cache: the second one
+     * finds it paid and does nothing - no second delivery (two licences,
+     * double hours), no stock taken twice, no refund undone.
+     *
+     * And delivery commits with the confirmation: OrderPaidEvent's listeners
+     * run in the same transaction, so if one fails, nothing is confirmed and
+     * the provider's next try delivers - rather than an order confirmed with
+     * nothing delivered, which no retry would ever deliver.
+     *
+     * The order and the transaction are locked, not reloaded: what the caller
+     * set on them before (a provider's reference) is kept, and saved either way.
+     */
     public function confirm(Order $order, Transaction $transaction): void
     {
-        if ($order->isConfirmed() || $order->isCompleted()) {
-            return;
-        }
-
-        $transaction->markAsPaid();
-        $order->markAsPaidAt();
-        $order->markAsConfirmed();
-        foreach ($order->getItems() as $item) {
-            $product = $item->getProduct();
-            if ($product && null !== $product->getStock()) {
-                $product->setStock(max(0, $product->getStock() - (int) $item->getQuantity()));
+        $this->entityManager->wrapInTransaction(function () use ($order, $transaction): void {
+            if (null !== $order->getId()) {
+                $this->entityManager->lock($order, LockMode::PESSIMISTIC_WRITE);
             }
-        }
-        $this->entityManager->flush();
+            if ($this->isAlreadyPaid($order, $transaction)) {
+                $this->entityManager->flush();
 
-        $this->dispatcher->dispatch(new OrderPaidEvent($order));
+                return;
+            }
+
+            $transaction->markAsPaid();
+            $order->markAsPaidAt();
+            $order->markAsConfirmed();
+            foreach ($order->getItems() as $item) {
+                $product = $item->getProduct();
+                if ($product && null !== $product->getStock()) {
+                    $product->setStock(max(0, $product->getStock() - (int) $item->getQuantity()));
+                }
+            }
+            $this->entityManager->flush();
+
+            $this->dispatcher->dispatch(new OrderPaidEvent($order));
+            $this->entityManager->flush();
+        });
     }
 
     /**
@@ -138,13 +188,38 @@ class Checkout
      */
     public function cancel(Order $order, Transaction $transaction): PaymentCancelledEvent
     {
-        $transaction->markAsCancelled();
-        if (!$order->isConfirmed() && !$order->isCompleted()) {
-            $order->markAsCart();
+        // A paid order stays paid, whatever comes back late - the cancel page
+        // opened from the history, an older session expiring: its transaction
+        // cancelled, a refund would no longer find the card it was paid with.
+        if (!$this->isAlreadyPaid($order, $transaction)) {
+            $transaction->markAsCancelled();
+            if (!$order->isConfirmed() && !$order->isCompleted()) {
+                $order->markAsCart();
+            }
+            $this->entityManager->flush();
         }
-        $this->entityManager->flush();
 
         return $this->dispatcher->dispatch(new PaymentCancelledEvent($order, $transaction));
+    }
+
+    /** Whether the order or this payment is paid (or refunded) - as the database has it. */
+    private function isAlreadyPaid(Order $order, Transaction $transaction): bool
+    {
+        if (null !== ($order->getId() ? $this->stored($order, 'paidAt') : $order->getPaidAt())) {
+            return true;
+        }
+        $state = $transaction->getId() ? $this->stored($transaction, 'state') : null;
+
+        return \in_array($state, [PaymentState::PAID, PaymentState::REFUND, PaymentState::REFUND_PARTIAL], true) || $transaction->isPaid();
+    }
+
+    /** A field as the database has it now - not the entity in memory, nor the second-level cache's copy. */
+    private function stored(object $entity, string $field): mixed
+    {
+        return $this->entityManager->createQuery(sprintf('SELECT e.%s FROM %s e WHERE e.id = :id', $field, $entity::class))
+            ->setParameter('id', $entity->getId())
+            ->setCacheable(false)
+            ->getSingleScalarResult();
     }
 
     /** @throws CartException */

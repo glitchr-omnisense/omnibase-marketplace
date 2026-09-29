@@ -6,7 +6,6 @@ use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Transaction;
 use Base\Market\Service\Checkout;
 use Base\Market\Service\Shipping;
-use Base\Market\Shopify\Api\Endpoint;
 use Base\Market\Shopify\Catalogue\InventorySynchronizer;
 use Base\Market\Shopify\Catalogue\ProductMapper;
 use Base\Market\Shopify\Catalogue\ProductSynchronizer;
@@ -31,7 +30,6 @@ class ShopifyWebhookHandler
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly Checkout $checkout,
-        private readonly Endpoint $endpoint,
         private readonly ProductMapper $mapper,
         private readonly ProductSynchronizer $products,
         private readonly InventorySynchronizer $inventory,
@@ -150,6 +148,8 @@ class ShopifyWebhookHandler
 
         try {
             $this->shipping->ship($order, (string) $tracking);
+            // Shipping::ship() persists; a webhook has nobody else to flush it.
+            $this->entityManager->flush();
         } catch (\Throwable $e) {
             $this->logger?->warning('Shopify fulfilment could not be applied: {message}', ['message' => $e->getMessage()]);
 

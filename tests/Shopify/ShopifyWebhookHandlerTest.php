@@ -3,8 +3,8 @@
 namespace Tests\Base\Market\Shopify;
 
 use Base\Market\Entity\Order;
+use Base\Market\Event\PaymentCancelledEvent;
 use Base\Market\Service\Checkout;
-use Base\Market\Shopify\Api\Endpoint;
 use Base\Market\Shopify\Catalogue\InventorySynchronizer;
 use Base\Market\Shopify\Catalogue\ProductMapper;
 use Base\Market\Shopify\Catalogue\ProductSynchronizer;
@@ -45,7 +45,6 @@ final class ShopifyWebhookHandlerTest extends TestCase
         return new ShopifyWebhookHandler(
             $entityManager,
             $checkout ?? $this->createMock(Checkout::class),
-            new Endpoint('example.myshopify.com', '2026-07', 'shpat_x', '', 'secret'),
             new ProductMapper(),
             $products,
             $inventory ?? $this->createMock(InventorySynchronizer::class),
@@ -117,7 +116,8 @@ final class ShopifyWebhookHandlerTest extends TestCase
         $order = $this->order('ABC-1234-XYZ');
 
         $checkout = $this->createMock(Checkout::class);
-        $checkout->expects(self::once())->method('cancel');
+        // The event is final: a real one, not a double.
+        $checkout->expects(self::once())->method('cancel')->willReturnCallback(fn ($order, $transaction) => new PaymentCancelledEvent($order, $transaction));
 
         $result = $this->handler($checkout, order: $order)->handle('orders/cancelled', $this->fixture('orders_paid.webhook.json'));
 
