@@ -48,6 +48,18 @@
         {
             "type": "vcs",
             "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/ux/google-api"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/omnistate"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/vies"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/annuaire-entreprises"
         }
     ],
     "autoload": {
@@ -65,6 +77,8 @@
         "doctrine/orm": "^2.15|^3.0",
         "glitchr/base-bundle": "3.0.*-dev",
         "glitchr/base-bundle-admin": "dev-main",
+        "glitchr/omnistate": "1.x-dev",
+        "omnistate/vies": "1.x-dev",
         "symfony/config": "^6.0|^7.0|^8.0",
         "symfony/dependency-injection": "^6.0|^7.0|^8.0",
         "symfony/form": "^6.0|^7.0|^8.0",
@@ -95,5 +109,8 @@
             "glitchr/doctrine-dc2type": true,
             "php-http/discovery": true
         }
+    },
+    "suggest": {
+        "omnistate/annuaire-entreprises": "The company register: French SIRENs and SIRETs from the State's Recherche d'entreprises (free, no key)"
     }
 }

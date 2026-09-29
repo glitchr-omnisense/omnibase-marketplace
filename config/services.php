@@ -19,6 +19,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  * services.
  *
  * The admin CRUD controllers are loaded only when base-bundle-admin is there.
+ * The company register and the VAT number checks ask Omnistate: the app
+ * registers Omnistate\Bridge\Symfony\OmnistateBundle.
  */
 return function (ContainerConfigurator $configurator) {
 
@@ -41,6 +43,8 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Enum/',
             $src . '/Event/',
             $src . '/Model/',
+            // A constraint, not a service: its validator is one.
+            $src . '/Validator/CompanyNumber.php',
             $src . '/Controller/Admin/',
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',

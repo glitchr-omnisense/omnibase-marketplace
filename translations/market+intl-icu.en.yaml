@@ -125,3 +125,12 @@ shopify:
   pending: "Your payment for {reference} has not reached us yet. Shopify may still be processing it; check again in a moment."
   cancelled: "The Shopify payment was cancelled."
   unavailable: "Shopify could not take this payment right now. {reason}"
+company:
+  siret: "Your company's SIRET (optional)"
+  siret_help: "For a French company: we check its name and address with the State's register."
+  checking: "Checking…"
+  found: "{name} - {address}"
+  closed: "This company is closed in the register."
+  unavailable: "The register does not answer: we will check later."
+  invalid: "This is not a valid SIREN (9 digits) or SIRET (14 digits)."
+  unknown: "No company has this number in the State's register."

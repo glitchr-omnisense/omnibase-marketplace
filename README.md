@@ -217,6 +217,27 @@ Orders Shopify created itself are never pushed back, and neither are orders made
 
 **Webhooks** are verified with `X-Shopify-Hmac-Sha256` (base64 of the raw digest, unlike Stripe's hex, and with no timestamp — so there is no freshness window and replay defence is the delivery id plus the fact that every action is idempotent). The shop domain is checked too. An unrecognised topic answers 200: Shopify deletes a subscription after eight hours of continuous failure.
 
+## Business customers: VAT numbers and company numbers
+
+The market checks public registers through [Omnistate](https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/omnistate). Register its bundle:
+
+```php
+// config/bundles.php
+Omnistate\Bridge\Symfony\OmnistateBundle::class => ['all' => true],
+```
+
+```yaml
+# config/packages/omnistate.yaml
+omnistate:
+    requester: FR53901821074   # your VAT number: VIES then answers a consultation number, the proof of each check
+```
+
+**Reverse charge.** Implement `Base\Market\Model\VatCustomerInterface` on your User, usually with `VatCustomerTrait` (three columns: the number, when VIES confirmed it, its consultation number). `Service\VatNumbers::confirm($user, $typed)` checks a number with VIES and keeps it when VIES knows it. It accepts a SIREN or a SIRET for a French business. It flushes nothing and returns a status (`confirmed`, `removed`, `not_a_number`, `unknown`, `unavailable`). `VatNumbers::check($typed)` checks any number, a store's for instance.
+
+A customer with a confirmed number from another EU country than the store's is then sold without VAT. `Pricing\ReverseCharge` puts the mention on the order: the directive's article, the customer's number and VIES's consultation number. A store's country is its VAT number's prefix. It runs after `StoreVatRegime`, so a store that charges no VAT says so first.
+
+**Company numbers.** With `omnistate/annuaire-entreprises` installed, `Service\CompanyRegistry` looks up a French SIREN or SIRET in the State's free register. The `#[CompanyNumber]` constraint refuses a number the register doesn't know, and lets it through when the register doesn't answer. `GET /api/company/{number}` (route `market_company_lookup`) answers the company as JSON, for a form that fills the name as the number is typed.
+
 ## Extend
 
 **Sell your own things.** Subclass `Product` in your app, with a `#[DiscriminatorEntry]` value of its own. Override `getMaxQuantity()` to return 1 for things that are owned once, such as an avatar item or a licence.
