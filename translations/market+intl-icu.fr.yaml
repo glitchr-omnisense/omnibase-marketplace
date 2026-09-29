@@ -134,3 +134,6 @@ company:
   unavailable: "Le registre ne répond pas : nous vérifierons plus tard."
   invalid: "Ce numéro n'est pas un SIREN (9 chiffres) ni un SIRET (14 chiffres) valide."
   unknown: "Ce numéro n'est connu d'aucune entreprise au registre de l'État."
+vat_number:
+  invalid: "Ce n'est pas un numéro de TVA intracommunautaire."
+  unknown: "VIES ne connaît pas ce numéro de TVA : vérifiez-le."

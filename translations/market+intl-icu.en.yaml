@@ -134,3 +134,6 @@ company:
   unavailable: "The register does not answer: we will check later."
   invalid: "This is not a valid SIREN (9 digits) or SIRET (14 digits)."
   unknown: "No company has this number in the State's register."
+vat_number:
+  invalid: "This is not an intra-EU VAT number."
+  unknown: "VIES does not know this VAT number: check it."

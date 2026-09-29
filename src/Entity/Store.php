@@ -19,6 +19,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Base\Market\Validator\VatNumber as KnownVatNumber;
+use Omnistate\Identifier\VatNumber;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
@@ -189,8 +191,13 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
         return $this;
     }
 
-    /** The store's intra-EU VAT number (FR12345678901), required to charge VAT. */
+    /**
+     * The store's intra-EU VAT number (FR12345678901), required to charge
+     * VAT - and one VIES knows, checked when it is saved (a SIREN gives the
+     * French number, with its key).
+     */
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[KnownVatNumber]
     protected ?string $vatNumber = null;
 
     public function getVatNumber(): ?string
@@ -200,33 +207,19 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
 
     public function setVatNumber(?string $vatNumber): self
     {
-        $vatNumber = null === $vatNumber ? null : strtoupper(preg_replace('/[\s.-]+/', '', $vatNumber));
-        $this->vatNumber = '' === $vatNumber ? null : $vatNumber;
+        $vatNumber = null === $vatNumber ? null : trim($vatNumber);
+        // As VIES writes it; what cannot be read as one stays as typed, for
+        // the validation to say so.
+        $this->vatNumber = '' === $vatNumber || null === $vatNumber ? null : (VatNumber::normalize($vatNumber) ?? $vatNumber);
 
         return $this;
-    }
-
-    /**
-     * An intra-EU VAT number's shape: two letters (the member state; EL for
-     * Greece), then 2 to 12 digits or letters - France's FR, two characters
-     * and the nine digits of the SIREN. The number itself is not asked of
-     * VIES here.
-     */
-    public static function isVatNumberWellFormed(?string $vatNumber): bool
-    {
-        if (null === $vatNumber || !preg_match('/^[A-Z]{2}[0-9A-Z+*]{2,12}$/', $vatNumber)) {
-            return false;
-        }
-
-        return !str_starts_with($vatNumber, 'FR') || (bool) preg_match('/^FR[0-9A-Z]{2}[0-9]{9}$/', $vatNumber);
     }
 
     #[Assert\Callback]
     public function validateVat(ExecutionContextInterface $context): void
     {
-        if ($this->chargesVat && null !== $this->vatNumber && !self::isVatNumberWellFormed($this->vatNumber)) {
-            $context->buildViolation('Ce numéro de TVA intracommunautaire n\'est pas valide.')->atPath('vatNumber')->addViolation();
-        } elseif ($this->chargesVat && null === $this->vatNumber) {
+        // Whether VIES knows the number is #[KnownVatNumber]'s to say.
+        if ($this->chargesVat && null === $this->vatNumber) {
             $context->buildViolation('Sans numéro de TVA valide, la TVA ne peut pas être appliquée.')->atPath('vatNumber')->addViolation();
         }
     }
