@@ -7,8 +7,13 @@ use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
 use Base\Service\SettingBagInterface;
 use Base\Market\Payment\Stripe\CheckoutGateway;
+use Omnipay\Common\GatewayInterface;
+use Omnipay\Common\Http\Client as OmnipayClient;
 use Omnipay\Omnipay;
+use Omnipay\Stripe\PaymentIntentsGateway;
+use Symfony\Component\HttpClient\Psr18Client;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Card payment through Stripe Checkout, the hosted payment page: the member
@@ -28,13 +33,19 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  *   adaptive_pricing  optional, true to let Stripe offer the buyer's own
  *                   currency (Adaptive Pricing); off, the order's currency only
  *
- * The buyer's email is filled in on Stripe's page.
+ * The buyer's email is filled in on Stripe's page. Stripe charges what the
+ * transaction expects - the order's net price, VAT, shipping, fees and
+ * discounts included (lines()) -, and a paid session can be refunded.
+ *
+ * Omnipay talks to Stripe through the application's HTTP client (a PSR-18
+ * bridge): the profiler sees the calls, the tests mock them.
  */
 final class StripeGateway implements PaymentGatewayInterface
 {
     public function __construct(
         private readonly UrlGeneratorInterface $urls,
         private readonly ?SettingBagInterface $settings = null,
+        private readonly ?HttpClientInterface $httpClient = null,
     ) {
     }
 
@@ -68,17 +79,7 @@ final class StripeGateway implements PaymentGatewayInterface
 
     public function pay(Order $order, Transaction $transaction, PaymentMethod $method): PaymentResult
     {
-        $lines = [];
-        foreach ($order->getItems() as $item) {
-            $lines[] = [
-                'quantity' => (int) $item->getQuantity(),
-                'price_data' => [
-                    'currency' => strtolower((string) $order->getCurrency()),
-                    'unit_amount' => (int) $item->getUnitPrice(),
-                    'product_data' => ['name' => (string) ($item->getProduct() ?? $item)],
-                ],
-            ];
-        }
+        $lines = $this->lines($order);
 
         $return = fn (array $query) => $this->urls->generate('market_stripe_return', ['order' => $order->getId()] + $query, UrlGeneratorInterface::ABSOLUTE_URL);
         $data = $this->gateway($method)->purchase([
@@ -100,6 +101,53 @@ final class StripeGateway implements PaymentGatewayInterface
         $transaction->setDetails(['stripe_session' => $data['id']]);
 
         return PaymentResult::redirect($data['url']);
+    }
+
+    /**
+     * What Stripe is asked to charge: the order's lines as they are when they
+     * add up to its net price, in its currency; else one line of the net
+     * price. Stripe Checkout takes no negative line (a discount), and VAT,
+     * shipping and fees live on the order, not on its lines: charged line by
+     * line, Stripe took less than the transaction expected (Checkout sets its
+     * amount to Order::getNetPrice()). A line in another currency than the
+     * order's would be charged as if it were in the order's.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function lines(Order $order): array
+    {
+        $currency = strtolower((string) $order->getCurrency());
+        $total = (int) $order->getNetPrice();
+
+        $lines = [];
+        $sum = 0;
+        foreach ($order->getItems() as $item) {
+            if (strtolower((string) $item->getCurrency()) !== $currency) {
+                $lines = null;
+                break;
+            }
+            $lines[] = [
+                'quantity' => (int) $item->getQuantity(),
+                'price_data' => [
+                    'currency' => $currency,
+                    'unit_amount' => (int) $item->getUnitPrice(),
+                    'product_data' => ['name' => (string) ($item->getProduct() ?? $item)],
+                ],
+            ];
+            $sum += (int) $item->getUnitPrice() * (int) $item->getQuantity();
+        }
+        if (null !== $lines && [] !== $lines && $sum === $total) {
+            return $lines;
+        }
+
+        return [[
+            'quantity' => 1,
+            'price_data' => [
+                'currency' => $currency,
+                'unit_amount' => $total,
+                'product_data' => ['name' => (string) ($order->getReference() ?? '#'.$order->getId())],
+            ],
+        ]];
     }
 
     /** The Checkout session as Stripe has it now (payment_status: paid, unpaid, no_payment_required). */
@@ -143,10 +191,55 @@ final class StripeGateway implements PaymentGatewayInterface
         return false;
     }
 
+    /**
+     * Pays $amount (cents) back on what the Checkout session was paid with -
+     * its payment intent's charge -, and returns Stripe's refund id (re_...).
+     * The idempotency key makes the same refund asked twice happen once.
+     *
+     * @throws \RuntimeException when Stripe knows no payment for it, or refuses
+     */
+    public function refund(PaymentMethod $method, string $sessionId, int $amount, string $currency, string $idempotencyKey): string
+    {
+        $intent = $this->session($method, $sessionId)['payment_intent'] ?? null;
+        if (\is_array($intent)) {
+            $intent = $intent['id'] ?? null;
+        }
+        if (!\is_string($intent) || '' === $intent) {
+            throw new \RuntimeException('Stripe knows no payment for this session.');
+        }
+
+        /** @var PaymentIntentsGateway $intents */
+        $intents = $this->create('Stripe\PaymentIntents', $method);
+        $payment = $intents->fetchPaymentIntent(['paymentIntentReference' => $intent])->send()->getData();
+        $charge = $payment['latest_charge'] ?? $payment['charges']['data'][0]['id'] ?? null;
+        if (\is_array($charge)) {
+            $charge = $charge['id'] ?? null;
+        }
+        if (!\is_string($charge) || '' === $charge) {
+            throw new \RuntimeException('Stripe knows no charge for this payment.');
+        }
+
+        $request = $this->gateway($method)->refund(['transactionReference' => $charge, 'currency' => strtoupper($currency)]);
+        $request->setAmountInteger($amount);
+        $request->setIdempotencyKeyHeader($idempotencyKey);
+        $response = $request->send();
+        $data = $response->getData();
+        if (!$response->isSuccessful() || empty($data['id']) || \in_array($data['status'] ?? '', ['failed', 'canceled'], true)) {
+            throw new \RuntimeException((string) ($response->getMessage() ?? $data['failure_reason'] ?? 'refused'));
+        }
+
+        return (string) $data['id'];
+    }
+
     private function gateway(PaymentMethod $method): CheckoutGateway
     {
-        /** @var CheckoutGateway $gateway */
-        $gateway = Omnipay::create('\\'.CheckoutGateway::class);
+        /** @var CheckoutGateway */
+        return $this->create('\\'.CheckoutGateway::class, $method);
+    }
+
+    private function create(string $gateway, PaymentMethod $method): GatewayInterface
+    {
+        $gateway = Omnipay::create($gateway, $this->httpClient ? new OmnipayClient(new Psr18Client($this->httpClient)) : null);
         $gateway->setApiKey($this->apiKey($method));
 
         return $gateway;
