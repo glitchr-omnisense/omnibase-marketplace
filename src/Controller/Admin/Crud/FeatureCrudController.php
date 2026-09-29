@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Field\ColorField;
 use Base\Field\IconField;
 use Base\Field\IdField;
@@ -18,7 +18,7 @@ use Base\Market\Entity\Product\Feature;
  * icon or a picture, a label and a description per language. A feature
  * products still carry cannot be deleted.
  */
-class FeatureCrudController extends AbstractCrudController
+class FeatureCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

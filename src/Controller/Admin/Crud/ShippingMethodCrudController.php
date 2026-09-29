@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Field\CurrencyField;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
@@ -19,7 +19,7 @@ use Base\Field\ImageField;
  * RATE_FLAT costs the unit price once, RATE_PRIORITY per shipping unit;
  * the tracking URL may hold {number}.
  */
-class ShippingMethodCrudController extends AbstractCrudController
+class ShippingMethodCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
@@ -18,8 +18,14 @@ use Base\Market\Entity\Sales\Discount\Promotion;
  * an event, a sale. Rules say when they hold (a minimum total...), scopes
  * which lines they touch (a store, a product...), actions what comes off.
  */
-class PromotionCrudController extends AbstractCrudController
+class PromotionCrudController extends AbstractMarketCrudController
 {
+    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    protected function isPricing(): bool
+    {
+        return true;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Promotion::class;

@@ -32,10 +32,22 @@ use Symfony\Contracts\Service\ResetInterface;
  * (market.forex.fixer; the free plan counts 100 calls a month), else the
  * European Central Bank's reference rates, free and keyless. A rate set by
  * hand stays until the next refresh.
+ *
+ * Fixer's calls are counted per month (requestsThisMonth()) before they are
+ * sent - a failed one counts at Fixer too - and a refresh comes at most once
+ * every MIN_INTERVAL, so a double click or an impatient administrator never
+ * spends the quota twice. Fixer is asked only for the currencies wanted.
  */
 final class ExchangeRates implements ResetInterface
 {
     public const FIXER_KEY = 'market.forex.fixer';
+    public const FIXER_QUOTA = 100;
+    public const MIN_INTERVAL = '1 hour';
+
+    private const LAST_SETTING = 'market.forex.refreshed_at';
+    // One setting a month, market.forex.requests_2026_09: a path segment of
+    // its own ("2026-09") is not a setting SettingBag reads back.
+    private const COUNT_SETTING = 'market.forex.requests_';
 
     // Fixer's free plan: plain http, from the euro only.
     private const FIXER_URL = 'http://data.fixer.io/api/latest';
@@ -52,6 +64,9 @@ final class ExchangeRates implements ResetInterface
         #[Autowire('%market.default_currency%')]
         private readonly string $currency,
         private readonly ?SettingBagInterface $settings = null,
+        /** @var string[] currencies always kept (market.forex.targets), besides those in use */
+        #[Autowire('%market.forex.targets%')]
+        private readonly array $targets = [],
     ) {
     }
 
@@ -103,28 +118,35 @@ final class ExchangeRates implements ResetInterface
     /**
      * Asks the provider for the day's rates - one HTTP call - and writes them,
      * from the store's currency to every currency the shop uses (its stores,
-     * regions and products) and to the $targets given.
+     * regions and products), to the configured market.forex.targets and to
+     * the $targets given.
      *
      * @param string[] $targets
      *
      * @return Forex[] the rates written
      *
-     * @throws \RuntimeException when the provider does not answer with rates
+     * @throws ExchangeRatesException when it is too soon, or the provider does not answer with rates
      */
     public function refresh(array $targets = []): array
     {
-        $key = trim((string) $this->settings?->getScalar(self::FIXER_KEY));
-        [$provider, $fromEuro] = '' !== $key ? $this->fromFixer($key) : $this->fromEcb();
-        $fromEuro['EUR'] = 1.0;
-        if (empty($fromEuro[$this->currency])) {
-            throw new \RuntimeException(sprintf('%s: no rate for %s, the store\'s currency.', $provider, $this->currency));
+        $last = $this->lastRefresh();
+        if (null !== $last && $last > new \DateTimeImmutable('-' . self::MIN_INTERVAL)) {
+            throw new ExchangeRatesException(sprintf('Refreshed at %s: one refresh every %s.', $last->format('H:i'), self::MIN_INTERVAL));
         }
 
         $targets = array_values(array_unique(array_filter(
-            array_map('strtoupper', [...$targets, ...$this->currenciesInUse()]),
-            fn (string $target) => $target !== $this->currency && !empty($fromEuro[$target]),
+            array_map('strtoupper', [...$targets, ...$this->targets, ...$this->currenciesInUse()]),
+            fn (string $target) => $target !== $this->currency,
         )));
         sort($targets);
+
+        $key = trim((string) $this->settings?->getScalar(self::FIXER_KEY));
+        [$provider, $fromEuro] = '' !== $key ? $this->fromFixer($key, [$this->currency, ...$targets]) : $this->fromEcb();
+        $fromEuro['EUR'] = 1.0;
+        if (empty($fromEuro[$this->currency])) {
+            throw new ExchangeRatesException(sprintf('%s: no rate for %s, the store\'s currency.', $provider, $this->currency));
+        }
+        $targets = array_values(array_filter($targets, fn (string $target) => !empty($fromEuro[$target])));
 
         $repository = $this->entityManager->getRepository(Forex::class);
         $written = [];
@@ -145,6 +167,26 @@ final class ExchangeRates implements ResetInterface
         return $written;
     }
 
+    /** When the rates were last asked for (Fixer or the ECB); null before the first time. */
+    public function lastRefresh(): ?\DateTimeImmutable
+    {
+        $last = $this->settings?->getScalar(self::LAST_SETTING);
+
+        return $last ? new \DateTimeImmutable((string) $last) : null;
+    }
+
+    /** Fixer's calls this calendar month, as counted here. */
+    public function requestsThisMonth(): int
+    {
+        return (int) $this->settings?->getScalar(self::COUNT_SETTING . date('Y_m'));
+    }
+
+    /** Whether a key makes refresh() ask Fixer (else the European Central Bank). */
+    public function usesFixer(): bool
+    {
+        return '' !== trim((string) $this->settings?->getScalar(self::FIXER_KEY));
+    }
+
     /** @return string[] the currencies of the shop's stores, regions and products */
     private function currenciesInUse(): array
     {
@@ -161,12 +203,27 @@ final class ExchangeRates implements ResetInterface
         return $currencies;
     }
 
-    /** @return array{string, array<string, float>} the provider's name, and its rates from the euro */
-    private function fromFixer(string $key): array
+    /**
+     * @param string[] $symbols the currencies wanted
+     *
+     * @return array{string, array<string, float>} the provider's name, and its rates from the euro
+     */
+    private function fromFixer(string $key, array $symbols): array
     {
-        $answer = $this->http->request('GET', self::FIXER_URL, ['query' => ['access_key' => $key], 'timeout' => self::TIMEOUT])->toArray(false);
+        // Counted before it is sent: a call that fails still counts at Fixer.
+        $this->settings?->set(self::COUNT_SETTING . date('Y_m'), (string) ($this->requestsThisMonth() + 1));
+        $this->settings?->set(self::LAST_SETTING, (new \DateTimeImmutable())->format(\DATE_ATOM));
+
+        try {
+            $answer = $this->http->request('GET', self::FIXER_URL, [
+                'query' => ['access_key' => $key, 'symbols' => implode(',', array_unique($symbols))],
+                'timeout' => self::TIMEOUT,
+            ])->toArray(false);
+        } catch (\Throwable $e) {
+            throw new ExchangeRatesException('Fixer.io did not answer: ' . $e->getMessage(), 0, $e);
+        }
         if (!($answer['success'] ?? false) || empty($answer['rates'])) {
-            throw new \RuntimeException('Fixer.io: '.($answer['error']['info'] ?? $answer['error']['type'] ?? 'no rates in the answer'));
+            throw new ExchangeRatesException('Fixer.io: ' . ($answer['error']['info'] ?? $answer['error']['type'] ?? 'no rates in the answer'));
         }
 
         return ['fixer', array_map('floatval', $answer['rates'])];
@@ -175,9 +232,10 @@ final class ExchangeRates implements ResetInterface
     /** @return array{string, array<string, float>} */
     private function fromEcb(): array
     {
+        $this->settings?->set(self::LAST_SETTING, (new \DateTimeImmutable())->format(\DATE_ATOM));
         $xml = @simplexml_load_string($this->http->request('GET', self::ECB_URL, ['timeout' => self::TIMEOUT])->getContent());
         if (false === $xml) {
-            throw new \RuntimeException('European Central Bank: the feed could not be read.');
+            throw new ExchangeRatesException('European Central Bank: the feed could not be read.');
         }
         $xml->registerXPathNamespace('ecb', 'http://www.ecb.int/vocabulary/2002-08-01/eurofxref');
 
@@ -186,7 +244,7 @@ final class ExchangeRates implements ResetInterface
             $rates[(string) $cube['currency']] = (float) $cube['rate'];
         }
         if (!$rates) {
-            throw new \RuntimeException('European Central Bank: no rates in the feed.');
+            throw new ExchangeRatesException('European Central Bank: no rates in the feed.');
         }
 
         return ['ecb', $rates];

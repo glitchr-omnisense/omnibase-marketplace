@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
@@ -17,7 +17,7 @@ use Base\Market\Entity\Order\Shipment;
  * The parcels sent for an order: their tracking number, method and the
  * items they hold. Kept once sent - a shipment is not deleted.
  */
-class ShipmentCrudController extends AbstractCrudController
+class ShipmentCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

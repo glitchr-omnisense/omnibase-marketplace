@@ -34,6 +34,16 @@ class MarketConfiguration extends AbstractBaseConfiguration
                 ->scalarNode('default_gateway')->defaultValue('stripe')->info('The gateway checkout offers first.')->end()
                 ->booleanNode('guest_cart')->defaultFalse()
                     ->info('Whether a visitor who is not signed in may fill a cart.')->end()
+                ->scalarNode('admin_role')->defaultValue('ROLE_SUPERADMIN')
+                    ->info('The role (or permission) every marketplace screen of the back office requires: the creators by default.')->end()
+                // Currencies whose rate from default_currency is always kept,
+                // besides those the shop uses (ExchangeRates::refresh()).
+                ->arrayNode('forex')->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('targets')->scalarPrototype()->end()->defaultValue([])
+                            ->info('ISO 4217 codes, e.g. [JPY, USD]: one Fixer call refreshes them all.')->end()
+                    ->end()
+                ->end()
                 // Per-gateway settings, keyed by the payment method's slug:
                 //     market:
                 //         gateways:

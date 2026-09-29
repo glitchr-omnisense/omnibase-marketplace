@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\SelectField;
 use Base\Field\CurrencyField;
@@ -19,8 +19,14 @@ use Base\Market\Entity\Sales\Channel;
  * Admin CRUD for the products. Prices are integers in the currency's
  * smallest unit (cents, or one token); an empty stock means unlimited.
  */
-class ProductCrudController extends AbstractCrudController
+class ProductCrudController extends AbstractMarketCrudController
 {
+    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    protected function isPricing(): bool
+    {
+        return true;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Product::class;

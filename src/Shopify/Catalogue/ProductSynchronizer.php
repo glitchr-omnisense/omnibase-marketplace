@@ -15,7 +15,6 @@ use Base\Market\Shopify\Api\Endpoint;
 use Base\Market\Shopify\Entity\ProductLink;
 use Base\Market\Shopify\Repository\ProductLinkRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -59,7 +58,6 @@ class ProductSynchronizer
         #[Autowire('%market.shopify.catalogue.merchant%')] private readonly ?string $merchantId = null,
         #[Autowire('%market.shopify.catalogue.owned_fields%')] private readonly array $ownedFields = [],
         #[Autowire('%market.default_currency%')] private readonly string $defaultCurrency = 'EUR',
-        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 

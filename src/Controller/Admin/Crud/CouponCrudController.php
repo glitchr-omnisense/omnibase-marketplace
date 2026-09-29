@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
@@ -20,8 +20,14 @@ use Base\Market\Entity\Sales\Discount\Coupon;
  * may use it (per member too), an owner reserves it to one member, and
  * "individual use" keeps it from mixing with anything else.
  */
-class CouponCrudController extends AbstractCrudController
+class CouponCrudController extends AbstractMarketCrudController
 {
+    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    protected function isPricing(): bool
+    {
+        return true;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Coupon::class;

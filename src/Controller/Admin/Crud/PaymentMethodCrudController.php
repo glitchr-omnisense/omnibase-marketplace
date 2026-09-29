@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\SlugField;
@@ -19,7 +19,7 @@ use Base\Market\Payment\PaymentGatewayRegistry;
  * name() of a service tagged market.payment_gateway ("manual" ships with the
  * bundle; an application adds its own).
  */
-class PaymentMethodCrudController extends AbstractCrudController
+class PaymentMethodCrudController extends AbstractMarketCrudController
 {
     public function __construct(private readonly PaymentGatewayRegistry $gateways)
     {

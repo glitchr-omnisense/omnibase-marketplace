@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\CurrencyField;
 use Base\Field\DateTimeField;
@@ -10,13 +10,56 @@ use Base\Field\IdField;
 use Base\Field\NumberField;
 use Base\Field\TextField;
 use Base\Market\Entity\Sales\Forex;
+use Base\Admin\Attribute\AdminAction;
+use Base\Admin\Config\Action;
+use Base\Admin\Config\Actions;
+use Base\Market\Security\MarketplaceVoter;
+use Base\Market\Service\ExchangeRates;
+use Base\Market\Service\ExchangeRatesException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The exchange rates (Forex) prices and promotions are converted with: one
- * row per currency pair, refreshed by the rate providers or set by hand.
+ * row per currency pair, set by hand or refreshed on demand - the refresh is
+ * the only way the shop reaches a rate provider (ExchangeRates: one request
+ * for every pair, Fixer's counted against its monthly quota), and only the
+ * creators may run it.
  */
-class ExchangeRateCrudController extends AbstractCrudController
+class ExchangeRateCrudController extends AbstractMarketCrudController
 {
+    public function __construct(private readonly ExchangeRates $rates)
+    {
+    }
+
+    public function configureActions(Actions $actions): Actions
+    {
+        $label = $this->rates->usesFixer()
+            ? sprintf('Mettre à jour depuis Fixer (%d/%d ce mois-ci)', $this->rates->requestsThisMonth(), ExchangeRates::FIXER_QUOTA)
+            : 'Mettre à jour (Banque centrale européenne)';
+
+        return parent::configureActions($actions)->add(Actions::PAGE_INDEX, Action::new('refreshRates', $label, 'fa-solid fa-rotate')
+            ->createAsGlobalAction()
+            ->linkToCrudAction('refreshRates')
+            ->setPermission(MarketplaceVoter::MANAGE)
+            ->askConfirmation($this->rates->usesFixer()
+                ? sprintf('Utiliser une des %d requêtes Fixer du mois (%d déjà utilisées) pour mettre à jour tous les taux ?', ExchangeRates::FIXER_QUOTA, $this->rates->requestsThisMonth())
+                : 'Mettre à jour tous les taux depuis la Banque centrale européenne ?'));
+    }
+
+    /** One request for every pair; at most once an hour (ExchangeRates::MIN_INTERVAL). */
+    #[AdminAction(path: '/refresh', methods: ['POST'])]
+    public function refreshRates(): Response
+    {
+        try {
+            $written = $this->rates->refresh();
+            $this->addFlash('success', sprintf('%d taux mis à jour : %s.', \count($written), implode(', ', array_map(fn (Forex $forex) => $forex->getSource() . '/' . $forex->getTarget(), $written)) ?: '-'));
+        } catch (ExchangeRatesException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToIndex();
+    }
+
     public static function getEntityFqcn(): string
     {
         return Forex::class;

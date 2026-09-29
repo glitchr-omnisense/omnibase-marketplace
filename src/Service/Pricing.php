@@ -7,8 +7,17 @@ use Base\Market\Entity\Order\OrderItem;
 use Base\Market\Entity\Sales\Discount;
 use Base\Market\Entity\Sales\Discount\Coupon;
 use Base\Market\Entity\Sales\Discount\Promotion;
+use Base\Market\Entity\Product;
+use Base\Market\Entity\Sales\Attribute\Scope\ProductAdapter;
+use Base\Market\Entity\Sales\Attribute\Scope\RegionAdapter;
+use Base\Market\Entity\Sales\Attribute\Scope\StoreAdapter;
+use Base\Market\Entity\Sales\Attribute\Scope\TaxonAdapter;
+use Base\Market\Entity\Sales\Region;
 use Base\Market\Entity\Sales\Tax\Vat;
+use Base\Market\Pricing\VatExemptionInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Prices a cart: the promotions running now, then the coupons the member
@@ -24,11 +33,39 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * A coupon for "individual use" stands alone: no promotion, no other
  * coupon. Nothing is ever cut below zero. Paid orders are never repriced.
+ *
+ * Prices are stored before VAT; each line's VAT is the most specific rate
+ * whose scopes hold its product - see vatRateFor() - unless the order is
+ * exempt (VatExemptionInterface: a reverse charge, an export).
  */
-final class Pricing
+final class Pricing implements ResetInterface
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    /**
+     * How specific a VAT scope is: a product's own rate before its taxon's,
+     * its store's, then its region's - so a grocery store's reduced rate wins
+     * over the country's standard one. A scope without adapter holds
+     * everything and ranks last.
+     */
+    private const SPECIFICITY = [
+        ProductAdapter::class => 4,
+        TaxonAdapter::class => 3,
+        StoreAdapter::class => 2,
+        RegionAdapter::class => 1,
+    ];
+
+    /** @var Vat[]|null the rates, read once a request */
+    private ?array $vats = null;
+
+    /** @param iterable<VatExemptionInterface> $exemptions */
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        #[AutowireIterator('market.vat_exemption')] private readonly iterable $exemptions = [],
+    ) {
+    }
+
+    public function reset(): void
     {
+        $this->vats = null;
     }
 
     public function reprice(Order $order): void
@@ -76,35 +113,88 @@ final class Pricing
 
         $order->setDiscountCharge(min($orderCut, $order->getSalePrice()));
 
-        // VAT on each line's sale price (after its discounts): the first VAT
-        // whose scopes hold the product or the order's region. The order's
-        // net price adds it (Order::getVatCharge()); it was never set.
-        $vats = $this->entityManager->getRepository(Vat::class)->findAll();
+        // VAT on each line's sale price (after its discounts), none for an
+        // exempt order. The order's net price adds it (Order::getVatCharge()).
+        $order->setVatExemption($this->exemption($order));
         foreach ($order->getItems() as $item) {
-            $rate = $this->vatRate($vats, $item->getProduct(), $order->getRegion());
+            $rate = $order->isVatExempt() ? 0.0 : $this->vatRate($item->getProduct(), $order->getRegion());
             $item->setVatCharge((int) round($item->getSalePrice() * $rate));
         }
     }
 
-    /** @param Vat[] $vats */
-    private function vatRate(array $vats, ?object $product, ?object $region): float
+    /** The first exemption's mention for this order, or null: it pays VAT. */
+    private function exemption(Order $order): ?string
     {
-        foreach ($vats as $vat) {
+        foreach ($this->exemptions as $exemption) {
+            if (null !== $mention = $exemption->exempts($order)) {
+                return $mention;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The VAT rate a product sells at (0.055 for 5.5 %): the most specific
+     * VAT whose scopes hold it, else the one of the region given (or the
+     * order's). 0 when none does, and in an order exempt from VAT.
+     */
+    public function vatRateFor(Product $product, ?Region $region = null, ?Order $order = null): float
+    {
+        return $order?->isVatExempt() ? 0.0 : $this->vatRate($product, $region ?? $order?->getRegion());
+    }
+
+    /**
+     * A product's unit price with its VAT, in cents: what a buyer is shown.
+     * Without an order, the VAT is the product's own (an anonymous visitor
+     * sees prices VAT included); in an exempt order, none.
+     */
+    public function priceWithVat(Product $product, ?Region $region = null, ?Order $order = null): int
+    {
+        return (int) round((int) $product->getUnitPrice() * (1 + $this->vatRateFor($product, $region, $order)));
+    }
+
+    private function vatRate(?object $product, ?object $region): float
+    {
+        $this->vats ??= $this->entityManager->getRepository(Vat::class)->findAll();
+
+        $best = null;
+        $bestRank = -1;
+        foreach ($this->vats as $vat) {
             if (!$vat->getRate()) {
                 continue;
             }
             foreach ($vat->getScopes() as $scope) {
-                try {
-                    if (($product && $scope->contains($product)) || ($region && $scope->contains($region))) {
-                        return (float) $vat->getRate();
+                $adapter = $scope->getAdapter();
+                $rank = 0;
+                foreach (self::SPECIFICITY as $class => $specificity) {
+                    if ($adapter instanceof $class) {
+                        $rank = $specificity;
+                        break;
                     }
+                }
+                if ($rank <= $bestRank) {
+                    continue;
+                }
+
+                try {
+                    // The region only answers for a region's VAT: a store's
+                    // scope also "holds" any region the store sells in, which
+                    // would hand its rate to every other store there.
+                    $holds = ($product && $scope->contains($product))
+                        || ($region && $adapter instanceof RegionAdapter && $scope->contains($region));
                 } catch (\Throwable) {
                     // A scope that cannot judge this subject does not hold it.
+                    $holds = false;
+                }
+                if ($holds) {
+                    $best = (float) $vat->getRate();
+                    $bestRank = $rank;
                 }
             }
         }
 
-        return 0.0;
+        return $best ?? 0.0;
     }
 
     /**

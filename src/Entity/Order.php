@@ -704,6 +704,31 @@ class Order implements IconizeInterface, LinkableInterface
         return $vatCharge;
     }
 
+    /**
+     * Why this order pays no VAT (a reverse charge's mention, an export),
+     * as a VatExemptionInterface answered when it was priced; null when it
+     * pays VAT. What an invoice or a receipt must print.
+     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    protected ?string $vatExemption = null;
+
+    public function getVatExemption(): ?string
+    {
+        return $this->vatExemption;
+    }
+
+    public function setVatExemption(?string $vatExemption): self
+    {
+        $this->vatExemption = $vatExemption;
+
+        return $this;
+    }
+
+    public function isVatExempt(): bool
+    {
+        return null !== $this->vatExemption;
+    }
+
     public function getNetPrice(): int
     {
         return max(

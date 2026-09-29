@@ -4,7 +4,7 @@ namespace Base\Market\Controller\Admin\Crud;
 
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
@@ -21,7 +21,7 @@ use Doctrine\ORM\QueryBuilder;
  * Admin view of the orders: a list and a detail page. Their state moves
  * through the shop (cart, checkout, payment), so nothing here edits them.
  */
-class OrderCrudController extends AbstractCrudController
+class OrderCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

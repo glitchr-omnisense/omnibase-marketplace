@@ -85,6 +85,9 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
         // in config/services.php only reaches services defined in that file.
         $container->registerForAutoconfiguration(\Base\Market\Payment\PaymentGatewayInterface::class)
             ->addTag('market.payment_gateway');
+        // Asked by Pricing whether an order is sold without VAT.
+        $container->registerForAutoconfiguration(\Base\Market\Pricing\VatExemptionInterface::class)
+            ->addTag('market.vat_exemption');
 
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');

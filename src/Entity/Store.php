@@ -19,6 +19,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: StoreRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
@@ -164,6 +166,69 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
         $this->currency = $currency;
 
         return $this;
+    }
+
+    /**
+     * Whether this store charges VAT: its owner's choice, for their business
+     * - and only with a valid VAT number. A store that does not sells without
+     * VAT, its orders carrying "TVA non applicable, art. 293 B du CGI"
+     * (StoreVatRegime).
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    protected bool $chargesVat = true;
+
+    public function chargesVat(): bool
+    {
+        return $this->chargesVat;
+    }
+
+    public function setChargesVat(bool $chargesVat): self
+    {
+        $this->chargesVat = $chargesVat;
+
+        return $this;
+    }
+
+    /** The store's intra-EU VAT number (FR12345678901), required to charge VAT. */
+    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    protected ?string $vatNumber = null;
+
+    public function getVatNumber(): ?string
+    {
+        return $this->vatNumber;
+    }
+
+    public function setVatNumber(?string $vatNumber): self
+    {
+        $vatNumber = null === $vatNumber ? null : strtoupper(preg_replace('/[\s.-]+/', '', $vatNumber));
+        $this->vatNumber = '' === $vatNumber ? null : $vatNumber;
+
+        return $this;
+    }
+
+    /**
+     * An intra-EU VAT number's shape: two letters (the member state; EL for
+     * Greece), then 2 to 12 digits or letters - France's FR, two characters
+     * and the nine digits of the SIREN. The number itself is not asked of
+     * VIES here.
+     */
+    public static function isVatNumberWellFormed(?string $vatNumber): bool
+    {
+        if (null === $vatNumber || !preg_match('/^[A-Z]{2}[0-9A-Z+*]{2,12}$/', $vatNumber)) {
+            return false;
+        }
+
+        return !str_starts_with($vatNumber, 'FR') || (bool) preg_match('/^FR[0-9A-Z]{2}[0-9]{9}$/', $vatNumber);
+    }
+
+    #[Assert\Callback]
+    public function validateVat(ExecutionContextInterface $context): void
+    {
+        if ($this->chargesVat && null !== $this->vatNumber && !self::isVatNumberWellFormed($this->vatNumber)) {
+            $context->buildViolation('Ce numéro de TVA intracommunautaire n\'est pas valide.')->atPath('vatNumber')->addViolation();
+        } elseif ($this->chargesVat && null === $this->vatNumber) {
+            $context->buildViolation('Sans numéro de TVA valide, la TVA ne peut pas être appliquée.')->atPath('vatNumber')->addViolation();
+        }
     }
 
     #[ORM\OneToMany(targetEntity: ProductTaxon::class, mappedBy: 'store')]

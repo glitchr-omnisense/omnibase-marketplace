@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\BooleanField;
 use Base\Field\CountryField;
@@ -20,7 +20,7 @@ use Base\Market\Entity\Store;
  * first region covering a visitor's country wins). A disabled region is
  * kept but no longer offered. A region orders were placed in stays.
  */
-class RegionCrudController extends AbstractCrudController
+class RegionCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

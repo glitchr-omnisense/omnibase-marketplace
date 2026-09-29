@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\AttributeField;
 use Base\Field\IdField;
@@ -11,12 +11,19 @@ use Base\Field\TextField;
 use Base\Market\Entity\Sales\Tax;
 
 /**
- * The taxes (VAT included, a Tax of its own kind): a rate, and the scopes it
- * applies to - a region, a product, a taxon. Pricing takes the first tax
- * whose scopes hold the item or the buyer's region.
+ * Every tax, VAT rates included: a rate, and the scopes it applies to - a
+ * region, a store, a taxon, a product. One created here is an additional tax;
+ * VAT rates are created on their own screen (VatCrudController), the ones
+ * Pricing adds to each line.
  */
-class TaxRateCrudController extends AbstractCrudController
+class TaxRateCrudController extends AbstractMarketCrudController
 {
+    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    protected function isPricing(): bool
+    {
+        return true;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Tax::class;

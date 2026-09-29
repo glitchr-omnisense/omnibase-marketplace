@@ -4,7 +4,7 @@ namespace Base\Market\Controller\Admin\Crud;
 
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
@@ -17,7 +17,7 @@ use Base\Market\Entity\Order\Transaction;
  * The payments recorded against orders, as the gateways reported them. A
  * record of what happened: read, never written or deleted from here.
  */
-class TransactionCrudController extends AbstractCrudController
+class TransactionCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

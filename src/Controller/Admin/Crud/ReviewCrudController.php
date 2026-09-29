@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\DateTimePickerField;
 use Base\Field\IdField;
@@ -21,7 +21,7 @@ use Base\Market\Entity\Store;
  * Customer reviews: the product and store they are about, their rating and
  * pictures, and when they show (a review is a Thread: published or not).
  */
-class ReviewCrudController extends AbstractCrudController
+class ReviewCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

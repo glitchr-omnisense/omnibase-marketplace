@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\BooleanField;
 use Base\Field\CurrencyField;
@@ -14,10 +14,17 @@ use Base\Market\Entity\Store;
 use Base\Field\SelectField;
 use Base\Market\Entity\Product;
 use Base\Market\Entity\Sales\Region;
+use Base\Entity\User;
 
 /** Admin CRUD for the stores: a name, the currency it trades in, open or shut. */
-class StoreCrudController extends AbstractCrudController
+class StoreCrudController extends AbstractMarketCrudController
 {
+    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    protected function isPricing(): bool
+    {
+        return true;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Store::class;
@@ -48,6 +55,12 @@ class StoreCrudController extends AbstractCrudController
         yield BooleanField::new('open')->setColumns(3);
         // Store::$regions and $products alias the thread's tags and children
         yield SelectField::new('tags', 'Regions')->setClass(Region::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        // VAT: the owner's choice, and only with a valid VAT number.
+        yield BooleanField::new('chargesVat', 'Applique la TVA')->setColumns(3)->hideOnIndex();
+        yield TextField::new('vatNumber', 'N° de TVA intracommunautaire')->setRequired(false)->setColumns(3)->hideOnIndex()
+            ->setHelp('Sans numéro de TVA valide, la TVA ne peut pas être appliquée.');
+        // Its owners read the whole marketplace in the back office (MarketplaceVoter).
+        yield SelectField::new('owners')->setClass(User::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         yield SelectField::new('children', 'Products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
         yield TextareaField::new('excerpt')->hideOnIndex();
     }

@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AttributeField;
 use Base\Field\IdField;
@@ -15,7 +15,7 @@ use Base\Market\Entity\Product\Identifier;
  * A product's codes (EAN, UPC...): what the marketplaces and feeds match it
  * by. One identifier per product or variant, one barcode per standard.
  */
-class ProductIdentifierCrudController extends AbstractCrudController
+class ProductIdentifierCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {

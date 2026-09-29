@@ -2,7 +2,7 @@
 
 namespace Base\Market\Controller\Admin\Crud;
 
-use Base\Admin\Controller\AbstractCrudController;
+use Base\Market\Controller\Admin\AbstractMarketCrudController;
 use Base\Field\ColorField;
 use Base\Field\IconField;
 use Base\Field\IdField;
@@ -16,7 +16,7 @@ use Base\Market\Entity\Sales\Channel;
  * The sales channels a product is published on (the storefront, a product
  * feed, an export): a product appears where its channels say.
  */
-class ChannelCrudController extends AbstractCrudController
+class ChannelCrudController extends AbstractMarketCrudController
 {
     public static function getEntityFqcn(): string
     {
