@@ -145,6 +145,25 @@ final class Pricing implements ResetInterface
     }
 
     /**
+     * The VAT rates an order's lines sell at, each once, lowest first (none
+     * for an exempt order): "TVA (20 %)" on a receipt when there is one.
+     *
+     * @return float[]
+     */
+    public function vatRatesOf(Order $order): array
+    {
+        $rates = [];
+        foreach ($order->getItems() as $item) {
+            if ($item->getProduct() && ($rate = $this->vatRateFor($item->getProduct(), null, $order)) > 0) {
+                $rates[(string) $rate] = $rate;
+            }
+        }
+        sort($rates);
+
+        return array_values($rates);
+    }
+
+    /**
      * A product's unit price with its VAT, in cents: what a buyer is shown.
      * Without an order, the VAT is the product's own (an anonymous visitor
      * sees prices VAT included); in an exempt order, none.

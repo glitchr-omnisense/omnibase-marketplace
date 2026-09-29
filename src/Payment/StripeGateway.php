@@ -86,6 +86,8 @@ final class StripeGateway implements PaymentGatewayInterface
             'mode' => 'payment',
             'line_items' => $lines,
             'customerEmail' => $order->getCustomer()?->getEmail(),
+            // An order sold without VAT says why, on the page and the receipt.
+            'vatMention' => $order->getVatExemption(),
             'adaptivePricing' => (bool) ($method->getGatewayParameters()['adaptive_pricing'] ?? false),
             // Stripe fills {CHECKOUT_SESSION_ID} in; the braces must survive URL encoding.
             'success_url' => str_replace('SESSION_ID_PLACEHOLDER', '{CHECKOUT_SESSION_ID}', $return(['session' => 'SESSION_ID_PLACEHOLDER'])),

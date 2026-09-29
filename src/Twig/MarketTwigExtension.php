@@ -14,6 +14,7 @@ use Twig\TwigFunction;
  *
  *   {{ market_price_with_vat(product)|... }}   cents, VAT included
  *   {{ market_vat_rate(product) }}             0.055 for 5.5 %
+ *   {{ market_vat_rates(order) }}              an order's rates, each once
  */
 final class MarketTwigExtension extends AbstractExtension
 {
@@ -27,6 +28,7 @@ final class MarketTwigExtension extends AbstractExtension
             new TwigFunction('market_cart_count', [$this->cart, 'count']),
             new TwigFunction('market_price_with_vat', [$this->pricing, 'priceWithVat']),
             new TwigFunction('market_vat_rate', [$this->pricing, 'vatRateFor']),
+            new TwigFunction('market_vat_rates', [$this->pricing, 'vatRatesOf']),
         ];
     }
 }

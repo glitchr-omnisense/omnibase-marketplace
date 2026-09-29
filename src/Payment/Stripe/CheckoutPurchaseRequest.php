@@ -34,6 +34,17 @@ class CheckoutPurchaseRequest extends PurchaseRequest
         return $this->setParameter('adaptivePricing', $value);
     }
 
+    /** Why the order pays no VAT (Order::getVatExemption()): shown on the payment page, carried to the receipt. */
+    public function getVatMention(): ?string
+    {
+        return $this->getParameter('vatMention');
+    }
+
+    public function setVatMention(?string $value): self
+    {
+        return $this->setParameter('vatMention', $value);
+    }
+
     public function getData(): array
     {
         $data = array_filter(parent::getData(), static fn ($value) => null !== $value);
@@ -42,6 +53,10 @@ class CheckoutPurchaseRequest extends PurchaseRequest
         }
         // Form-encoded: Stripe reads the strings "true" / "false".
         $data['adaptive_pricing'] = ['enabled' => $this->getAdaptivePricing() ? 'true' : 'false'];
+        if ($this->getVatMention()) {
+            $data['custom_text'] = ['submit' => ['message' => $this->getVatMention()]];
+            $data['payment_intent_data'] = ['description' => $this->getVatMention()];
+        }
 
         return $data;
     }

@@ -37,7 +37,7 @@
         </tbody>
         <tfoot>
             {% if cart.discountCharge > 0 %}<tr><th colspan="3" class="num">{{ '@market.cart.discount'|trans }}</th><th class="num market-discount">− {% include '@Market/client/_price.html.twig' with {amount: cart.discountCharge, currency: cart.currency} %}</th><th></th></tr>{% endif %}
-            <tr><th colspan="3" class="num">{{ '@market.cart.grand_total'|trans }}</th><th class="num">{% include '@Market/client/_price.html.twig' with {amount: cart.netPrice, currency: cart.currency} %}</th><th></th></tr>
+            {% include '@Market/client/_vat.html.twig' with {order: cart, layout: 'table'} only %}
         </tfoot>
     </table>
 

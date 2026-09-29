@@ -22,6 +22,10 @@ cart:
   remove: "Retirer"
   total: "Total"
   grand_total: "Total"
+  total_ht: "Total HT"
+  vat: "TVA"
+  vat_rate: "TVA ({rate, number} %)"
+  total_ttc: "Total TTC"
   checkout: "Commander"
   added: "{product} a été ajouté à ton panier."
   error:

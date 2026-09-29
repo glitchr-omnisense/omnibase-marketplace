@@ -1,4 +1,4 @@
-{# An order's totals: lines, discount, shipping, what is paid. Variables: order. #}
+{# An order's totals: lines (before VAT), discount, shipping, then HT / VAT / TTC or the exemption's mention (_vat). Variables: order. #}
 <ul class="market-summary">
     {% for line in order.items %}
         <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>
@@ -10,5 +10,5 @@
     {% if order.shippingMethod %}
         <li><span>{{ '@market.shipping.title'|trans }} : {{ order.shippingMethod.label }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.shippingCharge, currency: order.currency} %}</li>
     {% endif %}
-    <li class="market-summary-total"><span>{{ '@market.cart.grand_total'|trans }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</li>
+    {% include '@Market/client/_vat.html.twig' with {order: order, layout: 'list'} only %}
 </ul>

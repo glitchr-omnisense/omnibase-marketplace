@@ -22,6 +22,10 @@ cart:
   remove: "Remove"
   total: "Total"
   grand_total: "Total"
+  total_ht: "Total excl. VAT"
+  vat: "VAT"
+  vat_rate: "VAT ({rate, number} %)"
+  total_ttc: "Total incl. VAT"
   checkout: "Checkout"
   added: "{product} was added to your cart."
   error:
