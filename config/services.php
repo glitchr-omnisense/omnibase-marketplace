@@ -45,6 +45,7 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Model/',
             // A constraint, not a service: its validator is one.
             $src . '/Validator/CompanyNumber.php',
+            $src . '/Validator/VatNumber.php',
             $src . '/Controller/Admin/',
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
