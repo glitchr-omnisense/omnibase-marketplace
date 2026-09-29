@@ -9,6 +9,8 @@ use Base\Service\Model\IconizeInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ForexRepository::class)]
+// One rate per pair: with two rows for EUR/USD, which one converts is chance.
+#[ORM\UniqueConstraint(name: 'forex_pair', columns: ['source', 'target'])]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
 class Forex implements IconizeInterface
 {
@@ -81,10 +83,18 @@ class Forex implements IconizeInterface
         return $this->rate;
     }
 
+    public function setProvider(?string $provider): self
+    {
+        $this->provider = $provider;
+
+        return $this;
+    }
+
+    /** The rate, and where it comes from: a provider's name, or null for one set by hand. */
     public function setRate(float $rate, ?string $provider = null): self
     {
         $this->rate = $rate;
-        $this->provider = null;
+        $this->provider = $provider;
 
         return $this;
     }
