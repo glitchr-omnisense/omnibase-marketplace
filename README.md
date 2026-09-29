@@ -139,11 +139,22 @@ market:
     gateways:
         stripe:                      # the payment method's slug
             api_key: '%env(default::STRIPE_API_KEY)%'
-            webhook_secret: '%env(default::STRIPE_WEBHOOK_SECRET)%'
+            webhook_secret: '%env(default::STRIPE_WEBHOOK_SECRET)%'   # optional, see below
+            webhook_url: '%env(default::STRIPE_WEBHOOK_URL)%'         # for market:stripe:webhook
             currencies: [EUR]
 ```
 
-Create a payment method with the slug `stripe` and the gateway `stripe`. While `api_key` is empty, checkout doesn't offer it. In the Stripe dashboard, point a webhook at `https://<host>/market/stripe/webhook` with the `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` events. Every event's signature is checked against `webhook_secret`.
+Create a payment method with the slug `stripe` and the gateway `stripe`. While `api_key` is empty, checkout doesn't offer it.
+
+The webhook endpoint - `https://<host>/market/stripe/webhook` with the `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` events - is created by a command, safe to run on every deploy:
+
+```bash
+bin/console market:stripe:webhook              # creates it if Stripe lacks it, completes its events otherwise
+bin/console market:stripe:webhook --dry-run    # says what it would do
+bin/console market:stripe:webhook --recreate   # a new endpoint, hence a new signing secret
+```
+
+The address is `--url`, else `webhook_url`, else the route under the router's default URI. With no API key, or an address Stripe cannot reach (localhost - use `stripe listen` there), it does nothing and succeeds. Stripe returns an endpoint's signing secret only when it is created: the command stores it in the settings (`market.stripe.<slug>.webhook_secret`, secured), and the gateway reads it there when `webhook_secret` is empty - nothing to copy. Every event's signature is checked against that secret; a `webhook_secret` that is set wins, which is how `stripe listen`'s secret is used locally. An endpoint made by hand in the dashboard is found by its URL; its secret has to be revealed there into `webhook_secret`, or replaced with `--recreate`.
 
 A cancelled or expired payment puts the order back in the cart. A gateway error does the same, and the member sees why.
 

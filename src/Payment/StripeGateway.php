@@ -5,6 +5,7 @@ namespace Base\Market\Payment;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Order\Method\PaymentMethod;
 use Base\Market\Entity\Order\Transaction;
+use Base\Service\SettingBagInterface;
 use Base\Market\Payment\Stripe\CheckoutGateway;
 use Omnipay\Omnipay;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -19,7 +20,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  *
  * Settings, under market.gateways.<method slug>:
  *   api_key         the secret key (sk_live_... / sk_test_...)
- *   webhook_secret  the signing secret of the webhook endpoint (whsec_...)
+ *   webhook_secret  the signing secret of the webhook endpoint (whsec_...) -
+ *                   optional: market:stripe:webhook creates the endpoint and
+ *                   stores its secret in the settings, read when this is empty
+ *   webhook_url     optional, the endpoint's public address for that command
  *   currencies      optional, the currencies the method takes
  *   adaptive_pricing  optional, true to let Stripe offer the buyer's own
  *                   currency (Adaptive Pricing); off, the order's currency only
@@ -28,8 +32,27 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final class StripeGateway implements PaymentGatewayInterface
 {
-    public function __construct(private readonly UrlGeneratorInterface $urls)
+    public function __construct(
+        private readonly UrlGeneratorInterface $urls,
+        private readonly ?SettingBagInterface $settings = null,
+    ) {
+    }
+
+    /** Where market:stripe:webhook keeps the secret of the endpoint it created for $method. */
+    public static function webhookSecretSetting(PaymentMethod $method): string
     {
+        return 'market.stripe.'.str_replace(['-', '.'], '_', (string) $method->getSlug()).'.webhook_secret';
+    }
+
+    /** The endpoint's signing secret: the gateway's webhook_secret, else the one the command stored; null when neither. */
+    public static function webhookSecret(PaymentMethod $method, ?SettingBagInterface $settings): ?string
+    {
+        $secret = (string) ($method->getGatewayParameters()['webhook_secret'] ?? '');
+        if ('' === $secret && $settings) {
+            $secret = (string) ($settings->getScalar(self::webhookSecretSetting($method)) ?? '');
+        }
+
+        return '' === $secret ? null : $secret;
     }
 
     public static function name(): string
@@ -91,8 +114,8 @@ final class StripeGateway implements PaymentGatewayInterface
      */
     public function verify(PaymentMethod $method, string $payload, string $header, int $tolerance = 300): bool
     {
-        $secret = (string) ($method->getGatewayParameters()['webhook_secret'] ?? '');
-        if ('' === $secret) {
+        $secret = self::webhookSecret($method, $this->settings);
+        if (null === $secret) {
             return false;
         }
 
