@@ -15,6 +15,7 @@ use Base\Field\SelectField;
 use Base\Market\Entity\Product;
 use Base\Market\Entity\Sales\Region;
 use Base\Entity\User;
+use Omnistate\Bridge\Symfony\Form\CompanySearchType;
 
 /** Admin CRUD for the stores: a name, the currency it trades in, open or shut. */
 class StoreCrudController extends AbstractMarketCrudController
@@ -55,6 +56,11 @@ class StoreCrudController extends AbstractMarketCrudController
         yield BooleanField::new('open')->setColumns(3);
         // Store::$regions and $products alias the thread's tags and children
         yield SelectField::new('tags', 'Regions')->setClass(Region::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        // Find the company by its name in the register (Omnistate): the pick fills its VAT number.
+        yield TextField::new('company', 'Rechercher la société')->onlyOnForms()->setColumns(6)
+            ->setFormType(CompanySearchType::class)
+            ->setFormTypeOptions(['mapped' => false, 'required' => false, 'fill' => ['vatNumber' => 'vatNumber']])
+            ->setHelp('Nom ou SIREN : le numéro de TVA se remplit avec celui de la société choisie.');
         // VAT: the owner's choice, and only with a valid VAT number.
         yield BooleanField::new('chargesVat', 'Applique la TVA')->setColumns(3)->hideOnIndex();
         yield TextField::new('vatNumber', 'N° de TVA intracommunautaire')->setRequired(false)->setColumns(3)->hideOnIndex()

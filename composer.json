@@ -78,6 +78,7 @@
         "glitchr/base-bundle": "3.0.*-dev",
         "glitchr/base-bundle-admin": "dev-main",
         "glitchr/omnistate": "1.x-dev",
+        "omnistate/annuaire-entreprises": "1.x-dev",
         "omnistate/vies": "1.x-dev",
         "symfony/config": "^6.0|^7.0|^8.0",
         "symfony/dependency-injection": "^6.0|^7.0|^8.0",
@@ -109,8 +110,5 @@
             "glitchr/doctrine-dc2type": true,
             "php-http/discovery": true
         }
-    },
-    "suggest": {
-        "omnistate/annuaire-entreprises": "The company register: French SIRENs and SIRETs from the State's Recherche d'entreprises (free, no key)"
     }
 }
