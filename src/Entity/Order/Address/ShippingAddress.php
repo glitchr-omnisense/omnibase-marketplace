@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Order\Address;
+namespace Base\Marketplace\Entity\Order\Address;
 
-use Base\Market\Entity\Order;
-use Base\Market\Repository\Order\Address\ShippingAddressRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Repository\Order\Address\ShippingAddressRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\User\Address;

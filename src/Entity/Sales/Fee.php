@@ -1,11 +1,11 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Entity\Sales\Attribute\FeeAction;
-use Base\Market\Entity\Sales\Attribute\FeeRule;
-use Base\Market\Entity\Sales\Attribute\FeeScope;
-use Base\Market\Repository\Sales\FeeRepository;
+use Base\Marketplace\Entity\Sales\Attribute\FeeAction;
+use Base\Marketplace\Entity\Sales\Attribute\FeeRule;
+use Base\Marketplace\Entity\Sales\Attribute\FeeScope;
+use Base\Marketplace\Repository\Sales\FeeRepository;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
 use Base\Traits\BaseTrait;

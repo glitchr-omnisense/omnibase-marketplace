@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Payment;
+namespace Base\Marketplace\Payment;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
 
 /**
  * One way of taking money for an order.
@@ -12,7 +12,7 @@ use Base\Market\Entity\Order\Transaction;
  * A PaymentMethod (an entity, configured in the admin) names its gateway by
  * `gatewayFactory`; the gateway with that name() is the one that takes the
  * payment. Services implementing this interface are tagged
- * market.payment_gateway and collected by PaymentGatewayRegistry, so an
+ * marketplace.payment_gateway and collected by PaymentGatewayRegistry, so an
  * application adds a gateway by writing a class - a currency of its own, a
  * card processor, a bank transfer.
  *

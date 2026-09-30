@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Entity\Order;
-use Base\Market\Enum\OrderState;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Enum\OrderState;
 use Base\Service\PaginatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,11 +20,11 @@ class OrderController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly PaginatorInterface $paginator,
-        #[Autowire('%market.orders_per_page%')] private readonly int $perPage = 20,
+        #[Autowire('%marketplace.orders_per_page%')] private readonly int $perPage = 20,
     ) {
     }
 
-    #[Route('/commandes', name: 'market_orders')]
+    #[Route('/commandes', name: 'marketplace_orders')]
     public function Index(Request $request): Response
     {
         $query = $this->entityManager->getRepository(Order::class)->createQueryBuilder('o')
@@ -33,12 +33,12 @@ class OrderController extends AbstractController
             ->orderBy('o.createdAt', 'DESC')
             ->getQuery();
 
-        return $this->render('@Market/client/orders.html.twig', [
+        return $this->render('@Marketplace/client/orders.html.twig', [
             'orders' => $this->paginator->paginate($query, max(1, $request->query->getInt('page', 1)), $this->perPage),
         ]);
     }
 
-    #[Route('/commandes/{reference}', name: 'market_order', requirements: ['reference' => '[A-Za-z0-9\-]+'])]
+    #[Route('/commandes/{reference}', name: 'marketplace_order', requirements: ['reference' => '[A-Za-z0-9\-]+'])]
     public function Show(string $reference): Response
     {
         $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]);
@@ -46,6 +46,6 @@ class OrderController extends AbstractController
             throw $this->createNotFoundException('Unknown order.');
         }
 
-        return $this->render('@Market/client/order.html.twig', ['order' => $order]);
+        return $this->render('@Marketplace/client/order.html.twig', ['order' => $order]);
     }
 }

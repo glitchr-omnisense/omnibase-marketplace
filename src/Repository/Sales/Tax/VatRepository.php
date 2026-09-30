@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Tax;
+namespace Base\Marketplace\Repository\Sales\Tax;
 
-use Base\Market\Entity\Sales\Tax;
-use Base\Market\Repository\Sales\TaxRepository;
+use Base\Marketplace\Entity\Sales\Tax;
+use Base\Marketplace\Repository\Sales\TaxRepository;
 
 /**
  * @method Tax|null find($id, $lockMode = null, $lockVersion = null)

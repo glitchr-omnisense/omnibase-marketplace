@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository;
+namespace Base\Marketplace\Repository;
 
-use Base\Market\Entity\Review;
+use Base\Marketplace\Entity\Review;
 use Base\Repository\ThreadRepository;
 
 /**

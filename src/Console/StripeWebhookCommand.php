@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Console;
+namespace Base\Marketplace\Console;
 
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Payment\StripeGateway;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Payment\StripeGateway;
 use Base\Service\SettingBagInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -17,9 +17,9 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Makes sure Stripe knows where to send the market's events: for every
+ * Makes sure Stripe knows where to send the marketplace's events: for every
  * payment method on the Stripe gateway that has an API key, the webhook
- * endpoint on market_stripe_webhook, listening to the Checkout events
+ * endpoint on marketplace_stripe_webhook, listening to the Checkout events
  * StripeController handles. Safe to run again and again - on every deploy,
  * from the container's entrypoint:
  *
@@ -31,14 +31,14 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *     it when the gateway's own webhook_secret is empty. No secret to copy.
  *
  * The address: --url, else the gateway's `webhook_url` setting
- * (market.gateways.<slug>.webhook_url), else the route's absolute URL under
+ * (marketplace.gateways.<slug>.webhook_url), else the route's absolute URL under
  * the router's default URI.
  *
  * An endpoint that exists but whose secret is known nowhere (created by hand,
  * or the settings lost) cannot be read back from the API: reveal it in the
  * Dashboard into webhook_secret, or run with --recreate for a new one.
  */
-#[AsCommand(name: 'market:stripe:webhook', description: "Create the Stripe webhook endpoint the market listens on, if Stripe does not have it yet")]
+#[AsCommand(name: 'marketplace:stripe:webhook', description: "Create the Stripe webhook endpoint the marketplace listens on, if Stripe does not have it yet")]
 final class StripeWebhookCommand extends Command
 {
     public const EVENTS = [
@@ -89,7 +89,7 @@ final class StripeWebhookCommand extends Command
                 continue;
             }
 
-            $url = (string) ($input->getOption('url') ?: ($parameters['webhook_url'] ?? '') ?: $this->urls->generate('market_stripe_webhook', [], UrlGeneratorInterface::ABSOLUTE_URL));
+            $url = (string) ($input->getOption('url') ?: ($parameters['webhook_url'] ?? '') ?: $this->urls->generate('marketplace_stripe_webhook', [], UrlGeneratorInterface::ABSOLUTE_URL));
             if (!self::reachable($url)) {
                 $io->note(sprintf('%s: Stripe cannot reach %s - locally, use `stripe listen`; elsewhere, set the gateway\'s webhook_url or pass --url.', $slug, $url));
                 continue;
@@ -138,7 +138,7 @@ final class StripeWebhookCommand extends Command
             if ('disabled' === ($found['status'] ?? null)) {
                 $io->warning(sprintf('%s: %s is disabled in Stripe - enable it in the Dashboard.', $slug, $found['id']));
             }
-            $io->success(sprintf('%s: Stripe (%s mode) already sends the market\'s events to %s (%s).', $slug, $mode, $url, $found['id']));
+            $io->success(sprintf('%s: Stripe (%s mode) already sends the marketplace\'s events to %s (%s).', $slug, $mode, $url, $found['id']));
             if (null === StripeGateway::webhookSecret($method, $this->settings)) {
                 $io->warning(sprintf('%s: its signing secret is known nowhere, and Stripe only gives it out at creation. Reveal it in the Dashboard (Developers > Webhooks) into the gateway\'s webhook_secret, or run again with --recreate.', $slug));
 
@@ -156,8 +156,8 @@ final class StripeWebhookCommand extends Command
         $created = $this->call($key, 'POST', self::API, [
             'url' => $url,
             'enabled_events' => self::EVENTS,
-            'description' => sprintf('Market - %s (%s)', $method->getLabel() ?: $slug, $slug),
-            'metadata' => ['created_by' => 'market:stripe:webhook', 'payment_method' => $slug],
+            'description' => sprintf('Marketplace - %s (%s)', $method->getLabel() ?: $slug, $slug),
+            'metadata' => ['created_by' => 'marketplace:stripe:webhook', 'payment_method' => $slug],
         ]);
         $secret = (string) ($created['secret'] ?? '');
         $setting = StripeGateway::webhookSecretSetting($method);

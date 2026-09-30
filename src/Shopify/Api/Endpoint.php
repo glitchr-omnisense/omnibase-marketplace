@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * One Shopify shop: where it is, which API version to speak, and the two

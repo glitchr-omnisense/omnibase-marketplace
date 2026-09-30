@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Attribute\Action;
+namespace Base\Marketplace\Repository\Sales\Attribute\Action;
 
-use Base\Market\Entity\Sales\Attribute\Action\PercentageAmountAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Action\PercentageAmountAdapter;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

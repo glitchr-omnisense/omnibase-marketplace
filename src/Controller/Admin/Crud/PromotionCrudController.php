@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
@@ -11,16 +11,16 @@ use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\TextField;
-use Base\Market\Entity\Sales\Discount\Promotion;
+use Base\Marketplace\Entity\Sales\Discount\Promotion;
 
 /**
  * Promotions run by themselves between two dates, highest priority first:
  * an event, a sale. Rules say when they hold (a minimum total...), scopes
  * which lines they touch (a store, a product...), actions what comes off.
  */
-class PromotionCrudController extends AbstractMarketCrudController
+class PromotionCrudController extends AbstractMarketplaceCrudController
 {
-    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    /** VAT and prices: the shops' owners set them too (MARKETPLACE_PRICING). */
     protected function isPricing(): bool
     {
         return true;

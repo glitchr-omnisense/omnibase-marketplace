@@ -34,7 +34,7 @@ class ShopifyDemoSeedCommand extends Command
             $io->writeln('  '.$line);
         }
 
-        $io->success('Seeded. Next: bin/console market:shopify:ping');
+        $io->success('Seeded. Next: bin/console marketplace:shopify:ping');
 
         return Command::SUCCESS;
     }

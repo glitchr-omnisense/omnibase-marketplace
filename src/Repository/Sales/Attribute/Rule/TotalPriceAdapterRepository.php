@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Attribute\Rule;
+namespace Base\Marketplace\Repository\Sales\Attribute\Rule;
 
-use Base\Market\Entity\Sales\Attribute\Rule\TotalPriceAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Rule\TotalPriceAdapter;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

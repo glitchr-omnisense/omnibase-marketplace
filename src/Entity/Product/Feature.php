@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Product;
+namespace Base\Marketplace\Entity\Product;
 
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Product\FeatureRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Product\FeatureRepository;
 use Base\Database\Attribute\Uploader;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\Alias;

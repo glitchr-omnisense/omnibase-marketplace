@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Repository\Product;
+namespace Base\Marketplace\Repository\Product;
 
-use Base\Market\Entity\Product\Variant;
-use Base\Market\Repository\ProductRepository;
+use Base\Marketplace\Entity\Product\Variant;
+use Base\Marketplace\Repository\ProductRepository;
 
 /**
  * @method Variant|null find($id, $lockMode = null, $lockVersion = null)

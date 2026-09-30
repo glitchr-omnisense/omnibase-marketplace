@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Attribute;
+namespace Base\Marketplace\Attribute;
 
 use Base\Attributes\AbstractAttribute;
 use Base\Attributes\AttributeReader;
@@ -17,7 +17,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  *   X  random digits
  *   Y  the date, down to the minute
  *
- * Found by base-bundle's AttributeReader because MarketExtension adds this
+ * Found by base-bundle's AttributeReader because MarketplaceExtension adds this
  * directory to base.attributes.paths.
  */
 #[\Attribute(\Attribute::TARGET_PROPERTY)]

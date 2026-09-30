@@ -2,11 +2,11 @@
 
 namespace App\Payment;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Payment\PaymentGatewayInterface;
-use Base\Market\Payment\PaymentResult;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Payment\PaymentGatewayInterface;
+use Base\Marketplace\Payment\PaymentResult;
 
 /**
  * An application's own gateway, as small as one gets: it accepts every

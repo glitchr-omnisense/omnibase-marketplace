@@ -1,5 +1,5 @@
 {
-    "name": "glitchr/base-bundle-market",
+    "name": "glitchr/base-bundle-marketplace",
     "type": "symfony-bundle",
     "description": "Marketplace for base-bundle: stores, products and variants, carts and orders, payment through pluggable gateways, sales rules (discounts, fees, taxes), reviews",
     "keywords": [
@@ -64,12 +64,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Base\\Market\\": "./src"
+            "Base\\Marketplace\\": "./src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Base\\Market\\": "./tests"
+            "Tests\\Base\\Marketplace\\": "./tests"
         }
     },
     "require": {

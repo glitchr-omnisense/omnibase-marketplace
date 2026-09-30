@@ -1,14 +1,14 @@
 <?php
 
-namespace Base\Market\Shopify\Checkout;
+namespace Base\Marketplace\Shopify\Checkout;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Payment\PaymentGatewayInterface;
-use Base\Market\Payment\PaymentResult;
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Payment\PaymentGatewayInterface;
+use Base\Marketplace\Payment\PaymentResult;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * Payment through a Shopify draft order's invoice page.
  *
  * The buyer is sent to Shopify, pays there, and the orders/paid webhook
- * confirms the order back here. Settings come from market.shopify.* (the shop
+ * confirms the order back here. Settings come from marketplace.shopify.* (the shop
  * and its token, which are infrastructure) while the payment method's own
  * gateway_parameters carry policy - `currencies`, which
  * PaymentGatewayRegistry::usableFor() already honours.
@@ -39,8 +39,8 @@ final class ShopifyGateway implements PaymentGatewayInterface
     public function __construct(
         private readonly AdminApi $api,
         private readonly DraftOrderMapper $mapper,
-        #[Autowire('%market.shopify.checkout.enabled%')] private readonly bool $enabled = false,
-        #[Autowire('%market.shopify.checkout.draft_order_tags%')] private readonly array $tags = [],
+        #[Autowire('%marketplace.shopify.checkout.enabled%')] private readonly bool $enabled = false,
+        #[Autowire('%marketplace.shopify.checkout.draft_order_tags%')] private readonly array $tags = [],
         private readonly ?LoggerInterface $logger = null,
     ) {
     }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Product;
+namespace Base\Marketplace\Repository\Product;
 
-use Base\Market\Entity\Product;
+use Base\Marketplace\Entity\Product;
 
 /**
  * @method Product|null find($id, $lockMode = null, $lockVersion = null)

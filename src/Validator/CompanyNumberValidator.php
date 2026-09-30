@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Validator;
+namespace Base\Marketplace\Validator;
 
-use Base\Market\Service\CompanyRegistry;
+use Base\Marketplace\Service\CompanyRegistry;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -21,9 +21,9 @@ final class CompanyNumberValidator extends ConstraintValidator
 
         $status = $this->registry->lookup((string) $value)['status'];
         if (CompanyRegistry::INVALID === $status) {
-            $this->context->buildViolation($constraint->invalid)->setTranslationDomain('market')->addViolation();
+            $this->context->buildViolation($constraint->invalid)->setTranslationDomain('marketplace')->addViolation();
         } elseif (CompanyRegistry::NOT_FOUND === $status) {
-            $this->context->buildViolation($constraint->unknown)->setTranslationDomain('market')->addViolation();
+            $this->context->buildViolation($constraint->unknown)->setTranslationDomain('marketplace')->addViolation();
         }
     }
 }

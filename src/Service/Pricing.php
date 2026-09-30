@@ -1,20 +1,20 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Sales\Discount;
-use Base\Market\Entity\Sales\Discount\Coupon;
-use Base\Market\Entity\Sales\Discount\Promotion;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Sales\Attribute\Scope\ProductAdapter;
-use Base\Market\Entity\Sales\Attribute\Scope\RegionAdapter;
-use Base\Market\Entity\Sales\Attribute\Scope\StoreAdapter;
-use Base\Market\Entity\Sales\Attribute\Scope\TaxonAdapter;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Sales\Tax\Vat;
-use Base\Market\Pricing\VatExemptionInterface;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Sales\Discount;
+use Base\Marketplace\Entity\Sales\Discount\Coupon;
+use Base\Marketplace\Entity\Sales\Discount\Promotion;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\ProductAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\RegionAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\StoreAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\TaxonAdapter;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Sales\Tax\Vat;
+use Base\Marketplace\Pricing\VatExemptionInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Contracts\Service\ResetInterface;
@@ -59,7 +59,7 @@ final class Pricing implements ResetInterface
     /** @param iterable<VatExemptionInterface> $exemptions */
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        #[AutowireIterator('market.vat_exemption')] private readonly iterable $exemptions = [],
+        #[AutowireIterator('marketplace.vat_exemption')] private readonly iterable $exemptions = [],
     ) {
     }
 

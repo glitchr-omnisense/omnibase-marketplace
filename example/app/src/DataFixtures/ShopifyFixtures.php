@@ -3,11 +3,11 @@
 namespace App\DataFixtures;
 
 use App\Entity\User;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Store;
-use Base\Market\Enum\ProductAvailability;
-use Base\Market\Shopify\Entity\ProductLink;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Enum\ProductAvailability;
+use Base\Marketplace\Shopify\Entity\ProductLink;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -15,7 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * Idempotent throughout: run it as many times as you like. It creates
  *
- *   - a store, the one market.shopify.catalogue.store names, because a
+ *   - a store, the one marketplace.shopify.catalogue.store names, because a
  *     synced product with no store cannot be put in a cart (Cart::add()
  *     refuses it);
  *   - a "shopify" payment method whose gatewayFactory matches
@@ -59,7 +59,7 @@ class ShopifyFixtures
             $method->setLabel('Pay on Shopify');
             $method->setSlug('shopify');
             // This is the whole wiring: the slug finds the settings under
-            // market.gateways.shopify, the factory finds the gateway service.
+            // marketplace.gateways.shopify, the factory finds the gateway service.
             $method->setGatewayFactory('shopify');
             $this->entityManager->persist($method);
             $done[] = 'payment method "shopify" created';
@@ -114,7 +114,7 @@ class ShopifyFixtures
         $product->setStore($store);
 
         foreach ($tags as $label) {
-            $feature = new \Base\Market\Entity\Product\Feature();
+            $feature = new \Base\Marketplace\Entity\Product\Feature();
             $feature->setLabel($label);
             $feature->setSlug($label);
             $this->entityManager->persist($feature);

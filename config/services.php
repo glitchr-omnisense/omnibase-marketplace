@@ -14,7 +14,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 /*
  * Plain autowiring over src/, the way an application's own src/ is wired:
  * repositories get their doctrine.repository_service tag, the payment
- * gateways their market.payment_gateway tag, the Twig extension its tag,
+ * gateways their marketplace.payment_gateway tag, the Twig extension its tag,
  * controllers theirs. Entities, enums, models and attributes are not
  * services.
  *
@@ -32,10 +32,10 @@ return function (ContainerConfigurator $configurator) {
         ->autoconfigure(true)
         ->public(false);
 
-    $services->instanceof('Base\\Market\\Payment\\PaymentGatewayInterface')
-        ->tag('market.payment_gateway');
+    $services->instanceof('Base\\Marketplace\\Payment\\PaymentGatewayInterface')
+        ->tag('marketplace.payment_gateway');
 
-    $services->load('Base\\Market\\', $src . '/')
+    $services->load('Base\\Marketplace\\', $src . '/')
         ->exclude([
             $src . '/Attribute/',
             $src . '/DependencyInjection/',
@@ -55,19 +55,19 @@ return function (ContainerConfigurator $configurator) {
             // Card payment needs omnipay/stripe; without it the gateway is left out.
             ...(class_exists('Omnipay\\Stripe\\CheckoutGateway') ? [] : [$src . '/Payment/StripeGateway.php']),
             // The Shopify subtree is wired by config/shopify.php, loaded only
-            // when market.shopify.enabled is true. This load() is recursive
+            // when marketplace.shopify.enabled is true. This load() is recursive
             // over src/, so without this line the subtree is never dormant.
             $src . '/Shopify/',
-            $src . '/MarketBundle.php',
+            $src . '/MarketplaceBundle.php',
         ]);
 
     if (is_dir($src . '/Controller/Client')) {
-        $services->load('Base\\Market\\Controller\\Client\\', $src . '/Controller/Client/')
+        $services->load('Base\\Marketplace\\Controller\\Client\\', $src . '/Controller/Client/')
             ->tag('controller.service_arguments');
     }
 
     if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {
-        $services->load('Base\\Market\\Controller\\Admin\\', $src . '/Controller/Admin/')
+        $services->load('Base\\Marketplace\\Controller\\Admin\\', $src . '/Controller/Admin/')
             ->tag('controller.service_arguments');
     }
 };

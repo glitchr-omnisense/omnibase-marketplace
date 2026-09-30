@@ -1,0 +1,130 @@
+/*
+ * The shop's look, in the same family as base-bundle-forum: a pale blue page
+ * panel, a pink accent, rounded cards. Everything is namespaced .marketplace-* and
+ * driven by the custom properties below, so a host restyles a store by
+ * overriding them on .marketplace or on .marketplace-store-<slug>.
+ */
+.marketplace {
+    --marketplace-accent: #FF3399;
+    --marketplace-primary: #006699;
+    --marketplace-primary-soft: #6090BE;
+    --marketplace-pale: #EEF5FA;
+    --marketplace-panel: #DCEAF5;
+    --marketplace-text: #284555;
+    --marketplace-muted: #6d8296;
+    --marketplace-line: #D1D7DC;
+    --marketplace-ok: #3a9d23;
+    --marketplace-warn: #DD6900;
+    --marketplace-danger: #c0392b;
+    --marketplace-radius: 12px;
+    color: var(--marketplace-text);
+    font-size: 14px;
+    line-height: 1.45;
+}
+.marketplace a { color: var(--marketplace-primary); text-decoration: none; }
+.marketplace a:hover { color: var(--marketplace-warn); text-decoration: underline; }
+
+.marketplace-title { margin: 0 0 .75rem; font: bold 30px/1.1 "Display Heavy", "Trebuchet MS", Verdana, sans-serif; color: var(--marketplace-accent); letter-spacing: 1px; }
+.marketplace-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; margin: 0 0 1.25rem; font-size: 12.5px; color: var(--marketplace-muted); }
+.marketplace-bar > * { display: inline-flex; align-items: center; gap: .3rem; }
+.marketplace-bar-end { margin-left: auto; display: flex; gap: 1rem; }
+.marketplace-badge { display: inline-block; min-width: 1.4em; padding: 0 .35em; border-radius: 999px; background: var(--marketplace-accent); color: #fff; font-size: 11px; font-weight: bold; text-align: center; }
+.marketplace-intro { margin: 0 0 1rem; padding: .8rem 1rem; border-radius: var(--marketplace-radius); background: var(--marketplace-panel); }
+.marketplace-empty, .marketplace-closed { padding: 1rem; border-radius: var(--marketplace-radius); background: var(--marketplace-pale); color: var(--marketplace-muted); text-align: center; }
+.marketplace-closed { color: var(--marketplace-warn); }
+
+/* buttons */
+.marketplace-btn { display: inline-flex; align-items: center; gap: .4rem; border: 0; border-radius: 999px; padding: .5rem 1.1rem; font: bold 13px Verdana, sans-serif; cursor: pointer; text-decoration: none; }
+.marketplace-btn:hover { text-decoration: none; filter: brightness(1.08); }
+.marketplace .marketplace-btn-primary { background: var(--marketplace-accent); color: #fff; }
+.marketplace .marketplace-btn-ghost { background: var(--marketplace-pale); color: var(--marketplace-primary); }
+.marketplace .marketplace-btn-danger { background: transparent; color: var(--marketplace-danger); }
+.marketplace-btn-sm { padding: .3rem .7rem; font-size: 12px; }
+
+/* store list */
+.marketplace-stores { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; }
+.marketplace-store-card { display: flex; flex-direction: column; gap: .4rem; padding: 1.1rem 1.2rem; border-radius: var(--marketplace-radius); background: #fff; border: 1px solid var(--marketplace-line); border-top: 6px solid var(--marketplace-accent); }
+.marketplace .marketplace-store-card:hover { text-decoration: none; box-shadow: 0 4px 14px rgba(0, 60, 110, .15); }
+.marketplace-store-name { font: bold 18px Verdana, sans-serif; color: var(--marketplace-primary); }
+.marketplace-store-excerpt { color: var(--marketplace-muted); }
+.marketplace-store-go { margin-top: auto; color: var(--marketplace-accent); font-weight: bold; }
+
+/* product grid */
+.marketplace-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.marketplace-card { display: flex; flex-direction: column; border-radius: var(--marketplace-radius); background: #fff; border: 1px solid var(--marketplace-line); overflow: hidden; }
+.marketplace-card.is-unavailable { opacity: .6; }
+.marketplace-card-media { display: grid; place-items: center; aspect-ratio: 1; max-width: 100%; background: var(--marketplace-pale); }
+.marketplace-card-media img, .marketplace-card-media svg, .marketplace-card-media canvas { max-width: 85%; max-height: 85%; }
+.marketplace-media-placeholder { font-size: 42px; color: var(--marketplace-primary-soft); }
+.marketplace-card-body { display: flex; flex-direction: column; gap: .35rem; padding: .7rem .8rem .8rem; flex: 1; }
+.marketplace-card-title { font-weight: bold; }
+.marketplace-card-excerpt { margin: 0; color: var(--marketplace-muted); font-size: 12px; }
+.marketplace-card-foot { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+.marketplace-price { font-weight: bold; color: var(--marketplace-accent); white-space: nowrap; }
+.marketplace-soldout { font-size: 12px; color: var(--marketplace-muted); }
+
+/* product page */
+.marketplace-product { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 1.5rem; align-items: start; }
+.marketplace-product-media { display: grid; place-items: center; aspect-ratio: 1; max-width: 100%; border-radius: var(--marketplace-radius); background: var(--marketplace-pale); }
+.marketplace-product-media img, .marketplace-product-media svg, .marketplace-product-media canvas { max-width: 85%; max-height: 85%; }
+.marketplace-product h2 { margin: 0 0 .3rem; font-size: 22px; color: var(--marketplace-primary); }
+.marketplace-product-headline { margin: 0 0 .6rem; color: var(--marketplace-muted); }
+.marketplace-product-price { font-size: 20px; margin: 0 0 .5rem; }
+.marketplace-product-stock { margin: 0 0 .8rem; color: var(--marketplace-muted); font-size: 12.5px; }
+.marketplace-add { margin: 0 0 1rem; }
+@media (max-width: 640px) { .marketplace-product { grid-template-columns: 1fr; } }
+
+/* cart, orders */
+.marketplace-cart { margin-bottom: 1.5rem; }
+.marketplace-cart h2, .marketplace-checkout h2, .marketplace-order h2 { font-size: 17px; margin: 0 0 .6rem; color: var(--marketplace-primary); }
+.marketplace-lines { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid var(--marketplace-line); border-radius: var(--marketplace-radius); overflow: hidden; }
+/* A table only scrolls sideways as a block, and a block table no longer spans its box: narrow screens only. */
+@media (max-width: 640px) { .marketplace-lines { display: block; overflow-x: auto; } }
+.marketplace-lines th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #fff; background: var(--marketplace-primary); padding: .5rem .75rem; }
+.marketplace-lines td { padding: .55rem .75rem; border-top: 1px solid var(--marketplace-line); vertical-align: middle; }
+.marketplace-lines tbody tr:nth-child(even) td { background: var(--marketplace-pale); }
+.marketplace-lines tfoot th { background: var(--marketplace-panel); color: var(--marketplace-text); font-size: 13px; }
+.marketplace-lines .num { text-align: right; white-space: nowrap; }
+.marketplace-qty { display: inline-flex; gap: .3rem; align-items: center; }
+.marketplace-qty input { width: 4rem; padding: .25rem .4rem; border: 1px solid var(--marketplace-line); border-radius: 6px; font: inherit; }
+.marketplace-actions { text-align: right; margin: .75rem 0 0; }
+
+.marketplace-summary { list-style: none; margin: 0 0 1.25rem; padding: 0; border: 1px solid var(--marketplace-line); border-radius: var(--marketplace-radius); background: #fff; }
+.marketplace-summary li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-top: 1px solid var(--marketplace-line); }
+.marketplace-summary li:first-child { border-top: 0; }
+.marketplace-summary-total { font-weight: bold; background: var(--marketplace-panel); }
+
+.marketplace-methods { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+.marketplace-method { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .7rem .9rem; border: 1px solid var(--marketplace-line); border-radius: var(--marketplace-radius); background: #fff; cursor: pointer; }
+.marketplace-method:has(input:checked) { border-color: var(--marketplace-accent); background: var(--marketplace-pale); }
+.marketplace-method-label { font-weight: bold; }
+
+.marketplace-state { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: 11px; font-weight: bold; background: var(--marketplace-panel); color: var(--marketplace-primary); vertical-align: middle; }
+.marketplace-state-order_confirm, .marketplace-state-order_confirm_partial, .marketplace-state-order_shipped, .marketplace-state-order_complete, .marketplace-state-order_complete_review, .marketplace-state-order_return_received { background: #e1f3dc; color: var(--marketplace-ok); }
+.marketplace-state-order_pending, .marketplace-state-order_processing, .marketplace-state-order_delayed, .marketplace-state-order_returning { background: #fdebd9; color: var(--marketplace-warn); }
+.marketplace-state-order_cancel, .marketplace-state-order_cart_abandon, .marketplace-state-order_refund, .marketplace-state-order_return_partial { background: #f6dede; color: var(--marketplace-danger); }
+.marketplace-order-meta { color: var(--marketplace-muted); margin: 0 0 1rem; }
+.marketplace-instructions { padding: .8rem 1rem; border-radius: var(--marketplace-radius); background: #fdebd9; }
+
+/* aside */
+.marketplace-box { border: 1px solid var(--marketplace-line); border-radius: var(--marketplace-radius); overflow: hidden; background: #fff; margin-bottom: 1rem; }
+.marketplace-box-title { padding: .5rem .8rem; font: bold 13px Verdana, sans-serif; color: #fff; background: var(--marketplace-primary); }
+.marketplace-box-body { padding: .7rem .8rem; }
+.marketplace-box-body p { margin: 0 0 .6rem; }
+
+/* discounts, coupons, shipping */
+.marketplace-was { color: var(--marketplace-muted); font-weight: normal; }
+.marketplace-discount, .marketplace-summary-discount { color: var(--marketplace-ok); }
+.marketplace-coupons { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: flex-end; margin: .75rem 0 0; }
+.marketplace-coupon-tag { display: inline-flex; align-items: center; gap: .2rem; padding: .1rem .2rem .1rem .6rem; border-radius: 999px; background: #e1f3dc; }
+.marketplace-coupon-form { display: inline-flex; gap: .4rem; align-items: center; }
+.marketplace-coupon-form input { padding: .3rem .6rem; border: 1px solid var(--marketplace-line); border-radius: 999px; font: inherit; }
+.marketplace-note { color: var(--marketplace-muted); margin-top: -.6rem; }
+.marketplace-address { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: .6rem .8rem; width: 100%; }
+.marketplace-address label { display: flex; flex-direction: column; gap: .2rem; font-weight: bold; font-size: 12.5px; color: var(--marketplace-primary); }
+.marketplace-address label.wide { grid-column: 1 / -1; }
+.marketplace-address input { padding: .45rem .6rem; border: 1px solid var(--marketplace-line); border-radius: 8px; font: 14px Verdana, sans-serif; }
+.marketplace-method-extra { margin-left: auto; color: var(--marketplace-muted); }
+.marketplace-shipping { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 1rem 0; padding: .9rem 1rem; border-radius: var(--marketplace-radius); background: #fff; border: 1px solid var(--marketplace-line); }
+.marketplace-plain { margin: 0; padding-left: 1rem; }
+.marketplace-ship { padding: 1rem; margin-bottom: 1rem; border-radius: var(--marketplace-radius); background: var(--marketplace-pale); }

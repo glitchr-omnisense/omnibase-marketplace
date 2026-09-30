@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Shopify\Api\GraphQL;
-use Base\Market\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Shopify\Api\GraphQL;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;

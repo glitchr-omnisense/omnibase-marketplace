@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Model;
+namespace Base\Marketplace\Model;
 
 use Doctrine\ORM\Mapping as ORM;
 

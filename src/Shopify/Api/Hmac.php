@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * Shopify signs a webhook body with the app's API secret and sends the digest

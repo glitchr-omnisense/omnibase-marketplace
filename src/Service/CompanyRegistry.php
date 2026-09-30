@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Model\CompanyRecord;
+use Base\Marketplace\Model\CompanyRecord;
 use Omnistate\Exception\OmnistateException;
 use Omnistate\Identifier\Siren;
 use Omnistate\Identifier\Siret;

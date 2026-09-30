@@ -9,22 +9,22 @@
  #}
 {% macro row(layout, label, amount, currency, class) %}
     {% if layout == 'table' %}
-        <tr class="{{ class }}">{% if amount is null %}<td colspan="5" class="num"><small>{{ label }}</small></td>{% else %}<th colspan="3" class="num">{{ label }}</th><th class="num">{% include '@Market/client/_price.html.twig' with {amount: amount, currency: currency} %}</th><th></th>{% endif %}</tr>
+        <tr class="{{ class }}">{% if amount is null %}<td colspan="5" class="num"><small>{{ label }}</small></td>{% else %}<th colspan="3" class="num">{{ label }}</th><th class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: amount, currency: currency} %}</th><th></th>{% endif %}</tr>
     {% else %}
-        <li class="{{ class }}">{% if amount is null %}<small>{{ label }}</small>{% else %}<span>{{ label }}</span>{% include '@Market/client/_price.html.twig' with {amount: amount, currency: currency} %}{% endif %}</li>
+        <li class="{{ class }}">{% if amount is null %}<small>{{ label }}</small>{% else %}<span>{{ label }}</span>{% include '@Marketplace/client/_price.html.twig' with {amount: amount, currency: currency} %}{% endif %}</li>
     {% endif %}
 {% endmacro %}
 {% import _self as vat %}
 {% set _layout = layout|default('list') %}
 {% set _vat = order.vatCharge %}
 {% if order.vatExemption %}
-    {{ vat.row(_layout, '@market.cart.grand_total'|trans, order.netPrice, order.currency, 'market-summary-total') }}
-    {{ vat.row(_layout, order.vatExemption, null, order.currency, 'market-summary-mention') }}
+    {{ vat.row(_layout, '@marketplace.cart.grand_total'|trans, order.netPrice, order.currency, 'marketplace-summary-total') }}
+    {{ vat.row(_layout, order.vatExemption, null, order.currency, 'marketplace-summary-mention') }}
 {% elseif _vat > 0 %}
-    {% set _rates = market_vat_rates(order) %}
-    {{ vat.row(_layout, '@market.cart.total_ht'|trans, order.netPrice - _vat, order.currency, 'market-summary-subtotal') }}
-    {{ vat.row(_layout, _rates|length == 1 ? '@market.cart.vat_rate'|trans({rate: _rates[0] * 100}) : '@market.cart.vat'|trans, _vat, order.currency, 'market-summary-vat') }}
-    {{ vat.row(_layout, '@market.cart.total_ttc'|trans, order.netPrice, order.currency, 'market-summary-total') }}
+    {% set _rates = marketplace_vat_rates(order) %}
+    {{ vat.row(_layout, '@marketplace.cart.total_ht'|trans, order.netPrice - _vat, order.currency, 'marketplace-summary-subtotal') }}
+    {{ vat.row(_layout, _rates|length == 1 ? '@marketplace.cart.vat_rate'|trans({rate: _rates[0] * 100}) : '@marketplace.cart.vat'|trans, _vat, order.currency, 'marketplace-summary-vat') }}
+    {{ vat.row(_layout, '@marketplace.cart.total_ttc'|trans, order.netPrice, order.currency, 'marketplace-summary-total') }}
 {% else %}
-    {{ vat.row(_layout, '@market.cart.grand_total'|trans, order.netPrice, order.currency, 'market-summary-total') }}
+    {{ vat.row(_layout, '@marketplace.cart.grand_total'|trans, order.netPrice, order.currency, 'marketplace-summary-total') }}
 {% endif %}

@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Security;
+namespace Base\Marketplace\Security;
 
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Taxon;
-use Base\Market\Entity\Store;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Taxon;
+use Base\Marketplace\Entity\Store;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -16,27 +16,27 @@ use Symfony\Contracts\Service\ResetInterface;
 /**
  * Who reaches the marketplace in the back office:
  *
- * - MARKET_MANAGE (change anything): the creators, `market.admin_role`
+ * - MARKETPLACE_MANAGE (change anything): the creators, `marketplace.admin_role`
  *   (ROLE_SUPERADMIN by default; ROLE_EDITOR inherits it).
- * - MARKET_VIEW (read every marketplace screen): the creators, and the
+ * - MARKETPLACE_VIEW (read every marketplace screen): the creators, and the
  *   owners of a shop - a member among a Store's owners.
- * - MARKET_PRICING (change VAT, taxes, prices, discounts, a store's VAT
+ * - MARKETPLACE_PRICING (change VAT, taxes, prices, discounts, a store's VAT
  *   regime): the creators, and the shops' owners - their business, their
  *   prices, and theirs only: asked about a record, an owner is granted it
  *   when it belongs to one of their stores (a product, a store, a tax, fee
  *   or discount scoped to it). What every shop shares - a region's VAT, the
  *   exchange rates - stays the creators'.
  *
- * Nobody else, whatever other back-office rights they hold. The market's
- * CRUDs carry MARKET_VIEW as their entity permission (MarketAdminTrait);
+ * Nobody else, whatever other back-office rights they hold. The marketplace's
+ * CRUDs carry MARKETPLACE_VIEW as their entity permission (MarketplaceAdminTrait);
  * their changes already require ROLE_SUPERADMIN, the admin's default for
  * new, edit and delete.
  */
 final class MarketplaceVoter extends Voter implements ResetInterface
 {
-    public const VIEW = 'MARKET_VIEW';
-    public const MANAGE = 'MARKET_MANAGE';
-    public const PRICING = 'MARKET_PRICING';
+    public const VIEW = 'MARKETPLACE_VIEW';
+    public const MANAGE = 'MARKETPLACE_MANAGE';
+    public const PRICING = 'MARKETPLACE_PRICING';
 
     /** @var array<int, bool> owner or not, per member, for the request */
     private array $owners = [];
@@ -44,7 +44,7 @@ final class MarketplaceVoter extends Voter implements ResetInterface
     public function __construct(
         private readonly AccessDecisionManagerInterface $accessDecisionManager,
         private readonly EntityManagerInterface $entityManager,
-        #[Autowire('%market.admin_role%')] private readonly string $creators = 'ROLE_SUPERADMIN',
+        #[Autowire('%marketplace.admin_role%')] private readonly string $creators = 'ROLE_SUPERADMIN',
     ) {
     }
 
@@ -115,7 +115,7 @@ final class MarketplaceVoter extends Voter implements ResetInterface
         foreach ($subject->getScopes() as $scope) {
             $values = $scope->getValue();
             foreach (\is_array($values) ? $values : [$values] as $value) {
-                if (is_numeric($value) && $scope->getAdapter() instanceof \Base\Market\Entity\Sales\Attribute\Scope\StoreAdapter) {
+                if (is_numeric($value) && $scope->getAdapter() instanceof \Base\Marketplace\Entity\Sales\Attribute\Scope\StoreAdapter) {
                     $value = $this->entityManager->find(Store::class, $value);
                 }
                 $store = match (true) {

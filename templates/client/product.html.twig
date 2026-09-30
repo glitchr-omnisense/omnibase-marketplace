@@ -1,31 +1,31 @@
-{% extends '@Market/client/layout.html.twig' %}
+{% extends '@Marketplace/client/layout.html.twig' %}
 
-{% block market_title %}{{ product.title }}{% endblock %}
-{% block market_crumbs %}<span>›</span> <a href="{{ path('market_store', {slug: store.slug}) }}">{{ store.title }}</a> <span>›</span> <span>{{ product.title }}</span>{% endblock %}
+{% block marketplace_title %}{{ product.title }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <a href="{{ path('marketplace_store', {slug: store.slug}) }}">{{ store.title }}</a> <span>›</span> <span>{{ product.title }}</span>{% endblock %}
 
-{% block market_body %}
-<article class="market-product">
-    <div class="market-product-media">{% include '@Market/client/_product_media.html.twig' with {product: product, size: 'large'} %}</div>
-    <div class="market-product-text">
+{% block marketplace_body %}
+<article class="marketplace-product">
+    <div class="marketplace-product-media">{% include '@Marketplace/client/_product_media.html.twig' with {product: product, size: 'large'} %}</div>
+    <div class="marketplace-product-text">
         <h2>{{ product.title }}</h2>
-        {% if product.headline and product.headline != product.title %}<p class="market-product-headline">{{ product.headline }}</p>{% endif %}
-        <p class="market-product-price">{% include '@Market/client/_price.html.twig' with {amount: product.unitPrice, currency: product.currency} %}</p>
-        {% if product.stock is not null %}<p class="market-product-stock">{{ '@market.product.stock'|trans({count: product.stock}) }}</p>{% endif %}
+        {% if product.headline and product.headline != product.title %}<p class="marketplace-product-headline">{{ product.headline }}</p>{% endif %}
+        <p class="marketplace-product-price">{% include '@Marketplace/client/_price.html.twig' with {amount: product.unitPrice, currency: product.currency} %}</p>
+        {% if product.stock is not null %}<p class="marketplace-product-stock">{{ '@marketplace.product.stock'|trans({count: product.stock}) }}</p>{% endif %}
 
         {% if product.forSell %}
             {% if is_granted('ROLE_USER') %}
-            <form method="post" action="{{ path('market_cart_add', {id: product.id}) }}" class="market-add">
-                <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
-                <button class="market-btn market-btn-primary" type="submit"><i class="fa-solid fa-basket-shopping"></i> {{ '@market.product.add'|trans }}</button>
+            <form method="post" action="{{ path('marketplace_cart_add', {id: product.id}) }}" class="marketplace-add">
+                <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+                <button class="marketplace-btn marketplace-btn-primary" type="submit"><i class="fa-solid fa-basket-shopping"></i> {{ '@marketplace.product.add'|trans }}</button>
             </form>
             {% else %}
-                <p>{{ '@market.product.login'|trans({login: path('security_login')})|raw }}</p>
+                <p>{{ '@marketplace.product.login'|trans({login: path('security_login')})|raw }}</p>
             {% endif %}
         {% else %}
-            <p class="market-soldout">{{ '@market.product.unavailable'|trans }}</p>
+            <p class="marketplace-soldout">{{ '@marketplace.product.unavailable'|trans }}</p>
         {% endif %}
 
-        {% if product.content %}<div class="market-product-content">{{ product.content|striptags('<p><b><i><em><strong><ul><li><br>')|raw }}</div>{% endif %}
+        {% if product.content %}<div class="marketplace-product-content">{{ product.content|striptags('<p><b><i><em><strong><ul><li><br>')|raw }}</div>{% endif %}
     </div>
 </article>
 {% endblock %}

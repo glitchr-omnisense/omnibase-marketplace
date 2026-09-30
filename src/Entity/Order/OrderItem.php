@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Entity\Order;
+namespace Base\Marketplace\Entity\Order;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Sales\Region;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Region;
 use Base\Entity\User;
-use Base\Market\Repository\Order\OrderItemRepository;
+use Base\Marketplace\Repository\Order\OrderItemRepository;
 use Base\Database\Attribute\Cache;
 use Base\Traits\BaseTrait;
 use Doctrine\Common\Collections\ArrayCollection;

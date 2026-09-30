@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Shopify\Checkout;
+namespace Base\Marketplace\Shopify\Checkout;
 
-use Base\Market\Entity\Order;
-use Base\Market\Shopify\Api\Money;
-use Base\Market\Shopify\Repository\ProductLinkRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Shopify\Api\Money;
+use Base\Marketplace\Shopify\Repository\ProductLinkRepository;
 
 /**
- * A market Order -> a Shopify DraftOrderInput.
+ * A marketplace Order -> a Shopify DraftOrderInput.
  *
  * Pure, bar one indexed lookup: arrays out, no HTTP, no flush.
  *
@@ -46,7 +46,7 @@ class DraftOrderMapper
         GRAPHQL;
 
     /** The custom attribute both sides correlate on. */
-    public const REFERENCE_KEY = 'market_reference';
+    public const REFERENCE_KEY = 'marketplace_reference';
 
     public function __construct(
         private readonly ?ProductLinkRepository $links = null,

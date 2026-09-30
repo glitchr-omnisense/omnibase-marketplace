@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Product\Attribute;
+namespace Base\Marketplace\Repository\Product\Attribute;
 
-use Base\Market\Entity\Product\Attribute\Hyperlink;
+use Base\Marketplace\Entity\Product\Attribute\Hyperlink;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

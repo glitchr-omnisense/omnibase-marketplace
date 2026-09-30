@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Model;
+namespace Base\Marketplace\Model;
 
 /**
  * A customer who may buy as a business: its intra-EU VAT number, and whether

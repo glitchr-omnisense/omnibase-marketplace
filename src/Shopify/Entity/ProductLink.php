@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Shopify\Entity;
+namespace Base\Marketplace\Shopify\Entity;
 
-use Base\Market\Entity\Product;
-use Base\Market\Shopify\Repository\ProductLinkRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Shopify\Repository\ProductLinkRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * What a market Product is, on the Shopify side.
+ * What a marketplace Product is, on the Shopify side.
  *
  * A table of its own rather than a column on Product, for three reasons that
  * a column cannot meet at once:
@@ -17,10 +17,10 @@ use Doctrine\ORM\Mapping as ORM;
  *   - the inventory_levels/update webhook identifies what changed by
  *     inventoryItemId and by nothing else, so that id has to be indexed
  *     somewhere;
- *   - a column on market_product would exist in every host's schema, Shopify
+ *   - a column on marketplace_product would exist in every host's schema, Shopify
  *     or not, and the whole point of this integration is that it leaves no
  *     trace when it is off. This table is mapped only when
- *     market.shopify.enabled is true (see MarketExtension::prepend()).
+ *     marketplace.shopify.enabled is true (see MarketplaceExtension::prepend()).
  *
  * It doubles as the delta store: `fingerprint` is a hash of the fields the
  * synchroniser owns, so an unchanged product costs one comparison and no
@@ -32,7 +32,7 @@ use Doctrine\ORM\Mapping as ORM;
  * carrying the same gid cannot silently adopt an old catalogue entry.
  */
 #[ORM\Entity(repositoryClass: ProductLinkRepository::class)]
-#[ORM\Table(name: 'marketShopifyProductLink')]
+#[ORM\Table(name: 'marketplaceShopifyProductLink')]
 #[ORM\UniqueConstraint(name: 'shopify_variant_unique', columns: ['shop', 'variantGid'])]
 #[ORM\Index(name: 'shopify_inventory_item_idx', columns: ['inventoryItemId'])]
 #[ORM\Index(name: 'shopify_product_gid_idx', columns: ['productGid'])]
@@ -140,7 +140,7 @@ class ProductLink
 
     /**
      * SET NULL, not CASCADE: a link whose product is gone is a tombstone, and
-     * deleting market products is not something this integration ever does
+     * deleting marketplace products is not something this integration ever does
      * anyway - they are the inverse side of OrderItem and Review.
      */
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]

@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
 use Base\Entity\User;
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Store;
-use Base\Market\Enum\OrderState;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Enum\OrderState;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -26,7 +26,7 @@ class Cart
         private readonly EntityManagerInterface $entityManager,
         private readonly Security $security,
         private readonly RegionResolver $regions,
-        #[Autowire('%market.cart_max_quantity%')] private readonly int $maxQuantity = 99,
+        #[Autowire('%marketplace.cart_max_quantity%')] private readonly int $maxQuantity = 99,
     ) {
     }
 

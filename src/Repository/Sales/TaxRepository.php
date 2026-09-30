@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales;
+namespace Base\Marketplace\Repository\Sales;
 
-use Base\Market\Entity\Sales\Tax;
+use Base\Marketplace\Entity\Sales\Tax;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

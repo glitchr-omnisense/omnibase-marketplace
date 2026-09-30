@@ -1,21 +1,21 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\CurrencyField;
 use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\NumberField;
 use Base\Field\TextField;
-use Base\Market\Entity\Sales\Forex;
+use Base\Marketplace\Entity\Sales\Forex;
 use Base\Admin\Attribute\AdminAction;
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
-use Base\Market\Security\MarketplaceVoter;
-use Base\Market\Service\ExchangeRates;
-use Base\Market\Service\ExchangeRatesException;
+use Base\Marketplace\Security\MarketplaceVoter;
+use Base\Marketplace\Service\ExchangeRates;
+use Base\Marketplace\Service\ExchangeRatesException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  * for every pair, Fixer's counted against its monthly quota), and only the
  * creators may run it.
  */
-class ExchangeRateCrudController extends AbstractMarketCrudController
+class ExchangeRateCrudController extends AbstractMarketplaceCrudController
 {
     public function __construct(private readonly ExchangeRates $rates)
     {

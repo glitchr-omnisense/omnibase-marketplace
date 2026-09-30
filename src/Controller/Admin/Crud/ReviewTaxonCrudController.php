@@ -1,17 +1,17 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
 use Base\Controller\Backoffice\Crud\Thread\TaxonCrudController;
 use Base\Field\SelectField;
-use Base\Market\Entity\Review\Taxon;
-use Base\Market\Entity\Store;
-use Base\Market\Controller\Admin\MarketAdminTrait;
+use Base\Marketplace\Entity\Review\Taxon;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Controller\Admin\MarketplaceAdminTrait;
 
 /** The review categories of a store: base-bundle's taxonomy, with the store they belong to. */
 class ReviewTaxonCrudController extends TaxonCrudController
 {
-    use MarketAdminTrait;
+    use MarketplaceAdminTrait;
 
     public static function getEntityFqcn(): string
     {

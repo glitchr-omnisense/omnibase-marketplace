@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Shopify\Export;
+namespace Base\Marketplace\Shopify\Export;
 
-use Base\Market\Entity\Order;
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -23,8 +23,8 @@ class OrderExporter
         private readonly AdminApi $api,
         private readonly OrderMapper $mapper,
         private readonly EntityManagerInterface $entityManager,
-        #[Autowire('%market.shopify.export.only_shippable%')] private readonly bool $onlyShippable = true,
-        #[Autowire('%market.shopify.export.location%')] private readonly ?string $location = null,
+        #[Autowire('%marketplace.shopify.export.only_shippable%')] private readonly bool $onlyShippable = true,
+        #[Autowire('%marketplace.shopify.export.location%')] private readonly ?string $location = null,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }

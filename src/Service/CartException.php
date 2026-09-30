@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-/** Something the buyer should read; the message is a key in the "market" domain. */
+/** Something the buyer should read; the message is a key in the "marketplace" domain. */
 class CartException extends \RuntimeException
 {
     public function __construct(string $key, private readonly array $parameters = [])

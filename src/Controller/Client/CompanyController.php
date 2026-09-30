@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Service\CompanyRegistry;
+use Base\Marketplace\Service\CompanyRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class CompanyController extends AbstractController
 {
-    #[Route('/api/company/{number}', name: 'market_company_lookup', requirements: ['number' => '[0-9 ]{9,20}'], methods: ['GET'])]
+    #[Route('/api/company/{number}', name: 'marketplace_company_lookup', requirements: ['number' => '[0-9 ]{9,20}'], methods: ['GET'])]
     public function lookup(string $number, CompanyRegistry $registry): JsonResponse
     {
         $result = $registry->lookup($number);

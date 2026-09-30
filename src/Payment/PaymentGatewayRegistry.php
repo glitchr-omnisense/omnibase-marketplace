@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Payment;
+namespace Base\Marketplace\Payment;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /** Every gateway of the application, by name(). */
@@ -13,7 +13,7 @@ class PaymentGatewayRegistry
     private array $gateways = [];
 
     /** @param iterable<PaymentGatewayInterface> $gateways */
-    public function __construct(#[AutowireIterator('market.payment_gateway')] iterable $gateways)
+    public function __construct(#[AutowireIterator('marketplace.payment_gateway')] iterable $gateways)
     {
         foreach ($gateways as $gateway) {
             $this->gateways[$gateway::name()] = $gateway;

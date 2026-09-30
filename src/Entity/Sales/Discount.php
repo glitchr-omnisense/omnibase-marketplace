@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Sales\Attribute\DiscountAction;
-use Base\Market\Entity\Sales\Attribute\DiscountRule;
-use Base\Market\Entity\Sales\Attribute\DiscountScope;
-use Base\Market\Repository\Sales\DiscountRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Sales\Attribute\DiscountAction;
+use Base\Marketplace\Entity\Sales\Attribute\DiscountRule;
+use Base\Marketplace\Entity\Sales\Attribute\DiscountScope;
+use Base\Marketplace\Repository\Sales\DiscountRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;

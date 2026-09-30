@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 #
-# Standalone, runnable demo of glitchr/base-bundle-market — a bare Symfony
+# Standalone, runnable demo of glitchr/base-bundle-marketplace — a bare Symfony
 # skeleton with base-bundle and this checkout installed, a SQLite database,
 # a one-page tour that seeds a small board and checks the wiring, and the
 # forum itself at /bbs.
 #
 # Build from the repository root (the local checkout is what gets installed):
 #
-#   docker build -t base-bundle-market-demo .
-#   docker run --rm -p 8000:8000 base-bundle-market-demo
+#   docker build -t base-bundle-marketplace-demo .
+#   docker run --rm -p 8000:8000 base-bundle-marketplace-demo
 #   → http://localhost:8000/
 #
 # base-bundle and its companions are fetched from gitlab.glitchr.dev (public).
@@ -63,7 +63,7 @@ COPY . /srv/base-bundle-marketplace
 # overlay ships every config file the demo needs; the container is compiled
 # at first run instead.
 RUN composer config repositories.base-bundle-marketplace '{"type": "path", "url": "/srv/base-bundle-marketplace", "options": {"symlink": false}}' \
-    && composer require "glitchr/base-bundle:3.x-dev as 3.0.x-dev" "glitchr/base-bundle-market:*@dev" symfony/translation --no-interaction --no-progress --no-scripts \
+    && composer require "glitchr/base-bundle:3.x-dev as 3.0.x-dev" "glitchr/base-bundle-marketplace:*@dev" symfony/translation --no-interaction --no-progress --no-scripts \
     # Recipe leftovers for bundles the demo does not register: the
     # google/recaptcha contrib recipe references a class recaptcha 1.5 no
     # longer ships, and webauthn's expects credential repositories the demo

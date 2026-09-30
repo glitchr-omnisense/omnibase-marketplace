@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Product\Attribute\Adapter;
+namespace Base\Marketplace\Repository\Product\Attribute\Adapter;
 
-use Base\Market\Entity\Product\Attribute\Adapter\BarcodeAdapter;
+use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
 use Base\Repository\Layout\AttributeRepository;
 
 /**

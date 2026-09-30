@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Sales\ChannelRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Sales\ChannelRepository;
 use Base\Database\Attribute\Hierarchify;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;

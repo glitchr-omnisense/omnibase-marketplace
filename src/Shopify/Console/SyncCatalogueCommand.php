@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Shopify\Console;
+namespace Base\Marketplace\Shopify\Console;
 
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
-use Base\Market\Shopify\Catalogue\ProductMapper;
-use Base\Market\Shopify\Catalogue\ProductSynchronizer;
-use Base\Market\Shopify\Catalogue\Query;
-use Base\Market\Shopify\Repository\ProductLinkRepository;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Shopify\Catalogue\ProductMapper;
+use Base\Marketplace\Shopify\Catalogue\ProductSynchronizer;
+use Base\Marketplace\Shopify\Catalogue\Query;
+use Base\Marketplace\Shopify\Repository\ProductLinkRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,7 +33,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * markedly harder to debug, and it would be a flag on this command rather
  * than a change to it.
  */
-#[AsCommand(name: 'market:shopify:catalogue:sync', description: 'Import products and stock from Shopify')]
+#[AsCommand(name: 'marketplace:shopify:catalogue:sync', description: 'Import products and stock from Shopify')]
 class SyncCatalogueCommand extends Command
 {
     private const PAGE = 50;
@@ -43,7 +43,7 @@ class SyncCatalogueCommand extends Command
         private readonly ProductMapper $mapper,
         private readonly ProductSynchronizer $synchronizer,
         private readonly ProductLinkRepository $links,
-        #[Autowire('%market.shopify.catalogue.enabled%')] private readonly bool $enabled = false,
+        #[Autowire('%marketplace.shopify.catalogue.enabled%')] private readonly bool $enabled = false,
     ) {
         parent::__construct();
     }
@@ -62,13 +62,13 @@ class SyncCatalogueCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         if (!$this->enabled) {
-            $io->warning('market.shopify.catalogue.enabled is false: nothing to do.');
+            $io->warning('marketplace.shopify.catalogue.enabled is false: nothing to do.');
 
             return Command::SUCCESS;
         }
 
         if (!$this->api->isConfigured()) {
-            $io->error('Shopify is not configured. Run market:shopify:ping.');
+            $io->error('Shopify is not configured. Run marketplace:shopify:ping.');
 
             return Command::FAILURE;
         }

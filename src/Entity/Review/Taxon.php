@@ -1,16 +1,16 @@
 <?php
 
-namespace Base\Market\Entity\Review;
+namespace Base\Marketplace\Entity\Review;
 
-use Base\Market\Entity\Store;
-use Base\Market\Repository\Review\TaxonRepository;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Repository\Review\TaxonRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaxonRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
-#[\Base\Database\Attribute\DiscriminatorEntry(value: 'market_review_taxon')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'marketplace_review_taxon')]
 class Taxon extends \Base\Entity\Thread\Taxon
 {
     public static function __iconizeStatic(): ?array

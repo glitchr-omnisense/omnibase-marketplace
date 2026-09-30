@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Attribute;
+namespace Base\Marketplace\Repository\Sales\Attribute;
 
-use Base\Market\Entity\Sales\Attribute\DiscountAction;
+use Base\Marketplace\Entity\Sales\Attribute\DiscountAction;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

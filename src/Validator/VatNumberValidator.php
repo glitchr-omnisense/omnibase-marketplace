@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Validator;
+namespace Base\Marketplace\Validator;
 
-use Base\Market\Service\VatNumbers;
+use Base\Marketplace\Service\VatNumbers;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -21,9 +21,9 @@ final class VatNumberValidator extends ConstraintValidator
 
         $status = $this->numbers->check((string) $value)['status'];
         if (VatNumbers::NOT_A_NUMBER === $status) {
-            $this->context->buildViolation($constraint->invalid)->setTranslationDomain('market')->addViolation();
+            $this->context->buildViolation($constraint->invalid)->setTranslationDomain('marketplace')->addViolation();
         } elseif (VatNumbers::UNKNOWN === $status) {
-            $this->context->buildViolation($constraint->unknown)->setTranslationDomain('market')->addViolation();
+            $this->context->buildViolation($constraint->unknown)->setTranslationDomain('marketplace')->addViolation();
         }
     }
 }

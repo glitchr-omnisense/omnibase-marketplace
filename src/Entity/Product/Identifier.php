@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Product;
+namespace Base\Marketplace\Entity\Product;
 
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Attribute\Barcode;
-use Base\Market\Repository\Product\IdentifierRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Attribute\Barcode;
+use Base\Marketplace\Repository\Product\IdentifierRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\OrderColumn;
 use Base\Validator\Constraints as AssertBase;

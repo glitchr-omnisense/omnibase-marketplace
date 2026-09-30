@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Repository\Order\Address;
+namespace Base\Marketplace\Repository\Order\Address;
 
 use Base\Repository\User\AddressRepository;
 

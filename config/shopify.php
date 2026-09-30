@@ -2,12 +2,12 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\Endpoint;
-use Base\Market\Shopify\Api\GraphQL;
-use Base\Market\Shopify\Api\StorefrontApi;
-use Base\Market\Shopify\Export\OrderPaidSubscriber;
-use Base\Market\Shopify\Export\PushOrderHandler;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\Endpoint;
+use Base\Marketplace\Shopify\Api\GraphQL;
+use Base\Marketplace\Shopify\Api\StorefrontApi;
+use Base\Marketplace\Shopify\Export\OrderPaidSubscriber;
+use Base\Marketplace\Shopify\Export\PushOrderHandler;
 
 /*
  * This file is part of the Glitchr package.
@@ -21,7 +21,7 @@ use Base\Market\Shopify\Export\PushOrderHandler;
 /*
  * The optional Shopify integration.
  *
- * Loaded by MarketExtension::load() and ONLY when market.shopify.enabled is a
+ * Loaded by MarketplaceExtension::load() and ONLY when marketplace.shopify.enabled is a
  * literal true, so nothing here exists in an application that does not ask for
  * it - config/services.php excludes src/Shopify/ from its own recursive load
  * for exactly that reason.
@@ -51,19 +51,19 @@ return static function (ContainerConfigurator $configurator): void {
     // change to this definition and nowhere else.
     $services->set(Endpoint::class)
         ->args([
-            '%market.shopify.shop_domain%',
-            '%market.shopify.api_version%',
-            '%market.shopify.admin_token%',
-            '%market.shopify.storefront_token%',
-            '%market.shopify.webhook_secret%',
-            '%market.shopify.timeout%',
+            '%marketplace.shopify.shop_domain%',
+            '%marketplace.shopify.api_version%',
+            '%marketplace.shopify.admin_token%',
+            '%marketplace.shopify.storefront_token%',
+            '%marketplace.shopify.webhook_secret%',
+            '%marketplace.shopify.timeout%',
         ]);
 
     $services->set(GraphQL::class);
     $services->set(AdminApi::class);
     $services->set(StorefrontApi::class);
 
-    $services->load('Base\\Market\\Shopify\\', $src . '/')
+    $services->load('Base\\Marketplace\\Shopify\\', $src . '/')
         ->exclude([
             $src . '/Api/',
             $src . '/Entity/',
@@ -74,13 +74,13 @@ return static function (ContainerConfigurator $configurator): void {
         ]);
 
     // The repository is a service like any other in this bundle; the entity it
-    // serves is mapped by MarketExtension::prepend(), under the same flag.
-    $services->load('Base\\Market\\Shopify\\Repository\\', $src . '/Repository/');
+    // serves is mapped by MarketplaceExtension::prepend(), under the same flag.
+    $services->load('Base\\Marketplace\\Shopify\\Repository\\', $src . '/Repository/');
 
     // An optional collaborator, the way wikidoc takes its index cache: without
     // a pool the replay guard simply says "not seen" and the integration falls
     // back on the idempotency it has anyway.
-    $services->set(\Base\Market\Shopify\Webhook\ReplayGuard::class)
+    $services->set(\Base\Marketplace\Shopify\Webhook\ReplayGuard::class)
         ->args([service('cache.app')->nullOnInvalid()]);
 
     // Messenger is how a paid order reaches Shopify without a network call

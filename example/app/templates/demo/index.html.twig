@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>base-bundle-market — demo</title>
+    <title>base-bundle-marketplace — demo</title>
     <style>
         body { font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 2rem auto; max-width: 60rem; padding: 0 1rem; color: #222; }
         h1 { font-size: 1.4rem; } h2 { font-size: 1rem; margin-bottom: .2rem; }
@@ -15,10 +15,10 @@
     </style>
 </head>
 <body>
-    <h1>glitchr/base-bundle-market</h1>
+    <h1>glitchr/base-bundle-marketplace</h1>
     <p>A shop for base-bundle applications: stores, products, carts, checkout, orders and pluggable payment gateways. This page seeds a small store, fills a cart and pays two orders; the shop itself is the link below.</p>
 
-    <a class="go" href="{{ path('market_store', {slug: 'boutique'}) }}">Open the shop →</a>
+    <a class="go" href="{{ path('marketplace_store', {slug: 'boutique'}) }}">Open the shop →</a>
 
     {% for section in sections %}
     <section>

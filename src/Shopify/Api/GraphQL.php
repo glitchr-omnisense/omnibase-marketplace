@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Payment;
+namespace Base\Marketplace\Payment;
 
 /** What a gateway's pay() came to - see PaymentGatewayInterface. */
 final class PaymentResult
@@ -13,7 +13,7 @@ final class PaymentResult
     private function __construct(
         public readonly string $status,
         public readonly ?string $redirectUrl = null,
-        /** A translation key in the "market" domain, for the buyer. */
+        /** A translation key in the "marketplace" domain, for the buyer. */
         public readonly ?string $reason = null,
         public readonly array $parameters = [],
     ) {

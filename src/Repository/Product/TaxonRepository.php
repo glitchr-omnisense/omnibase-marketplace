@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Product;
+namespace Base\Marketplace\Repository\Product;
 
-use Base\Market\Entity\Product\Taxon;
+use Base\Marketplace\Entity\Product\Taxon;
 
 /**
  * @method Taxon|null find($id, $lockMode = null, $lockVersion = null)

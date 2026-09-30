@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Product;
+namespace Base\Marketplace\Entity\Product;
 
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Product\ImageRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Product\ImageRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;

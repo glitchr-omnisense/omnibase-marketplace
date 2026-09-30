@@ -20,7 +20,7 @@ return [
     // and payment methods, so it requires base-bundle-admin: registered here
     // even though the demo opens no backoffice.
     Base\Admin\AdminBundle::class => ['all' => true],
-    Base\Market\MarketBundle::class => ['all' => true],
+    Base\Marketplace\MarketplaceBundle::class => ['all' => true],
     ApiPlatform\Symfony\Bundle\ApiPlatformBundle::class => ['all' => true],
     Symfony\UX\TwigComponent\TwigComponentBundle::class => ['all' => true],
 ];

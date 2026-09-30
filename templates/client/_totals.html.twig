@@ -1,14 +1,14 @@
 {# An order's totals: lines (before VAT), discount, shipping, then HT / VAT / TTC or the exemption's mention (_vat). Variables: order. #}
-<ul class="market-summary">
+<ul class="marketplace-summary">
     {% for line in order.items %}
         <li><span>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</span>
-            <span>{% if line.discountCharge > 0 %}<s class="market-was">{% include '@Market/client/_price.html.twig' with {amount: line.grossPrice, currency: order.currency} %}</s> {% endif %}{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: order.currency} %}</span></li>
+            <span>{% if line.discountCharge > 0 %}<s class="marketplace-was">{% include '@Marketplace/client/_price.html.twig' with {amount: line.grossPrice, currency: order.currency} %}</s> {% endif %}{% include '@Marketplace/client/_price.html.twig' with {amount: line.salePrice, currency: order.currency} %}</span></li>
     {% endfor %}
     {% if order.discountCharge > 0 %}
-        <li class="market-summary-discount"><span>{{ '@market.cart.discount'|trans }}{% for coupon in order.coupons %} <code>{{ coupon.code }}</code>{% endfor %}</span><span>− {% include '@Market/client/_price.html.twig' with {amount: order.discountCharge, currency: order.currency} %}</span></li>
+        <li class="marketplace-summary-discount"><span>{{ '@marketplace.cart.discount'|trans }}{% for coupon in order.coupons %} <code>{{ coupon.code }}</code>{% endfor %}</span><span>− {% include '@Marketplace/client/_price.html.twig' with {amount: order.discountCharge, currency: order.currency} %}</span></li>
     {% endif %}
     {% if order.shippingMethod %}
-        <li><span>{{ '@market.shipping.title'|trans }} : {{ order.shippingMethod.label }}</span>{% include '@Market/client/_price.html.twig' with {amount: order.shippingCharge, currency: order.currency} %}</li>
+        <li><span>{{ '@marketplace.shipping.title'|trans }} : {{ order.shippingMethod.label }}</span>{% include '@Marketplace/client/_price.html.twig' with {amount: order.shippingCharge, currency: order.currency} %}</li>
     {% endif %}
-    {% include '@Market/client/_vat.html.twig' with {order: order, layout: 'list'} only %}
+    {% include '@Marketplace/client/_vat.html.twig' with {order: order, layout: 'list'} only %}
 </ul>

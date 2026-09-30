@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Entity\Order;
-use Base\Market\Service\Shipping;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Service\Shipping;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,44 +27,44 @@ class ShipmentController extends AbstractController
     ) {
     }
 
-    #[Route('/commandes/a-expedier', name: 'market_shipping_queue', priority: 1)]
+    #[Route('/commandes/a-expedier', name: 'marketplace_shipping_queue', priority: 1)]
     public function Queue(): Response
     {
-        return $this->render('@Market/client/shipping_queue.html.twig', ['orders' => $this->shipping->queue()]);
+        return $this->render('@Marketplace/client/shipping_queue.html.twig', ['orders' => $this->shipping->queue()]);
     }
 
-    #[Route('/commandes/{reference}/expedier', name: 'market_order_ship', methods: ['POST'], requirements: ['reference' => '[A-Za-z0-9\-]+'])]
+    #[Route('/commandes/{reference}/expedier', name: 'marketplace_order_ship', methods: ['POST'], requirements: ['reference' => '[A-Za-z0-9\-]+'])]
     public function Ship(Request $request, string $reference): Response
     {
         $order = $this->order($request, $reference);
         $number = trim((string) $request->request->get('tracking'));
         if ('' === $number) {
-            $this->addFlash('error', $this->translator->trans('@market.shipping.error.tracking'));
+            $this->addFlash('error', $this->translator->trans('@marketplace.shipping.error.tracking'));
         } elseif (!$order->isConfirmed()) {
-            $this->addFlash('error', $this->translator->trans('@market.shipping.error.state'));
+            $this->addFlash('error', $this->translator->trans('@marketplace.shipping.error.state'));
         } else {
             $this->shipping->ship($order, $number);
             $this->entityManager->flush();
-            $this->addFlash('success', $this->translator->trans('@market.shipping.shipped', ['{reference}' => $order->getReference()]));
+            $this->addFlash('success', $this->translator->trans('@marketplace.shipping.shipped', ['{reference}' => $order->getReference()]));
         }
 
-        return $this->redirectToRoute('market_shipping_queue');
+        return $this->redirectToRoute('marketplace_shipping_queue');
     }
 
-    #[Route('/commandes/{reference}/livree', name: 'market_order_deliver', methods: ['POST'], requirements: ['reference' => '[A-Za-z0-9\-]+'])]
+    #[Route('/commandes/{reference}/livree', name: 'marketplace_order_deliver', methods: ['POST'], requirements: ['reference' => '[A-Za-z0-9\-]+'])]
     public function Deliver(Request $request, string $reference): Response
     {
         $order = $this->order($request, $reference);
         $order->markAsCompleted();
         $this->entityManager->flush();
-        $this->addFlash('success', $this->translator->trans('@market.shipping.delivered', ['{reference}' => $order->getReference()]));
+        $this->addFlash('success', $this->translator->trans('@marketplace.shipping.delivered', ['{reference}' => $order->getReference()]));
 
-        return $this->redirectToRoute('market_shipping_queue');
+        return $this->redirectToRoute('marketplace_shipping_queue');
     }
 
     private function order(Request $request, string $reference): Order
     {
-        if (!$this->isCsrfTokenValid('market_ship', (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('marketplace_ship', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid token.');
         }
         $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]);

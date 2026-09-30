@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\BooleanField;
 use Base\Field\CurrencyField;
@@ -10,17 +10,17 @@ use Base\Field\IdField;
 use Base\Field\SlugField;
 use Base\Field\TextareaField;
 use Base\Field\TextField;
-use Base\Market\Entity\Store;
+use Base\Marketplace\Entity\Store;
 use Base\Field\SelectField;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Sales\Region;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Region;
 use Base\Entity\User;
 use Omnistate\Bridge\Symfony\Form\CompanySearchType;
 
 /** Admin CRUD for the stores: a name, the currency it trades in, open or shut. */
-class StoreCrudController extends AbstractMarketCrudController
+class StoreCrudController extends AbstractMarketplaceCrudController
 {
-    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    /** VAT and prices: the shops' owners set them too (MARKETPLACE_PRICING). */
     protected function isPricing(): bool
     {
         return true;

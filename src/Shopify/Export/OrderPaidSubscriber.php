@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Shopify\Export;
+namespace Base\Marketplace\Shopify\Export;
 
-use Base\Market\Event\OrderPaidEvent;
+use Base\Marketplace\Event\OrderPaidEvent;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -32,7 +32,7 @@ final class OrderPaidSubscriber
     public function __construct(
         private readonly MessageBusInterface $bus,
         private readonly OrderExporter $exporter,
-        #[Autowire('%market.shopify.export.enabled%')] private readonly bool $enabled = false,
+        #[Autowire('%marketplace.shopify.export.enabled%')] private readonly bool $enabled = false,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }

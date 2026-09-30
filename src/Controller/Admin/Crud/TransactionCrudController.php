@@ -1,23 +1,23 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\TextField;
-use Base\Market\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Order\Transaction;
 
 /**
  * The payments recorded against orders, as the gateways reported them. A
  * record of what happened: read, never written or deleted from here.
  */
-class TransactionCrudController extends AbstractMarketCrudController
+class TransactionCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

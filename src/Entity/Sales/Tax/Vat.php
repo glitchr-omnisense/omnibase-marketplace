@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Tax;
+namespace Base\Marketplace\Entity\Sales\Tax;
 
-use Base\Market\Entity\Sales\Tax;
-use Base\Market\Repository\Sales\Tax\VatRepository;
+use Base\Marketplace\Entity\Sales\Tax;
+use Base\Marketplace\Repository\Sales\Tax\VatRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;

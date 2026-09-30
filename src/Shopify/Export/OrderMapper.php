@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Shopify\Export;
+namespace Base\Marketplace\Shopify\Export;
 
-use Base\Market\Entity\Order;
-use Base\Market\Shopify\Api\Money;
-use Base\Market\Shopify\Repository\ProductLinkRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Shopify\Api\Money;
+use Base\Marketplace\Shopify\Repository\ProductLinkRepository;
 
 /**
- * A paid market Order -> a Shopify OrderCreateOrderInput.
+ * A paid marketplace Order -> a Shopify OrderCreateOrderInput.
  *
  * For orders paid somewhere else - by card here, by an in-game currency, by
  * bank transfer - that still need Shopify to pick, pack and label them. The
@@ -34,7 +34,7 @@ class OrderMapper
         }
         GRAPHQL;
 
-    public const REFERENCE_KEY = 'market_reference';
+    public const REFERENCE_KEY = 'marketplace_reference';
 
     public function __construct(
         private readonly ?ProductLinkRepository $links = null,
@@ -76,7 +76,7 @@ class OrderMapper
             // sourceIdentifier is indexed by Shopify and unique on our side,
             // so it is both the correlation key and the duplicate guard.
             'sourceIdentifier' => $reference,
-            'sourceName' => 'base-bundle-market',
+            'sourceName' => 'base-bundle-marketplace',
             'currency' => $currency,
             'financialStatus' => 'PAID',
             'lineItems' => $lineItems,

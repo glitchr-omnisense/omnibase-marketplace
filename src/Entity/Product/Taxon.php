@@ -1,16 +1,16 @@
 <?php
 
-namespace Base\Market\Entity\Product;
+namespace Base\Marketplace\Entity\Product;
 
-use Base\Market\Entity\Store;
-use Base\Market\Repository\Product\TaxonRepository;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Repository\Product\TaxonRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaxonRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
-#[\Base\Database\Attribute\DiscriminatorEntry(value: 'market_product_taxon')]
+#[\Base\Database\Attribute\DiscriminatorEntry(value: 'marketplace_product_taxon')]
 class Taxon extends \Base\Entity\Thread\Taxon
 {
     public static function __iconizeStatic(): ?array

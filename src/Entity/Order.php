@@ -1,24 +1,24 @@
 <?php
 
-namespace Base\Market\Entity;
+namespace Base\Marketplace\Entity;
 
-use Base\Market\Attribute\OrderReference;
-use Base\Market\Entity\Order\Address\BillingAddress;
-use Base\Market\Entity\Order\Address\ShippingAddress;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Method\ShippingMethod;
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Order\Shipment;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Entity\Sales\Discount;
-use Base\Market\Entity\Sales\Fee;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Sales\Tax;
+use Base\Marketplace\Attribute\OrderReference;
+use Base\Marketplace\Entity\Order\Address\BillingAddress;
+use Base\Marketplace\Entity\Order\Address\ShippingAddress;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Order\Shipment;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Sales\Discount;
+use Base\Marketplace\Entity\Sales\Fee;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Sales\Tax;
 use Base\Entity\User;
-use Base\Market\Model\MerchantInterface;
-use Base\Market\Enum\OrderState;
-use Base\Market\Model\ShippingUnitInterface;
-use Base\Market\Repository\OrderRepository;
+use Base\Marketplace\Model\MerchantInterface;
+use Base\Marketplace\Enum\OrderState;
+use Base\Marketplace\Model\ShippingUnitInterface;
+use Base\Marketplace\Repository\OrderRepository;
 use Base\Database\Attribute\Timestamp;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
@@ -41,7 +41,7 @@ class Order implements IconizeInterface, LinkableInterface
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        $routeName = 'market_order';
+        $routeName = 'marketplace_order';
         $routeParameters = array_merge($routeParameters, [
             'reference' => $this->getReference(),
         ]);
@@ -75,7 +75,7 @@ class Order implements IconizeInterface, LinkableInterface
         $this->additionalTaxes = new ArrayCollection();
 
         $this->store = $store;
-        $this->_currency = $store?->getCurrency() ?? $this->getParameterBag('market.default_currency');
+        $this->_currency = $store?->getCurrency() ?? $this->getParameterBag('marketplace.default_currency');
         $this->managers = new ArrayCollection();
         $this->reviews = new ArrayCollection();
         $this->transactions = new ArrayCollection();

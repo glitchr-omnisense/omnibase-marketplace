@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Event;
+namespace Base\Marketplace\Event;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Transaction;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\EventDispatcher\Event;
 

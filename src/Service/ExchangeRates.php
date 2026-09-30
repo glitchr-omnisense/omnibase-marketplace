@@ -1,11 +1,11 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Sales\Forex;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Store;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Forex;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Store;
 use Base\Service\SettingBagInterface;
 use Base\Service\TradingInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,7 +29,7 @@ use Symfony\Contracts\Service\ResetInterface;
  * refresh() asks for the day's rates and writes them in the table - on
  * demand only, an administrator's action or a command. One HTTP call for
  * every currency at once: Fixer.io when its key is in the settings
- * (market.forex.fixer; the free plan counts 100 calls a month), else the
+ * (marketplace.forex.fixer; the free plan counts 100 calls a month), else the
  * European Central Bank's reference rates, free and keyless. A rate set by
  * hand stays until the next refresh.
  *
@@ -40,14 +40,14 @@ use Symfony\Contracts\Service\ResetInterface;
  */
 final class ExchangeRates implements ResetInterface
 {
-    public const FIXER_KEY = 'market.forex.fixer';
+    public const FIXER_KEY = 'marketplace.forex.fixer';
     public const FIXER_QUOTA = 100;
     public const MIN_INTERVAL = '1 hour';
 
-    private const LAST_SETTING = 'market.forex.refreshed_at';
-    // One setting a month, market.forex.requests_2026_09: a path segment of
+    private const LAST_SETTING = 'marketplace.forex.refreshed_at';
+    // One setting a month, marketplace.forex.requests_2026_09: a path segment of
     // its own ("2026-09") is not a setting SettingBag reads back.
-    private const COUNT_SETTING = 'market.forex.requests_';
+    private const COUNT_SETTING = 'marketplace.forex.requests_';
 
     // Fixer's free plan: plain http, from the euro only.
     private const FIXER_URL = 'http://data.fixer.io/api/latest';
@@ -61,11 +61,11 @@ final class ExchangeRates implements ResetInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly TradingInterface $trading,
         private readonly HttpClientInterface $http,
-        #[Autowire('%market.default_currency%')]
+        #[Autowire('%marketplace.default_currency%')]
         private readonly string $currency,
         private readonly ?SettingBagInterface $settings = null,
-        /** @var string[] currencies always kept (market.forex.targets), besides those in use */
-        #[Autowire('%market.forex.targets%')]
+        /** @var string[] currencies always kept (marketplace.forex.targets), besides those in use */
+        #[Autowire('%marketplace.forex.targets%')]
         private readonly array $targets = [],
     ) {
     }
@@ -118,7 +118,7 @@ final class ExchangeRates implements ResetInterface
     /**
      * Asks the provider for the day's rates - one HTTP call - and writes them,
      * from the store's currency to every currency the shop uses (its stores,
-     * regions and products), to the configured market.forex.targets and to
+     * regions and products), to the configured marketplace.forex.targets and to
      * the $targets given.
      *
      * @param string[] $targets

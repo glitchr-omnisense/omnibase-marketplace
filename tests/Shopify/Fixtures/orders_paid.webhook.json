@@ -7,7 +7,7 @@
   "total_price": "27.00",
   "draft_order_id": 990011,
   "note_attributes": [
-    { "name": "market_reference", "value": "ABC-1234-XYZ" }
+    { "name": "marketplace_reference", "value": "ABC-1234-XYZ" }
   ],
   "line_items": [
     { "id": 1, "title": "Enamel Mug", "quantity": 2, "price": "12.50" }

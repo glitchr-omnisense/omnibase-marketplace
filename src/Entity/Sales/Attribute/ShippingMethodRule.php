@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute;
+namespace Base\Marketplace\Entity\Sales\Attribute;
 
-use Base\Market\Entity\Order\Method\ShippingMethod;
-use Base\Market\Repository\Sales\Attribute\ShippingMethodRuleRepository;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Repository\Sales\Attribute\ShippingMethodRuleRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Common\AbstractRule;

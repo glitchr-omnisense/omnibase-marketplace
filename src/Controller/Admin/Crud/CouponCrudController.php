@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
@@ -13,16 +13,16 @@ use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\SelectField;
 use Base\Field\TextField;
-use Base\Market\Entity\Sales\Discount\Coupon;
+use Base\Marketplace\Entity\Sales\Discount\Coupon;
 
 /**
  * Coupons: a code members type in their cart. A quota caps how many orders
  * may use it (per member too), an owner reserves it to one member, and
  * "individual use" keeps it from mixing with anything else.
  */
-class CouponCrudController extends AbstractMarketCrudController
+class CouponCrudController extends AbstractMarketplaceCrudController
 {
-    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    /** VAT and prices: the shops' owners set them too (MARKETPLACE_PRICING). */
     protected function isPricing(): bool
     {
         return true;

@@ -1,4 +1,4 @@
-market:
+marketplace:
     default_currency: EUR
     products_per_page: 12
     cart_max_quantity: 5
@@ -25,10 +25,10 @@ market:
         catalogue:
             enabled: true
             store: boutique
-            images: false            # not implemented yet; see MarketConfiguration
+            images: false            # not implemented yet; see MarketplaceConfiguration
             owned_fields: [title, description, price, stock, availability, identifiers, tags]
         checkout:
             enabled: true
-            draft_order_tags: ['base-bundle-market-demo']
+            draft_order_tags: ['base-bundle-marketplace-demo']
         export:
             enabled: false

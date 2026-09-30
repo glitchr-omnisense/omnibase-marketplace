@@ -1,24 +1,24 @@
-{% extends '@Market/client/layout.html.twig' %}
+{% extends '@Marketplace/client/layout.html.twig' %}
 
-{% block market_title %}{{ '@market.shipping.queue'|trans }}{% endblock %}
-{% block market_crumbs %}<span>›</span> <span>{{ '@market.shipping.queue'|trans }}</span>{% endblock %}
+{% block marketplace_title %}{{ '@marketplace.shipping.queue'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.shipping.queue'|trans }}</span>{% endblock %}
 
-{% block market_body %}
+{% block marketplace_body %}
 {% if orders|length == 0 %}
-    <p class="market-empty">{{ '@market.shipping.queue_empty'|trans }}</p>
+    <p class="marketplace-empty">{{ '@marketplace.shipping.queue_empty'|trans }}</p>
 {% endif %}
 {% for order in orders %}
-<section class="market-order market-ship">
-    <h2>{{ order.reference }} <span class="market-state market-state-{{ order.state|lower }}">{{ ('@market.state.' ~ order.state|lower)|trans }}</span></h2>
-    <p class="market-order-meta">{{ order.customer ? order.customer }} · {{ order.paidAt ? order.paidAt|date('d/m/Y H:i') }} · {{ order.shippingMethod ? order.shippingMethod.label }}</p>
-    <div class="market-shipping">
+<section class="marketplace-order marketplace-ship">
+    <h2>{{ order.reference }} <span class="marketplace-state marketplace-state-{{ order.state|lower }}">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span></h2>
+    <p class="marketplace-order-meta">{{ order.customer ? order.customer }} · {{ order.paidAt ? order.paidAt|date('d/m/Y H:i') }} · {{ order.shippingMethod ? order.shippingMethod.label }}</p>
+    <div class="marketplace-shipping">
         <div>{{ order.shippingAddress.name }}<br>{{ order.shippingAddress.streetAddress }}{% if order.shippingAddress.affix %}<br>{{ order.shippingAddress.affix }}{% endif %}<br>{{ order.shippingAddress.zipCode }} {{ order.shippingAddress.city }} · {{ order.shippingAddress.country }}{% if order.shippingAddress.phone %}<br>{{ order.shippingAddress.phone }}{% endif %}</div>
-        <div><ul class="market-plain">{% for line in order.items %}<li>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</li>{% endfor %}</ul></div>
+        <div><ul class="marketplace-plain">{% for line in order.items %}<li>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</li>{% endfor %}</ul></div>
     </div>
-    <form method="post" action="{{ path('market_order_ship', {reference: order.reference}) }}" class="market-coupon-form">
-        <input type="hidden" name="_token" value="{{ csrf_token('market_ship') }}">
-        <input type="text" name="tracking" required placeholder="{{ '@market.shipping.tracking'|trans }}" maxlength="64">
-        <button class="market-btn market-btn-primary market-btn-sm" type="submit">{{ '@market.shipping.mark_shipped'|trans }}</button>
+    <form method="post" action="{{ path('marketplace_order_ship', {reference: order.reference}) }}" class="marketplace-coupon-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('marketplace_ship') }}">
+        <input type="text" name="tracking" required placeholder="{{ '@marketplace.shipping.tracking'|trans }}" maxlength="64">
+        <button class="marketplace-btn marketplace-btn-primary marketplace-btn-sm" type="submit">{{ '@marketplace.shipping.mark_shipped'|trans }}</button>
     </form>
 </section>
 {% endfor %}

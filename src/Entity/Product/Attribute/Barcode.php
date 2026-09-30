@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Product\Attribute;
+namespace Base\Marketplace\Entity\Product\Attribute;
 
-use Base\Market\Entity\Product\Attribute\Adapter\BarcodeAdapter;
-use Base\Market\Entity\Product\Identifier;
-use Base\Market\Repository\Product\Attribute\BarcodeRepository;
+use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
+use Base\Marketplace\Entity\Product\Identifier;
+use Base\Marketplace\Repository\Product\Attribute\BarcodeRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractAdapter;

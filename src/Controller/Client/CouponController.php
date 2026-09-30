@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Sales\Discount\Coupon;
-use Base\Market\Service\Cart;
-use Base\Market\Service\CartException;
-use Base\Market\Service\Pricing;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Sales\Discount\Coupon;
+use Base\Marketplace\Service\Cart;
+use Base\Marketplace\Service\CartException;
+use Base\Marketplace\Service\Pricing;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,22 +27,22 @@ class CouponController extends AbstractController
     ) {
     }
 
-    #[Route('/panier/{order}/coupon', name: 'market_cart_coupon', methods: ['POST'], requirements: ['order' => '\d+'])]
+    #[Route('/panier/{order}/coupon', name: 'marketplace_cart_coupon', methods: ['POST'], requirements: ['order' => '\d+'])]
     public function Apply(Request $request, int $order): Response
     {
         $cart = $this->mine($request, $order);
         try {
             $coupon = $this->pricing->applyCoupon($cart, (string) $request->request->get('code'), $this->getUser());
             $this->entityManager->flush();
-            $this->addFlash('success', $this->translator->trans('@market.coupon.applied', ['{code}' => $coupon->getCode()]));
+            $this->addFlash('success', $this->translator->trans('@marketplace.coupon.applied', ['{code}' => $coupon->getCode()]));
         } catch (CartException $e) {
-            $this->addFlash('error', $this->translator->trans('@market.'.$e->getMessage(), $e->getParameters()));
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
         }
 
-        return $this->redirectToRoute('market_cart');
+        return $this->redirectToRoute('marketplace_cart');
     }
 
-    #[Route('/panier/{order}/coupon/{coupon}/retirer', name: 'market_cart_coupon_remove', methods: ['POST'], requirements: ['order' => '\d+', 'coupon' => '\d+'])]
+    #[Route('/panier/{order}/coupon/{coupon}/retirer', name: 'marketplace_cart_coupon_remove', methods: ['POST'], requirements: ['order' => '\d+', 'coupon' => '\d+'])]
     public function Remove(Request $request, int $order, int $coupon): Response
     {
         $cart = $this->mine($request, $order);
@@ -52,12 +52,12 @@ class CouponController extends AbstractController
             $this->entityManager->flush();
         }
 
-        return $this->redirectToRoute('market_cart');
+        return $this->redirectToRoute('marketplace_cart');
     }
 
     private function mine(Request $request, int $order): Order
     {
-        if (!$this->isCsrfTokenValid('market_cart', (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('marketplace_cart', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid token.');
         }
         $cart = $this->entityManager->getRepository(Order::class)->find($order);

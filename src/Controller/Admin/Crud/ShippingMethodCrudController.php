@@ -1,14 +1,14 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Field\CurrencyField;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\SlugField;
 use Base\Field\TextField;
-use Base\Market\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\AttributeField;
@@ -19,7 +19,7 @@ use Base\Field\ImageField;
  * RATE_FLAT costs the unit price once, RATE_PRIORITY per shipping unit;
  * the tracking URL may hold {number}.
  */
-class ShippingMethodCrudController extends AbstractMarketCrudController
+class ShippingMethodCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

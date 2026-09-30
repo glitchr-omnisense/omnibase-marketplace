@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Review;
+namespace Base\Marketplace\Repository\Review;
 
-use Base\Market\Entity\Review\Taxon;
+use Base\Marketplace\Entity\Review\Taxon;
 
 /**
  * @method Taxon|null find($id, $lockMode = null, $lockVersion = null)

@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * Shopify quotes money as a decimal string ("12.50"); this bundle stores it

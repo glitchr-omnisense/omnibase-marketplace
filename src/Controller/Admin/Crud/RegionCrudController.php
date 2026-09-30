@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\BooleanField;
 use Base\Field\CountryField;
@@ -12,15 +12,15 @@ use Base\Field\IntegerField;
 use Base\Field\SelectField;
 use Base\Field\SlugField;
 use Base\Field\TranslationField;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Store;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Store;
 
 /**
  * The regions a store sells to: their countries, currency and priority (the
  * first region covering a visitor's country wins). A disabled region is
  * kept but no longer offered. A region orders were placed in stays.
  */
-class RegionCrudController extends AbstractMarketCrudController
+class RegionCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

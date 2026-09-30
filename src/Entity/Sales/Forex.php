@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Repository\Sales\ForexRepository;
+use Base\Marketplace\Repository\Sales\ForexRepository;
 use Base\Database\Attribute\Timestamp;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;

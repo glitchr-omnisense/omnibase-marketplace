@@ -1,17 +1,17 @@
 <?php
 
-namespace Base\Market\Payment;
+namespace Base\Marketplace\Payment;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
 
 /**
  * Paid outside the site - a bank transfer, a cheque, cash on collection. The
  * order waits (pending) until someone in the admin marks it paid. The
  * instructions shown to the buyer are the method's settings:
  *
- *     market:
+ *     marketplace:
  *         gateways:
  *             virement: { instructions: 'IBAN FR76 ... - mention the reference' }
  */

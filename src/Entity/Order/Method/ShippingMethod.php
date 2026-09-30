@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Entity\Order\Method;
+namespace Base\Marketplace\Entity\Order\Method;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Sales\Attribute\ShippingMethodRule;
-use Base\Market\Entity\Sales\Attribute\ShippingMethodScope;
-use Base\Market\Entity\Sales\Fee;
-use Base\Market\Repository\Order\Method\ShippingMethodRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Sales\Attribute\ShippingMethodRule;
+use Base\Marketplace\Entity\Sales\Attribute\ShippingMethodScope;
+use Base\Marketplace\Entity\Sales\Fee;
+use Base\Marketplace\Repository\Order\Method\ShippingMethodRepository;
 use Base\Database\Attribute\Uploader;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
@@ -46,7 +46,7 @@ class ShippingMethod implements IconizeInterface
         $this->orders = new ArrayCollection();
         $this->rules = new ArrayCollection();
         $this->scopes = new ArrayCollection();
-        $this->currency = $currency ?? $this->getParameterBag('market.default_currency') ?? 'USD';
+        $this->currency = $currency ?? $this->getParameterBag('marketplace.default_currency') ?? 'USD';
     }
 
     #[ORM\Id]

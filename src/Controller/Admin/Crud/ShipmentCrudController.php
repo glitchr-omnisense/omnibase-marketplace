@@ -1,23 +1,23 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\SelectField;
 use Base\Field\TextField;
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\ShippingMethod;
-use Base\Market\Entity\Order\Shipment;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Entity\Order\Shipment;
 
 /**
  * The parcels sent for an order: their tracking number, method and the
  * items they hold. Kept once sent - a shipment is not deleted.
  */
-class ShipmentCrudController extends AbstractMarketCrudController
+class ShipmentCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

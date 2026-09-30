@@ -1,26 +1,26 @@
-{% extends '@Market/client/layout.html.twig' %}
+{% extends '@Marketplace/client/layout.html.twig' %}
 
 {% set store = order.store %}
-{% block market_title %}{{ '@market.orders.one'|trans({reference: order.reference}) }}{% endblock %}
-{% block market_crumbs %}<span>›</span> <a href="{{ path('market_orders') }}">{{ '@market.orders.title'|trans }}</a> <span>›</span> <span>{{ order.reference }}</span>{% endblock %}
+{% block marketplace_title %}{{ '@marketplace.orders.one'|trans({reference: order.reference}) }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <a href="{{ path('marketplace_orders') }}">{{ '@marketplace.orders.title'|trans }}</a> <span>›</span> <span>{{ order.reference }}</span>{% endblock %}
 
-{% block market_body %}
-<section class="market-order">
-    <h2>{{ '@market.orders.one'|trans({reference: order.reference}) }} <span class="market-state market-state-{{ order.state|lower }}">{{ ('@market.state.' ~ order.state|lower)|trans }}</span></h2>
-    <p class="market-order-meta">{{ order.store ? order.store.title }} · {{ order.createdAt|date('d/m/Y H:i') }}{% if order.paidAt %} · {{ '@market.orders.paid_at'|trans({date: order.paidAt|date('d/m/Y H:i')}) }}{% endif %}{% if order.paymentMethod %} · {{ order.paymentMethod.label ?? order.paymentMethod.slug }}{% endif %}</p>
-    {% include '@Market/client/_totals.html.twig' with {order: order} %}
+{% block marketplace_body %}
+<section class="marketplace-order">
+    <h2>{{ '@marketplace.orders.one'|trans({reference: order.reference}) }} <span class="marketplace-state marketplace-state-{{ order.state|lower }}">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span></h2>
+    <p class="marketplace-order-meta">{{ order.store ? order.store.title }} · {{ order.createdAt|date('d/m/Y H:i') }}{% if order.paidAt %} · {{ '@marketplace.orders.paid_at'|trans({date: order.paidAt|date('d/m/Y H:i')}) }}{% endif %}{% if order.paymentMethod %} · {{ order.paymentMethod.label ?? order.paymentMethod.slug }}{% endif %}</p>
+    {% include '@Marketplace/client/_totals.html.twig' with {order: order} %}
 
     {% if order.shippingAddress %}
-    <div class="market-shipping">
+    <div class="marketplace-shipping">
         <div>
-            <b>{{ '@market.shipping.address'|trans }}</b><br>
+            <b>{{ '@marketplace.shipping.address'|trans }}</b><br>
             {{ order.shippingAddress.name }}<br>{{ order.shippingAddress.streetAddress }}{% if order.shippingAddress.affix %}<br>{{ order.shippingAddress.affix }}{% endif %}<br>{{ order.shippingAddress.zipCode }} {{ order.shippingAddress.city }} · {{ order.shippingAddress.country }}
         </div>
         <div>
-            <b>{{ '@market.shipping.title'|trans }}</b><br>{{ order.shippingMethod ? order.shippingMethod.label : '—' }}
+            <b>{{ '@marketplace.shipping.title'|trans }}</b><br>{{ order.shippingMethod ? order.shippingMethod.label : '—' }}
             {% for shipment in order.shipments %}
-                <br>{{ '@market.shipping.tracking'|trans }} :
-                {% set url = market_tracking_url(shipment.method, shipment.number) %}
+                <br>{{ '@marketplace.shipping.tracking'|trans }} :
+                {% set url = marketplace_tracking_url(shipment.method, shipment.number) %}
                 {% if url %}<a href="{{ url }}" rel="noopener" target="_blank">{{ shipment.number }}</a>{% else %}<code>{{ shipment.number }}</code>{% endif %}
             {% endfor %}
         </div>
@@ -29,7 +29,7 @@
 
     {% for transaction in order.transactions %}
         {% if transaction.details.instructions is defined and transaction.details.instructions %}
-            <div class="market-instructions"><b>{{ '@market.orders.instructions'|trans }}</b><br>{{ transaction.details.instructions }}</div>
+            <div class="marketplace-instructions"><b>{{ '@marketplace.orders.instructions'|trans }}</b><br>{{ transaction.details.instructions }}</div>
         {% endif %}
     {% endfor %}
 </section>

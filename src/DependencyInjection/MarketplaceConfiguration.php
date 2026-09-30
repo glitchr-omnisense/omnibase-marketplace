@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\DependencyInjection;
+namespace Base\Marketplace\DependencyInjection;
 
 use Base\Bundle\AbstractBaseConfiguration;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 
-class MarketConfiguration extends AbstractBaseConfiguration
+class MarketplaceConfiguration extends AbstractBaseConfiguration
 {
     /**
      * getTreeBuilder() memoises the builder while this method ADDS children to
@@ -45,7 +45,7 @@ class MarketConfiguration extends AbstractBaseConfiguration
                     ->end()
                 ->end()
                 // Per-gateway settings, keyed by the payment method's slug:
-                //     market:
+                //     marketplace:
                 //         gateways:
                 //             stripe: { secret: '%env(STRIPE_SECRET)%' }
                 // read by PaymentMethod::getGatewayParameters().

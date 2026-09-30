@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Security\MarketplaceVoter;
+use Base\Marketplace\Security\MarketplaceVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -10,7 +10,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * so every shop has it without importing Omnistate's controllers (the
  * Store form's company field asks it). Its route is the parent's.
  *
- * For the back office only (MARKET_VIEW: creators and store owners): open,
+ * For the back office only (MARKETPLACE_VIEW: creators and store owners): open,
  * any visitor could search the State's register through the shop and spend
  * its rate limit (about seven calls a second, per server).
  */

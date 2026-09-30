@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales;
+namespace Base\Marketplace\Repository\Sales;
 
-use Base\Market\Entity\Sales\Channel;
+use Base\Marketplace\Entity\Sales\Channel;
 use Base\Attributes\Traits\HierarchifyTrait;
 use Base\Database\Repository\ServiceEntityRepository;
 

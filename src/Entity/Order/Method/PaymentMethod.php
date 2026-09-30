@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Entity\Order\Method;
+namespace Base\Marketplace\Entity\Order\Method;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Sales\Attribute\PaymentMethodRule;
-use Base\Market\Entity\Sales\Attribute\PaymentMethodScope;
-use Base\Market\Entity\Sales\Fee;
-use Base\Market\Repository\Order\Method\PaymentMethodRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Sales\Attribute\PaymentMethodRule;
+use Base\Marketplace\Entity\Sales\Attribute\PaymentMethodScope;
+use Base\Marketplace\Entity\Sales\Fee;
+use Base\Marketplace\Repository\Order\Method\PaymentMethodRepository;
 use Base\Database\Attribute\Uploader;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
@@ -198,10 +198,10 @@ class PaymentMethod implements IconizeInterface
         return array_merge($this->getGatewayParameters(), ['factory' => $this->getGatewayFactory()]);
     }
 
-    /** The gateway's own settings, from the market.gateways.<slug> parameter. */
+    /** The gateway's own settings, from the marketplace.gateways.<slug> parameter. */
     public function getGatewayParameters(): array
     {
-        $parameters = $this->getParameterBag('market.gateways.' . str_replace('-', '_', (string) $this->getSlug()));
+        $parameters = $this->getParameterBag('marketplace.gateways.' . str_replace('-', '_', (string) $this->getSlug()));
 
         return is_array($parameters) ? $parameters : [];
     }

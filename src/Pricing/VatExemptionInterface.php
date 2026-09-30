@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Pricing;
+namespace Base\Marketplace\Pricing;
 
-use Base\Market\Entity\Order;
+use Base\Marketplace\Entity\Order;
 
 /**
  * Whether an order is sold without VAT - an EU business buying from another
  * member state (reverse charge), an export... Each service implementing it
- * is asked once per repricing (tagged market.vat_exemption, autoconfigured);
+ * is asked once per repricing (tagged marketplace.vat_exemption, autoconfigured);
  * the first that exempts wins.
  *
  * exempts() answers the mention an invoice must carry (e.g. "Autoliquidation

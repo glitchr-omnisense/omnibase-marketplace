@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Shopify\Catalogue\ProductData;
-use Base\Market\Shopify\Catalogue\ProductMapper;
+use Base\Marketplace\Shopify\Catalogue\ProductData;
+use Base\Marketplace\Shopify\Catalogue\ProductMapper;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -1,27 +1,27 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
 use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\TextField;
-use Base\Market\Entity\Order;
+use Base\Marketplace\Entity\Order;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Base\Admin\Filter\Filter;
-use Base\Market\Enum\OrderState;
+use Base\Marketplace\Enum\OrderState;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Admin view of the orders: a list and a detail page. Their state moves
  * through the shop (cart, checkout, payment), so nothing here edits them.
  */
-class OrderCrudController extends AbstractMarketCrudController
+class OrderCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

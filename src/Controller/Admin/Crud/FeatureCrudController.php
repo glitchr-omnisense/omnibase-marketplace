@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Field\ColorField;
 use Base\Field\IconField;
 use Base\Field\IdField;
@@ -10,15 +10,15 @@ use Base\Field\ImageField;
 use Base\Field\SelectField;
 use Base\Field\SlugField;
 use Base\Field\TranslationField;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Feature;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Feature;
 
 /**
  * The product features shown as badges (washable, made in France...): an
  * icon or a picture, a label and a description per language. A feature
  * products still carry cannot be deleted.
  */
-class FeatureCrudController extends AbstractMarketCrudController
+class FeatureCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

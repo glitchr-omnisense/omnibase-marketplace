@@ -1,14 +1,14 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Shopify\Api\Endpoint;
-use Base\Market\Shopify\Api\Hmac;
-use Base\Market\Shopify\Checkout\OrderReconciler;
-use Base\Market\Shopify\Webhook\ReplayGuard;
-use Base\Market\Shopify\Webhook\ShopifyWebhookHandler;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Shopify\Api\Endpoint;
+use Base\Marketplace\Shopify\Api\Hmac;
+use Base\Marketplace\Shopify\Checkout\OrderReconciler;
+use Base\Marketplace\Shopify\Webhook\ReplayGuard;
+use Base\Marketplace\Shopify\Webhook\ShopifyWebhookHandler;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,7 +45,7 @@ class ShopifyController extends AbstractController
      * we do not recognise, because eight hours of non-2xx costs the
      * subscription.
      */
-    #[Route('/market/shopify/webhook', name: 'market_shopify_webhook', methods: ['POST'])]
+    #[Route('/marketplace/shopify/webhook', name: 'marketplace_shopify_webhook', methods: ['POST'])]
     public function Webhook(Request $request): JsonResponse
     {
         if (!$this->handler || !$this->endpoint) {
@@ -87,33 +87,33 @@ class ShopifyController extends AbstractController
      * thank-you page and never redirects back, so this is a page the member
      * reaches from their pending order, not somewhere Shopify sends them.
      */
-    #[Route('/panier/{order}/shopify', name: 'market_shopify_check', requirements: ['order' => '\d+'])]
+    #[Route('/panier/{order}/shopify', name: 'marketplace_shopify_check', requirements: ['order' => '\d+'])]
     public function Check(int $order): Response
     {
         $order = $this->entityManager->getRepository(Order::class)->find($order);
         $transaction = $order ? $this->pending($order) : null;
 
         if (!$this->reconciler || !$order || !$transaction || !$order->isCustomer($this->getUser())) {
-            return $this->redirectToRoute('market_cart');
+            return $this->redirectToRoute('marketplace_cart');
         }
 
         $status = $this->reconciler->reconcile($order, $transaction);
 
         if ('paid' === $status) {
-            $this->addFlash('success', $this->translator->trans('@market.checkout.paid', ['{reference}' => (string) $order->getReference()]));
+            $this->addFlash('success', $this->translator->trans('@marketplace.checkout.paid', ['{reference}' => (string) $order->getReference()]));
 
-            return $this->redirectToRoute('market_order', ['reference' => $order->getReference()]);
+            return $this->redirectToRoute('marketplace_order', ['reference' => $order->getReference()]);
         }
 
         if ('cancelled' === $status) {
-            $this->addFlash('error', $this->translator->trans('@market.shopify.cancelled'));
+            $this->addFlash('error', $this->translator->trans('@marketplace.shopify.cancelled'));
 
-            return $this->redirectToRoute('market_cart');
+            return $this->redirectToRoute('marketplace_cart');
         }
 
-        $this->addFlash('warning', $this->translator->trans('@market.shopify.pending', ['{reference}' => (string) $order->getReference()]));
+        $this->addFlash('warning', $this->translator->trans('@marketplace.shopify.pending', ['{reference}' => (string) $order->getReference()]));
 
-        return $this->redirectToRoute('market_order', ['reference' => $order->getReference()]);
+        return $this->redirectToRoute('marketplace_order', ['reference' => $order->getReference()]);
     }
 
     /** The transaction this order is waiting on. */

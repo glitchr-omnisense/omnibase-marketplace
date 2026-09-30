@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Event;
+namespace Base\Marketplace\Event;
 
-use Base\Market\Entity\Order;
+use Base\Marketplace\Entity\Order;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**

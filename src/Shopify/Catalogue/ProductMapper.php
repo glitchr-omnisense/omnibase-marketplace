@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Shopify\Catalogue;
+namespace Base\Marketplace\Shopify\Catalogue;
 
-use Base\Market\Shopify\Api\Money;
+use Base\Marketplace\Shopify\Api\Money;
 
 /**
  * Shopify's two product shapes -> ProductData.

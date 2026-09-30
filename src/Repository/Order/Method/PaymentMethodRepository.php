@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Order\Method;
+namespace Base\Marketplace\Repository\Order\Method;
 
-use Base\Market\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

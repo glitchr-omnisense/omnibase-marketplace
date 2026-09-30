@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Payment\Stripe;
+namespace Base\Marketplace\Payment\Stripe;
 
 use Omnipay\Stripe\Message\Checkout\PurchaseRequest;
 

@@ -8,13 +8,13 @@
 # the plain demo - which is itself the point being demonstrated: the
 # integration costs nothing when it is off.
 #
-#   docker build -f Dockerfile.shopify -t base-bundle-market-shopify .
+#   docker build -f Dockerfile.shopify -t base-bundle-marketplace-shopify .
 #   docker run --rm -p 8000:8000 \
 #     -e SHOPIFY_ENABLED=1 \
 #     -e SHOPIFY_SHOP_DOMAIN=your-dev-store.myshopify.com \
 #     -e SHOPIFY_ADMIN_TOKEN=shpat_xxx \
 #     -e SHOPIFY_WEBHOOK_SECRET=shpss_xxx \
-#     base-bundle-market-shopify
+#     base-bundle-marketplace-shopify
 #
 #   -> http://localhost:8000/                   the tour
 #   -> http://localhost:8000/boutique/boutique  the shop
@@ -25,7 +25,7 @@
 # The credentials come from a Shopify DEVELOPMENT STORE's custom app:
 #   Settings -> Apps and sales channels -> Develop apps -> Create an app
 #   API scopes: read_products, read_inventory, write_draft_orders, read_orders
-#   (write_orders as well, only if you turn market.shopify.export on)
+#   (write_orders as well, only if you turn marketplace.shopify.export on)
 # The Admin API access token is shpat_...; the webhook secret is the app's
 # API secret key.
 
@@ -70,7 +70,7 @@ COPY . /srv/base-bundle-marketplace
 # are the APPLICATION's dependencies, not the bundle's - that asymmetry is
 # exactly what config/shopify.php's class_exists guard is checking.
 RUN composer config repositories.base-bundle-marketplace '{"type": "path", "url": "/srv/base-bundle-marketplace", "options": {"symlink": false}}' \
-    && composer require "glitchr/base-bundle:3.x-dev as 3.0.x-dev" "glitchr/base-bundle-market:*@dev" \
+    && composer require "glitchr/base-bundle:3.x-dev as 3.0.x-dev" "glitchr/base-bundle-marketplace:*@dev" \
         symfony/translation symfony/http-client symfony/messenger \
         --no-interaction --no-progress --no-scripts \
     && rm -f config/packages/google_recaptcha.yaml config/packages/webauthn.yaml config/routes/webauthn_routes.yaml config/routes/api_platform.yaml
@@ -86,13 +86,13 @@ RUN rm -rf var/cache \
 
 # The integration's on/off switch is read while the container COMPILES, where
 # an env placeholder is still an unresolved string - so it cannot be one. The
-# entrypoint rewrites the literal in market.yaml from the environment before
+# entrypoint rewrites the literal in marketplace.yaml from the environment before
 # anything is warmed, which is the honest way to drive a compile-time flag
 # from a runtime variable.
 COPY <<'ENTRYPOINT' /usr/local/bin/demo-entrypoint
 #!/bin/sh
 set -e
-CONFIG=/srv/demo/config/packages/market.yaml
+CONFIG=/srv/demo/config/packages/marketplace.yaml
 
 if [ -n "$SHOPIFY_ENABLED" ] && [ -n "$SHOPIFY_SHOP_DOMAIN" ] && [ -n "$SHOPIFY_ADMIN_TOKEN" ]; then
     # Only the line inside the shopify: block, which is the indented one.
@@ -111,13 +111,13 @@ php bin/console cache:warmup
 
 if [ -n "$SHOPIFY_ON" ]; then
     php bin/console demo:shopify:seed || true
-    echo "--- market:shopify:ping ---"
-    php bin/console market:shopify:ping || echo "ping failed: check the domain, the token and the API version"
-    echo "--- market:shopify:catalogue:sync --dry-run --limit=5 ---"
-    php bin/console market:shopify:catalogue:sync --dry-run --limit=5 || true
+    echo "--- marketplace:shopify:ping ---"
+    php bin/console marketplace:shopify:ping || echo "ping failed: check the domain, the token and the API version"
+    echo "--- marketplace:shopify:catalogue:sync --dry-run --limit=5 ---"
+    php bin/console marketplace:shopify:catalogue:sync --dry-run --limit=5 || true
     echo
-    echo "To write the catalogue for real:   docker exec -it <container> php bin/console market:shopify:catalogue:sync"
-    echo "To install the webhooks:           docker exec -it <container> php bin/console market:shopify:webhooks --install --callback=https://<your-tunnel>/market/shopify/webhook"
+    echo "To write the catalogue for real:   docker exec -it <container> php bin/console marketplace:shopify:catalogue:sync"
+    echo "To install the webhooks:           docker exec -it <container> php bin/console marketplace:shopify:webhooks --install --callback=https://<your-tunnel>/marketplace/shopify/webhook"
 fi
 
 exec php -S 0.0.0.0:8000 -t public

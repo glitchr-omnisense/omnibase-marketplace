@@ -1,32 +1,32 @@
 <?php
 
-namespace Base\Market\Shopify\Catalogue;
+namespace Base\Marketplace\Shopify\Catalogue;
 
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Attribute\Adapter\BarcodeAdapter;
-use Base\Market\Entity\Product\Attribute\Barcode as BarcodeAttribute;
-use Base\Market\Entity\Product\Feature;
-use Base\Market\Entity\Product\Identifier;
-use Base\Market\Entity\Product\Variant;
-use Base\Market\Entity\Store;
-use Base\Market\Enum\Barcode;
-use Base\Market\Enum\ProductAvailability;
-use Base\Market\Shopify\Api\Endpoint;
-use Base\Market\Shopify\Entity\ProductLink;
-use Base\Market\Shopify\Repository\ProductLinkRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
+use Base\Marketplace\Entity\Product\Attribute\Barcode as BarcodeAttribute;
+use Base\Marketplace\Entity\Product\Feature;
+use Base\Marketplace\Entity\Product\Identifier;
+use Base\Marketplace\Entity\Product\Variant;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Enum\Barcode;
+use Base\Marketplace\Enum\ProductAvailability;
+use Base\Marketplace\Shopify\Api\Endpoint;
+use Base\Marketplace\Shopify\Entity\ProductLink;
+use Base\Marketplace\Shopify\Repository\ProductLinkRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Writes what the mapper produced into the catalogue.
  *
- * One way only, Shopify -> market. Nothing here ever calls Shopify, and
+ * One way only, Shopify -> marketplace. Nothing here ever calls Shopify, and
  * nothing here writes to it; that halves the conflict surface and is the only
  * version worth having first.
  *
  * Three things keep it from trampling the shop's own work:
  *
- *   1. It writes only the fields listed in market.shopify.catalogue.
+ *   1. It writes only the fields listed in marketplace.shopify.catalogue.
  *      owned_fields. Taxa, channels, owners, image crops, anything an
  *      application's own Product subclass adds - never listed, never touched.
  *   2. A product whose owned fields hash the same as last time is skipped
@@ -37,7 +37,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *      ordinary Feature, so a shop manager can pin a product from the admin
  *      without anyone touching config.
  *
- * It never deletes. A market Product is the inverse side of OrderItem and
+ * It never deletes. A marketplace Product is the inverse side of OrderItem and
  * Review; removing one would tear a hole in order history. A product that
  * disappears from Shopify is marked DISCONTINUED with no stock, and its link
  * row is kept as a tombstone with a null product - so a Shopify product
@@ -54,10 +54,10 @@ class ProductSynchronizer
         private readonly EntityManagerInterface $entityManager,
         private readonly ProductLinkRepository $links,
         private readonly Endpoint $endpoint,
-        #[Autowire('%market.shopify.catalogue.store%')] private readonly ?string $storeSlug = null,
-        #[Autowire('%market.shopify.catalogue.merchant%')] private readonly ?string $merchantId = null,
-        #[Autowire('%market.shopify.catalogue.owned_fields%')] private readonly array $ownedFields = [],
-        #[Autowire('%market.default_currency%')] private readonly string $defaultCurrency = 'EUR',
+        #[Autowire('%marketplace.shopify.catalogue.store%')] private readonly ?string $storeSlug = null,
+        #[Autowire('%marketplace.shopify.catalogue.merchant%')] private readonly ?string $merchantId = null,
+        #[Autowire('%marketplace.shopify.catalogue.owned_fields%')] private readonly array $ownedFields = [],
+        #[Autowire('%marketplace.default_currency%')] private readonly string $defaultCurrency = 'EUR',
     ) {
     }
 

@@ -5,13 +5,13 @@ doctrine:
         # The shop's seller: the demo's member here, a Merchant class of
         # your own in a real shop.
         resolve_target_entities:
-            Base\Market\Model\MerchantInterface: App\Entity\User
+            Base\Marketplace\Model\MerchantInterface: App\Entity\User
         # Base ships its own naming strategy and metadata factory: they resolve
         # the App\ <-> Base\ mirrored entities and the Set/Enum column types.
         naming_strategy: Base\Database\Mapping\NamingStrategy
         class_metadata_factory_name: Base\Database\Mapping\ClassMetadataFactory
         # auto_mapping picks up both bundles' entities: Base\Entity\* from
-        # base-bundle and Base\Market\Entity\* from this one (the mapping is
+        # base-bundle and Base\Marketplace\Entity\* from this one (the mapping is
         # derived from the bundle class's own directory, so src/Entity needs
         # no declaration of its own).
         auto_mapping: true

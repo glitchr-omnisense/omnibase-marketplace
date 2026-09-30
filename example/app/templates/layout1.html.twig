@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Shop{% endblock %} — base-bundle-market</title>
+    <title>{% block title %}Shop{% endblock %} — base-bundle-marketplace</title>
     <style>
         body { margin: 0; background: #eef2f5; font: 14px/1.5 system-ui, sans-serif; color: #284555; }
         .demo-bar { background: #006699; color: #fff; padding: .5rem 1rem; font-size: 13px; }
@@ -24,9 +24,9 @@
 </head>
 <body>
     <div class="demo-bar">
-        base-bundle-market demo — signed in as <b>{{ app.user ? app.user.username : 'nobody' }}</b> ·
+        base-bundle-marketplace demo — signed in as <b>{{ app.user ? app.user.username : 'nobody' }}</b> ·
         <a href="{{ path('demo_index') }}">tour</a> ·
-        <a href="{{ path('market_stores') }}">/boutiques</a> · <a href="{{ path('market_cart') }}">/panier</a> · <a href="{{ path('market_orders') }}">/commandes</a>
+        <a href="{{ path('marketplace_stores') }}">/boutiques</a> · <a href="{{ path('marketplace_cart') }}">/panier</a> · <a href="{{ path('marketplace_orders') }}">/commandes</a>
     </div>
     <div class="demo-cols">
         <main>{% block content %}{% endblock %}</main>

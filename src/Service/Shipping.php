@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Address\ShippingAddress;
-use Base\Market\Entity\Order\Method\ShippingMethod;
-use Base\Market\Entity\Order\Shipment;
-use Base\Market\Enum\ShippingRate;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Address\ShippingAddress;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Entity\Order\Shipment;
+use Base\Marketplace\Enum\ShippingRate;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**

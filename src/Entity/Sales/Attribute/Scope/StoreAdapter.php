@@ -1,13 +1,13 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute\Scope;
+namespace Base\Marketplace\Entity\Sales\Attribute\Scope;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Taxon;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Store;
-use Base\Market\Repository\Sales\Attribute\Scope\StoreAdapterRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Taxon;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Repository\Sales\Attribute\Scope\StoreAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;

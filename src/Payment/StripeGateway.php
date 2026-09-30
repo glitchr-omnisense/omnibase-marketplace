@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Payment;
+namespace Base\Marketplace\Payment;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
 use Base\Service\SettingBagInterface;
-use Base\Market\Payment\Stripe\CheckoutGateway;
+use Base\Marketplace\Payment\Stripe\CheckoutGateway;
 use Omnipay\Common\GatewayInterface;
 use Omnipay\Common\Http\Client as OmnipayClient;
 use Omnipay\Omnipay;
@@ -17,16 +17,16 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Card payment through Stripe Checkout, the hosted payment page: the member
- * is sent to Stripe, then back to market_stripe_return; the webhook
- * (market_stripe_webhook) confirms the order even if they never come back.
+ * is sent to Stripe, then back to marketplace_stripe_return; the webhook
+ * (marketplace_stripe_webhook) confirms the order even if they never come back.
  *
  * Built on omnipay/stripe's Checkout gateway, as a shop site is on
  * Omnipay. Only registered when that package is installed.
  *
- * Settings, under market.gateways.<method slug>:
+ * Settings, under marketplace.gateways.<method slug>:
  *   api_key         the secret key (sk_live_... / sk_test_...)
  *   webhook_secret  the signing secret of the webhook endpoint (whsec_...) -
- *                   optional: market:stripe:webhook creates the endpoint and
+ *                   optional: marketplace:stripe:webhook creates the endpoint and
  *                   stores its secret in the settings, read when this is empty
  *   webhook_url     optional, the endpoint's public address for that command
  *   currencies      optional, the currencies the method takes
@@ -49,10 +49,10 @@ final class StripeGateway implements PaymentGatewayInterface
     ) {
     }
 
-    /** Where market:stripe:webhook keeps the secret of the endpoint it created for $method. */
+    /** Where marketplace:stripe:webhook keeps the secret of the endpoint it created for $method. */
     public static function webhookSecretSetting(PaymentMethod $method): string
     {
-        return 'market.stripe.'.str_replace(['-', '.'], '_', (string) $method->getSlug()).'.webhook_secret';
+        return 'marketplace.stripe.'.str_replace(['-', '.'], '_', (string) $method->getSlug()).'.webhook_secret';
     }
 
     /** The endpoint's signing secret: the gateway's webhook_secret, else the one the command stored; null when neither. */
@@ -81,7 +81,7 @@ final class StripeGateway implements PaymentGatewayInterface
     {
         $lines = $this->lines($order);
 
-        $return = fn (array $query) => $this->urls->generate('market_stripe_return', ['order' => $order->getId()] + $query, UrlGeneratorInterface::ABSOLUTE_URL);
+        $return = fn (array $query) => $this->urls->generate('marketplace_stripe_return', ['order' => $order->getId()] + $query, UrlGeneratorInterface::ABSOLUTE_URL);
         $data = $this->gateway($method)->purchase([
             'mode' => 'payment',
             'line_items' => $lines,

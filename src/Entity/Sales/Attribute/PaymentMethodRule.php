@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute;
+namespace Base\Marketplace\Entity\Sales\Attribute;
 
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Repository\Sales\Attribute\PaymentMethodRuleRepository;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Repository\Sales\Attribute\PaymentMethodRuleRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Common\AbstractRule;

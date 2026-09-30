@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Entity\Sales\Attribute\FeeScope;
-use Base\Market\Entity\Sales\Attribute\TaxScope;
-use Base\Market\Repository\Sales\TaxRepository;
+use Base\Marketplace\Entity\Sales\Attribute\FeeScope;
+use Base\Marketplace\Entity\Sales\Attribute\TaxScope;
+use Base\Marketplace\Repository\Sales\TaxRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;

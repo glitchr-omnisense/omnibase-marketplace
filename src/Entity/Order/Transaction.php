@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Order;
+namespace Base\Marketplace\Entity\Order;
 
-use Base\Market\Entity\Order;
-use Base\Market\Enum\PaymentState;
-use Base\Market\Repository\Order\TransactionRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Enum\PaymentState;
+use Base\Marketplace\Repository\Order\TransactionRepository;
 use Base\Database\Attribute\Timestamp;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
@@ -36,7 +36,7 @@ class Transaction implements IconizeInterface
 
     /*
      * What Payum's Payment model used to carry, kept as plain columns: the
-     * gateways (see Base\Market\Payment\PaymentGatewayInterface) read and
+     * gateways (see Base\Marketplace\Payment\PaymentGatewayInterface) read and
      * write them, and nothing ties the bundle to Payum any more.
      */
     #[ORM\Column(type: 'string', length: 64, nullable: true)]

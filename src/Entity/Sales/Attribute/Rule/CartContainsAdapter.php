@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute\Rule;
+namespace Base\Marketplace\Entity\Sales\Attribute\Rule;
 
-use Base\Market\Entity\Order;
-use Base\Market\Repository\Sales\Attribute\Rule\CartContainsAdapterRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Repository\Sales\Attribute\Rule\CartContainsAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;

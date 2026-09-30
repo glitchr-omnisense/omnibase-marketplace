@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * Shopify said no, or said nothing.

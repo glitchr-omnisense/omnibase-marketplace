@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Export;
+namespace Base\Marketplace\Shopify\Export;
 
 /**
  * "Push order #id to Shopify."

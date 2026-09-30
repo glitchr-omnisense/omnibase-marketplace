@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Shopify\Api\Hmac;
+use Base\Marketplace\Shopify\Api\Hmac;
 use PHPUnit\Framework\TestCase;
 
 /**

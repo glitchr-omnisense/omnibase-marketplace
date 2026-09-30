@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Sales;
+namespace Base\Marketplace\Entity\Sales;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Store;
-use Base\Market\Repository\Sales\RegionRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Repository\Sales\RegionRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\Alias;
 use Base\Database\Attribute\DiscriminatorEntry;

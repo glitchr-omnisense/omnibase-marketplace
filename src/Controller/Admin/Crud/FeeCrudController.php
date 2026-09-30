@@ -1,23 +1,23 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\AttributeField;
 use Base\Field\IdField;
 use Base\Field\TextField;
-use Base\Market\Entity\Sales\Fee;
+use Base\Marketplace\Entity\Sales\Fee;
 
 /**
  * Additional fees on an order (handling, small-order surcharge...): where
  * they apply (scopes), when (rules) and how much (actions).
  */
-class FeeCrudController extends AbstractMarketCrudController
+class FeeCrudController extends AbstractMarketplaceCrudController
 {
-    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    /** VAT and prices: the shops' owners set them too (MARKETPLACE_PRICING). */
     protected function isPricing(): bool
     {
         return true;

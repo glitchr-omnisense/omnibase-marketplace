@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Order\Method;
+namespace Base\Marketplace\Repository\Order\Method;
 
-use Base\Market\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

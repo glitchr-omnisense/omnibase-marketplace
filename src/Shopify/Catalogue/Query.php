@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Catalogue;
+namespace Base\Marketplace\Shopify\Catalogue;
 
 /**
  * The GraphQL documents, kept together so that an API version bump is one
@@ -48,7 +48,7 @@ final class Query
         }
         GRAPHQL;
 
-    /** Who am I talking to - the whole of market:shopify:ping. */
+    /** Who am I talking to - the whole of marketplace:shopify:ping. */
     public const SHOP = <<<'GRAPHQL'
         query Shop {
           shop { name myshopifyDomain currencyCode ianaTimezone plan { displayName } }

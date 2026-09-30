@@ -1,36 +1,36 @@
 {#
  # The shop's chrome inside the host's layout: a banner (overridable per
  # store), the cart link, the flashes, then the page. Every shop page
- # extends this and fills `market_body`.
+ # extends this and fills `marketplace_body`.
  #}
 {% extends 'layout1.html.twig' %}
 
-{% block title %}{{ block('market_title') is defined ? block('market_title') : '@market.stores.title'|trans }}{% endblock %}
+{% block title %}{{ block('marketplace_title') is defined ? block('marketplace_title') : '@marketplace.stores.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('bundles/market/css/market.css') }}">
+    <link rel="stylesheet" href="{{ asset('bundles/marketplace/css/marketplace.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="market{{ store is defined and store ? ' market-store-' ~ store.slug }}">
-    {% include '@Market/client/_banner.html.twig' with {store: store ?? null} %}
+<div class="marketplace{{ store is defined and store ? ' marketplace-store-' ~ store.slug }}">
+    {% include '@Marketplace/client/_banner.html.twig' with {store: store ?? null} %}
 
-    <div class="market-bar" role="navigation">
-        <a href="{{ path('market_stores') }}"><i class="fa-solid fa-store"></i> {{ '@market.stores.title'|trans }}</a>
-        {% block market_crumbs %}{% endblock %}
-        <span class="market-bar-end">
+    <div class="marketplace-bar" role="navigation">
+        <a href="{{ path('marketplace_stores') }}"><i class="fa-solid fa-store"></i> {{ '@marketplace.stores.title'|trans }}</a>
+        {% block marketplace_crumbs %}{% endblock %}
+        <span class="marketplace-bar-end">
             {% if is_granted('ROLE_USER') %}
-                <a href="{{ path('market_orders') }}"><i class="fa-solid fa-receipt"></i> {{ '@market.orders.title'|trans }}</a>
-                <a class="market-cart-link" href="{{ path('market_cart') }}"><i class="fa-solid fa-basket-shopping"></i> {{ '@market.cart.title'|trans }}{% set n = market_cart_count() %}{% if n %} <span class="market-badge">{{ n }}</span>{% endif %}</a>
+                <a href="{{ path('marketplace_orders') }}"><i class="fa-solid fa-receipt"></i> {{ '@marketplace.orders.title'|trans }}</a>
+                <a class="marketplace-cart-link" href="{{ path('marketplace_cart') }}"><i class="fa-solid fa-basket-shopping"></i> {{ '@marketplace.cart.title'|trans }}{% set n = marketplace_cart_count() %}{% if n %} <span class="marketplace-badge">{{ n }}</span>{% endif %}</a>
             {% endif %}
         </span>
     </div>
 
     {% include 'flashbag.html.twig' ignore missing %}
 
-    {% block market_body %}{% endblock %}
+    {% block marketplace_body %}{% endblock %}
 </div>
 {% endblock %}
 
-{% block aside %}{% block market_aside %}{% endblock %}{% endblock %}
+{% block aside %}{% block marketplace_aside %}{% endblock %}{% endblock %}

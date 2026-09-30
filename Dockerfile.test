@@ -5,11 +5,11 @@
 # mappers are pure functions, the transport runs on MockHttpClient, and the
 # dormancy tests build a ContainerBuilder by hand.
 #
-#   docker build -f Dockerfile.test -t base-bundle-market-tests .
-#   docker run --rm base-bundle-market-tests
+#   docker build -f Dockerfile.test -t base-bundle-marketplace-tests .
+#   docker run --rm base-bundle-marketplace-tests
 #
 # A single test or group:
-#   docker run --rm base-bundle-market-tests vendor/bin/phpunit --filter DormancyTest
+#   docker run --rm base-bundle-marketplace-tests vendor/bin/phpunit --filter DormancyTest
 #
 # The first tests to care about are in tests/DependencyInjection/DormancyTest:
 # they are the contract that this bundle is unchanged when Shopify is off.

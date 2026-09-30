@@ -1,17 +1,17 @@
 <?php
 
-namespace Base\Market\Controller\Client;
+namespace Base\Marketplace\Controller\Client;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Product;
-use Base\Market\Payment\PaymentResult;
-use Base\Market\Service\Cart;
-use Base\Market\Service\CartException;
-use Base\Market\Service\Checkout;
-use Base\Market\Service\Pricing;
-use Base\Market\Service\Shipping;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Payment\PaymentResult;
+use Base\Marketplace\Service\Cart;
+use Base\Marketplace\Service\CartException;
+use Base\Marketplace\Service\Checkout;
+use Base\Marketplace\Service\Pricing;
+use Base\Marketplace\Service\Shipping;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,7 +32,7 @@ class CartController extends AbstractController
     ) {
     }
 
-    #[Route('/panier', name: 'market_cart')]
+    #[Route('/panier', name: 'marketplace_cart')]
     public function Index(Pricing $pricing): Response
     {
         $carts = $this->cart->all();
@@ -41,13 +41,13 @@ class CartController extends AbstractController
         }
         $this->entityManager->flush();
 
-        return $this->render('@Market/client/cart.html.twig', ['carts' => $carts]);
+        return $this->render('@Marketplace/client/cart.html.twig', ['carts' => $carts]);
     }
 
-    #[Route('/panier/ajouter/{id}', name: 'market_cart_add', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[Route('/panier/ajouter/{id}', name: 'marketplace_cart_add', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function Add(Request $request, int $id): Response
     {
-        $this->csrf($request, 'market_cart');
+        $this->csrf($request, 'marketplace_cart');
         $product = $this->entityManager->getRepository(Product::class)->find($id);
         if (!$product instanceof Product) {
             throw $this->createNotFoundException('Unknown product.');
@@ -55,30 +55,30 @@ class CartController extends AbstractController
 
         try {
             $this->cart->add($product, max(1, $request->request->getInt('quantity', 1)));
-            $this->addFlash('success', $this->translator->trans('@market.cart.added', ['{product}' => (string) $product]));
+            $this->addFlash('success', $this->translator->trans('@marketplace.cart.added', ['{product}' => (string) $product]));
         } catch (CartException $e) {
-            $this->addFlash('error', $this->translator->trans('@market.'.$e->getMessage(), $e->getParameters()));
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
         }
 
-        return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('market_cart'));
+        return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('marketplace_cart'));
     }
 
-    #[Route('/panier/{order}/ligne/{item}', name: 'market_cart_update', methods: ['POST'], requirements: ['order' => '\d+', 'item' => '\d+'])]
+    #[Route('/panier/{order}/ligne/{item}', name: 'marketplace_cart_update', methods: ['POST'], requirements: ['order' => '\d+', 'item' => '\d+'])]
     public function Update(Request $request, int $order, int $item): Response
     {
-        $this->csrf($request, 'market_cart');
+        $this->csrf($request, 'marketplace_cart');
         [$cart, $line] = $this->line($order, $item);
 
         try {
             $this->cart->update($cart, $line, $request->request->getInt('quantity', 0));
         } catch (CartException $e) {
-            $this->addFlash('error', $this->translator->trans('@market.'.$e->getMessage(), $e->getParameters()));
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
         }
 
-        return $this->redirectToRoute('market_cart');
+        return $this->redirectToRoute('marketplace_cart');
     }
 
-    #[Route('/panier/{order}/commander', name: 'market_checkout', requirements: ['order' => '\d+'])]
+    #[Route('/panier/{order}/commander', name: 'marketplace_checkout', requirements: ['order' => '\d+'])]
     public function Checkout(Request $request, int $order, Pricing $pricing, Shipping $shipping): Response
     {
         $cart = $this->entityManager->getRepository(Order::class)->find($order);
@@ -89,26 +89,26 @@ class CartController extends AbstractController
         try {
             $this->cart->assertMine($cart);
         } catch (CartException $e) {
-            $this->addFlash('error', $this->translator->trans('@market.'.$e->getMessage()));
-            return $this->redirectToRoute('market_cart');
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage()));
+            return $this->redirectToRoute('marketplace_cart');
         }
 
         $methods = $this->checkout->methodsFor($cart);
 
         if ($request->isMethod('POST')) {
-            $this->csrf($request, 'market_checkout_'.$cart->getId());
+            $this->csrf($request, 'marketplace_checkout_'.$cart->getId());
             $method = $this->entityManager->getRepository(PaymentMethod::class)->find($request->request->getInt('method'));
             if (!$method instanceof PaymentMethod || !in_array($method, $methods, true)) {
-                $this->addFlash('error', $this->translator->trans('@market.checkout.error.method'));
-                return $this->redirectToRoute('market_checkout', ['order' => $cart->getId()]);
+                $this->addFlash('error', $this->translator->trans('@marketplace.checkout.error.method'));
+                return $this->redirectToRoute('marketplace_checkout', ['order' => $cart->getId()]);
             }
 
             if ($shipping->needsShipping($cart)) {
                 $error = $shipping->apply($cart, (array) $request->request->all('address'), $request->request->getInt('shipping'));
                 if ($error) {
-                    $this->addFlash('error', $this->translator->trans('@market.'.$error));
+                    $this->addFlash('error', $this->translator->trans('@marketplace.'.$error));
 
-                    return $this->redirectToRoute('market_checkout', ['order' => $cart->getId()]);
+                    return $this->redirectToRoute('marketplace_checkout', ['order' => $cart->getId()]);
                 }
             }
             $pricing->reprice($cart);
@@ -117,8 +117,8 @@ class CartController extends AbstractController
             try {
                 $result = $this->checkout->pay($cart, $method);
             } catch (CartException $e) {
-                $this->addFlash('error', $this->translator->trans('@market.'.$e->getMessage(), $e->getParameters()));
-                return $this->redirectToRoute('market_cart');
+                $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
+                return $this->redirectToRoute('marketplace_cart');
             }
 
             return match ($result->status) {
@@ -131,7 +131,7 @@ class CartController extends AbstractController
         $pricing->reprice($cart);
         $this->entityManager->flush();
 
-        return $this->render('@Market/client/checkout.html.twig', [
+        return $this->render('@Marketplace/client/checkout.html.twig', [
             'order' => $cart,
             'methods' => $methods,
             'needs_shipping' => $shipping->needsShipping($cart),
@@ -142,16 +142,16 @@ class CartController extends AbstractController
 
     private function done(Order $order, PaymentResult $result): Response
     {
-        $this->addFlash('success', $this->translator->trans($result->isPaid() ? '@market.checkout.paid' : '@market.checkout.pending', ['{reference}' => (string) $order->getReference()]));
+        $this->addFlash('success', $this->translator->trans($result->isPaid() ? '@marketplace.checkout.paid' : '@marketplace.checkout.pending', ['{reference}' => (string) $order->getReference()]));
 
-        return $this->redirectToRoute('market_order', ['reference' => $order->getReference()]);
+        return $this->redirectToRoute('marketplace_order', ['reference' => $order->getReference()]);
     }
 
     private function refused(Order $order, PaymentResult $result): Response
     {
-        $this->addFlash('error', $this->translator->trans('@market.'.($result->reason ?? 'checkout.error.refused'), $result->parameters));
+        $this->addFlash('error', $this->translator->trans('@marketplace.'.($result->reason ?? 'checkout.error.refused'), $result->parameters));
 
-        return $this->redirectToRoute('market_checkout', ['order' => $order->getId()]);
+        return $this->redirectToRoute('marketplace_checkout', ['order' => $order->getId()]);
     }
 
     /** @return array{0: Order, 1: OrderItem} */

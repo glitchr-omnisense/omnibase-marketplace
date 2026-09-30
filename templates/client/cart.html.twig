@@ -1,61 +1,61 @@
-{% extends '@Market/client/layout.html.twig' %}
+{% extends '@Marketplace/client/layout.html.twig' %}
 
-{% block market_title %}{{ '@market.cart.title'|trans }}{% endblock %}
-{% block market_crumbs %}<span>›</span> <span>{{ '@market.cart.title'|trans }}</span>{% endblock %}
+{% block marketplace_title %}{{ '@marketplace.cart.title'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.cart.title'|trans }}</span>{% endblock %}
 
-{% block market_body %}
+{% block marketplace_body %}
 {% if carts|length == 0 %}
-    <p class="market-empty">{{ '@market.cart.empty'|trans }} <a href="{{ path('market_stores') }}">{{ '@market.stores.title'|trans }}</a></p>
+    <p class="marketplace-empty">{{ '@marketplace.cart.empty'|trans }} <a href="{{ path('marketplace_stores') }}">{{ '@marketplace.stores.title'|trans }}</a></p>
 {% endif %}
 {% for cart in carts %}
-<section class="market-cart market-cart-{{ cart.store.slug }}">
-    <h2><a href="{{ path('market_store', {slug: cart.store.slug}) }}">{{ cart.store.title }}</a></h2>
-    <table class="market-lines">
-        <thead><tr><th>{{ '@market.cart.product'|trans }}</th><th class="num">{{ '@market.cart.unit'|trans }}</th><th class="num">{{ '@market.cart.quantity'|trans }}</th><th class="num">{{ '@market.cart.total'|trans }}</th><th></th></tr></thead>
+<section class="marketplace-cart marketplace-cart-{{ cart.store.slug }}">
+    <h2><a href="{{ path('marketplace_store', {slug: cart.store.slug}) }}">{{ cart.store.title }}</a></h2>
+    <table class="marketplace-lines">
+        <thead><tr><th>{{ '@marketplace.cart.product'|trans }}</th><th class="num">{{ '@marketplace.cart.unit'|trans }}</th><th class="num">{{ '@marketplace.cart.quantity'|trans }}</th><th class="num">{{ '@marketplace.cart.total'|trans }}</th><th></th></tr></thead>
         <tbody>
         {% for line in cart.items %}
             <tr>
-                <td>{% if line.product %}<a href="{{ path('market_product', {store: cart.store.slug, slug: line.product.slug}) }}">{{ line.product.title }}</a>{% else %}{{ line }}{% endif %}</td>
-                <td class="num">{% include '@Market/client/_price.html.twig' with {amount: line.unitPrice, currency: cart.currency} %}</td>
+                <td>{% if line.product %}<a href="{{ path('marketplace_product', {store: cart.store.slug, slug: line.product.slug}) }}">{{ line.product.title }}</a>{% else %}{{ line }}{% endif %}</td>
+                <td class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: line.unitPrice, currency: cart.currency} %}</td>
                 <td class="num">
-                    <form method="post" action="{{ path('market_cart_update', {order: cart.id, item: line.id}) }}" class="market-qty">
-                        <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
-                        <input type="number" name="quantity" min="0" value="{{ line.quantity }}" aria-label="{{ '@market.cart.quantity'|trans }}">
-                        <button class="market-btn market-btn-ghost market-btn-sm" type="submit">{{ '@market.cart.update'|trans }}</button>
+                    <form method="post" action="{{ path('marketplace_cart_update', {order: cart.id, item: line.id}) }}" class="marketplace-qty">
+                        <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+                        <input type="number" name="quantity" min="0" value="{{ line.quantity }}" aria-label="{{ '@marketplace.cart.quantity'|trans }}">
+                        <button class="marketplace-btn marketplace-btn-ghost marketplace-btn-sm" type="submit">{{ '@marketplace.cart.update'|trans }}</button>
                     </form>
                 </td>
-                <td class="num">{% if line.discountCharge > 0 %}<s class="market-was">{% include '@Market/client/_price.html.twig' with {amount: line.grossPrice, currency: cart.currency} %}</s><br>{% endif %}{% include '@Market/client/_price.html.twig' with {amount: line.salePrice, currency: cart.currency} %}</td>
+                <td class="num">{% if line.discountCharge > 0 %}<s class="marketplace-was">{% include '@Marketplace/client/_price.html.twig' with {amount: line.grossPrice, currency: cart.currency} %}</s><br>{% endif %}{% include '@Marketplace/client/_price.html.twig' with {amount: line.salePrice, currency: cart.currency} %}</td>
                 <td class="num">
-                    <form method="post" action="{{ path('market_cart_update', {order: cart.id, item: line.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                    <form method="post" action="{{ path('marketplace_cart_update', {order: cart.id, item: line.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
                         <input type="hidden" name="quantity" value="0">
-                        <button class="market-btn market-btn-danger market-btn-sm" type="submit" title="{{ '@market.cart.remove'|trans }}"><i class="fa-solid fa-trash"></i></button>
+                        <button class="marketplace-btn marketplace-btn-danger marketplace-btn-sm" type="submit" title="{{ '@marketplace.cart.remove'|trans }}"><i class="fa-solid fa-trash"></i></button>
                     </form>
                 </td>
             </tr>
         {% endfor %}
         </tbody>
         <tfoot>
-            {% if cart.discountCharge > 0 %}<tr><th colspan="3" class="num">{{ '@market.cart.discount'|trans }}</th><th class="num market-discount">− {% include '@Market/client/_price.html.twig' with {amount: cart.discountCharge, currency: cart.currency} %}</th><th></th></tr>{% endif %}
-            {% include '@Market/client/_vat.html.twig' with {order: cart, layout: 'table'} only %}
+            {% if cart.discountCharge > 0 %}<tr><th colspan="3" class="num">{{ '@marketplace.cart.discount'|trans }}</th><th class="num marketplace-discount">− {% include '@Marketplace/client/_price.html.twig' with {amount: cart.discountCharge, currency: cart.currency} %}</th><th></th></tr>{% endif %}
+            {% include '@Marketplace/client/_vat.html.twig' with {order: cart, layout: 'table'} only %}
         </tfoot>
     </table>
 
-    <div class="market-coupons">
+    <div class="marketplace-coupons">
         {% for coupon in cart.coupons %}
-            <form method="post" action="{{ path('market_cart_coupon_remove', {order: cart.id, coupon: coupon.id}) }}" class="market-coupon-tag">
-                <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
-                <code>{{ coupon.code }}</code> <button type="submit" class="market-btn market-btn-ghost market-btn-sm" title="{{ '@market.coupon.remove'|trans }}">×</button>
+            <form method="post" action="{{ path('marketplace_cart_coupon_remove', {order: cart.id, coupon: coupon.id}) }}" class="marketplace-coupon-tag">
+                <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+                <code>{{ coupon.code }}</code> <button type="submit" class="marketplace-btn marketplace-btn-ghost marketplace-btn-sm" title="{{ '@marketplace.coupon.remove'|trans }}">×</button>
             </form>
         {% endfor %}
-        <form method="post" action="{{ path('market_cart_coupon', {order: cart.id}) }}" class="market-coupon-form">
-            <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
-            <input type="text" name="code" placeholder="{{ '@market.coupon.placeholder'|trans }}" aria-label="{{ '@market.coupon.placeholder'|trans }}" maxlength="64">
-            <button class="market-btn market-btn-ghost market-btn-sm" type="submit">{{ '@market.coupon.apply'|trans }}</button>
+        <form method="post" action="{{ path('marketplace_cart_coupon', {order: cart.id}) }}" class="marketplace-coupon-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+            <input type="text" name="code" placeholder="{{ '@marketplace.coupon.placeholder'|trans }}" aria-label="{{ '@marketplace.coupon.placeholder'|trans }}" maxlength="64">
+            <button class="marketplace-btn marketplace-btn-ghost marketplace-btn-sm" type="submit">{{ '@marketplace.coupon.apply'|trans }}</button>
         </form>
     </div>
 
-    <p class="market-actions"><a class="market-btn market-btn-primary" href="{{ path('market_checkout', {order: cart.id}) }}"><i class="fa-solid fa-lock"></i> {{ '@market.cart.checkout'|trans }}</a></p>
+    <p class="marketplace-actions"><a class="marketplace-btn marketplace-btn-primary" href="{{ path('marketplace_checkout', {order: cart.id}) }}"><i class="fa-solid fa-lock"></i> {{ '@marketplace.cart.checkout'|trans }}</a></p>
 </section>
 {% endfor %}
 {% endblock %}

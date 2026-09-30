@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute\Action;
+namespace Base\Marketplace\Entity\Sales\Attribute\Action;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Sales\Attribute\Action\PercentageAmountAdapterRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Sales\Attribute\Action\PercentageAmountAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;

@@ -13,9 +13,9 @@
 #
 #   cloudflared tunnel --url http://localhost:8000
 #   docker compose -f docker-compose.shopify.yml exec demo \
-#     php bin/console market:shopify:webhooks --install --callback=https://<tunnel>/market/shopify/webhook
+#     php bin/console marketplace:shopify:webhooks --install --callback=https://<tunnel>/marketplace/shopify/webhook
 #
-# Without a tunnel the checkout still settles: market:shopify:orders:reconcile
+# Without a tunnel the checkout still settles: marketplace:shopify:orders:reconcile
 # polls Shopify for draft orders that were paid. That is what the `reconciler`
 # service below runs, and it is why this works on a laptop at all.
 
@@ -50,9 +50,9 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
-        sed -i 's/^        enabled: false$/        enabled: true/' config/packages/market.yaml
+        sed -i 's/^        enabled: false$/        enabled: true/' config/packages/marketplace.yaml
         while true; do
-          php bin/console market:shopify:orders:reconcile --minutes=1 || true
+          php bin/console marketplace:shopify:orders:reconcile --minutes=1 || true
           sleep 600
         done
     profiles: ["reconcile"]

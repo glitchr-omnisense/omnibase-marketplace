@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Pricing;
+namespace Base\Marketplace\Pricing;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Store;
-use Base\Market\Model\VatCustomerInterface;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Model\VatCustomerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
 /**

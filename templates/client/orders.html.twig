@@ -1,26 +1,26 @@
-{% extends '@Market/client/layout.html.twig' %}
+{% extends '@Marketplace/client/layout.html.twig' %}
 
-{% block market_title %}{{ '@market.orders.title'|trans }}{% endblock %}
-{% block market_crumbs %}<span>›</span> <span>{{ '@market.orders.title'|trans }}</span>{% endblock %}
+{% block marketplace_title %}{{ '@marketplace.orders.title'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.orders.title'|trans }}</span>{% endblock %}
 
-{% block market_body %}
+{% block marketplace_body %}
 {% if orders|length == 0 %}
-    <p class="market-empty">{{ '@market.orders.empty'|trans }}</p>
+    <p class="marketplace-empty">{{ '@marketplace.orders.empty'|trans }}</p>
 {% else %}
-<table class="market-lines">
-    <thead><tr><th>{{ '@market.orders.reference'|trans }}</th><th>{{ '@market.orders.store'|trans }}</th><th>{{ '@market.orders.date'|trans }}</th><th>{{ '@market.orders.state'|trans }}</th><th class="num">{{ '@market.cart.total'|trans }}</th></tr></thead>
+<table class="marketplace-lines">
+    <thead><tr><th>{{ '@marketplace.orders.reference'|trans }}</th><th>{{ '@marketplace.orders.store'|trans }}</th><th>{{ '@marketplace.orders.date'|trans }}</th><th>{{ '@marketplace.orders.state'|trans }}</th><th class="num">{{ '@marketplace.cart.total'|trans }}</th></tr></thead>
     <tbody>
     {% for order in orders %}
         <tr>
-            <td><a href="{{ path('market_order', {reference: order.reference}) }}">{{ order.reference }}</a></td>
+            <td><a href="{{ path('marketplace_order', {reference: order.reference}) }}">{{ order.reference }}</a></td>
             <td>{{ order.store ? order.store.title : '—' }}</td>
             <td>{{ order.createdAt|date('d/m/Y H:i') }}</td>
-            <td><span class="market-state market-state-{{ order.state|lower }}">{{ ('@market.state.' ~ order.state|lower)|trans }}</span></td>
-            <td class="num">{% include '@Market/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</td>
+            <td><span class="marketplace-state marketplace-state-{{ order.state|lower }}">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span></td>
+            <td class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
-{{ paginator(orders, 'market_orders') }}
+{{ paginator(orders, 'marketplace_orders') }}
 {% endif %}
 {% endblock %}

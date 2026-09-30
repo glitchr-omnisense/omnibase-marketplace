@@ -1,22 +1,22 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Field\ColorField;
 use Base\Field\IconField;
 use Base\Field\IdField;
 use Base\Field\SelectField;
 use Base\Field\SlugField;
 use Base\Field\TranslationField;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Sales\Channel;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Channel;
 
 /**
  * The sales channels a product is published on (the storefront, a product
  * feed, an export): a product appears where its channels say.
  */
-class ChannelCrudController extends AbstractMarketCrudController
+class ChannelCrudController extends AbstractMarketplaceCrudController
 {
     public static function getEntityFqcn(): string
     {

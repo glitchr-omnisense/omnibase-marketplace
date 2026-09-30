@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity;
+namespace Base\Marketplace\Entity;
 
 use Base\Entity\User;
-use Base\Market\Repository\ReviewRepository;
+use Base\Marketplace\Repository\ReviewRepository;
 use Base\Database\Attribute\Hierarchify;
 use Base\Database\Attribute\Uploader;
 use Base\Database\Attribute\Cache;

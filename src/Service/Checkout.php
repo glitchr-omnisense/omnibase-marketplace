@@ -1,17 +1,17 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Enum\OrderState;
-use Base\Market\Enum\PaymentState;
-use Base\Market\Event\OrderPaidEvent;
-use Base\Market\Event\PaymentCancelledEvent;
-use Base\Market\Payment\PaymentGatewayRegistry;
-use Base\Market\Payment\PaymentResult;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Enum\OrderState;
+use Base\Marketplace\Enum\PaymentState;
+use Base\Marketplace\Event\OrderPaidEvent;
+use Base\Marketplace\Event\PaymentCancelledEvent;
+use Base\Marketplace\Payment\PaymentGatewayRegistry;
+use Base\Marketplace\Payment\PaymentResult;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -35,7 +35,7 @@ class Checkout
         private readonly PaymentGatewayRegistry $gateways,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly Cart $cart,
-        #[Autowire('%market.default_gateway%')] private readonly string $defaultGateway = 'stripe',
+        #[Autowire('%marketplace.default_gateway%')] private readonly string $defaultGateway = 'stripe',
     ) {
     }
 

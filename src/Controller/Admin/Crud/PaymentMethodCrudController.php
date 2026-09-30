@@ -1,25 +1,25 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\SlugField;
 use Base\Field\TextField;
-use Base\Market\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
 use Base\Field\AttributeField;
 use Base\Field\ImageField;
-use Base\Market\Payment\PaymentGatewayRegistry;
+use Base\Marketplace\Payment\PaymentGatewayRegistry;
 
 /**
  * Admin CRUD for the payment methods offered at checkout. The gateway is the
- * name() of a service tagged market.payment_gateway ("manual" ships with the
+ * name() of a service tagged marketplace.payment_gateway ("manual" ships with the
  * bundle; an application adds its own).
  */
-class PaymentMethodCrudController extends AbstractMarketCrudController
+class PaymentMethodCrudController extends AbstractMarketplaceCrudController
 {
     public function __construct(private readonly PaymentGatewayRegistry $gateways)
     {
@@ -41,13 +41,13 @@ class PaymentMethodCrudController extends AbstractMarketCrudController
         return 0 === \count($entity->getOrders());
     }
 
-    /** Whether its gateway is installed, and how many of its settings are filled (market.gateways.<slug>). */
+    /** Whether its gateway is installed, and how many of its settings are filled (marketplace.gateways.<slug>). */
     public function configureRecordNote(object $entity): ?string
     {
         $settings = \count(array_filter($entity->getGatewayParameters()));
 
         return sprintf(
-            'Gateway "%s" %s · %d setting(s) under market.gateways.%s',
+            'Gateway "%s" %s · %d setting(s) under marketplace.gateways.%s',
             $entity->getGatewayFactory(),
             null !== $this->gateways->for($entity) ? 'installed' : 'not installed',
             $settings,

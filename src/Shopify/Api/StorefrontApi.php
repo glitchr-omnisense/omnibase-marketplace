@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * The Storefront API, for the public catalogue and a Shopify-hosted cart.
@@ -27,7 +27,7 @@ class StorefrontApi
     public function query(string $document, array $variables = []): array
     {
         if (!$this->isConfigured()) {
-            throw new ShopifyApiException('The Shopify Storefront API is not configured: set market.shopify.storefront_token.');
+            throw new ShopifyApiException('The Shopify Storefront API is not configured: set marketplace.shopify.storefront_token.');
         }
 
         return $this->graphql->query(

@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Shopify\Console;
+namespace Base\Marketplace\Shopify\Console;
 
-use Base\Market\Entity\Order;
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Checkout\OrderReconciler;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Checkout\OrderReconciler;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -27,14 +27,14 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * The age window matters: an order two minutes old is probably a member still
  * typing their card number, not a lost webhook.
  */
-#[AsCommand(name: 'market:shopify:orders:reconcile', description: 'Settle orders still waiting on a Shopify payment')]
+#[AsCommand(name: 'marketplace:shopify:orders:reconcile', description: 'Settle orders still waiting on a Shopify payment')]
 class ReconcileOrdersCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly OrderReconciler $reconciler,
         private readonly AdminApi $api,
-        #[Autowire('%market.shopify.checkout.enabled%')] private readonly bool $enabled = false,
+        #[Autowire('%marketplace.shopify.checkout.enabled%')] private readonly bool $enabled = false,
     ) {
         parent::__construct();
     }

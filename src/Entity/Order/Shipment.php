@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Order;
+namespace Base\Marketplace\Entity\Order;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\ShippingMethod;
-use Base\Market\Repository\Order\ShipmentRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\ShippingMethod;
+use Base\Marketplace\Repository\Order\ShipmentRepository;
 use Base\Database\Attribute\Timestamp;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;

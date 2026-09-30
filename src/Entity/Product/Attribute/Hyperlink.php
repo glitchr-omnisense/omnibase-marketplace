@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Product\Attribute;
+namespace Base\Marketplace\Entity\Product\Attribute;
 
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Product\Attribute\HyperlinkRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Product\Attribute\HyperlinkRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Doctrine\ORM\Mapping as ORM;

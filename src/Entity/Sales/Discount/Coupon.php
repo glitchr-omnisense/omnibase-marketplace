@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Discount;
+namespace Base\Marketplace\Entity\Sales\Discount;
 
-use Base\Market\Entity\Sales\Discount;
+use Base\Marketplace\Entity\Sales\Discount;
 use Base\Entity\User;
-use Base\Market\Repository\Sales\Discount\CouponRepository;
+use Base\Marketplace\Repository\Sales\Discount\CouponRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Service\Model\IconizeInterface;

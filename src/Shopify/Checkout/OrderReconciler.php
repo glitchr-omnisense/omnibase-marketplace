@@ -1,16 +1,16 @@
 <?php
 
-namespace Base\Market\Shopify\Checkout;
+namespace Base\Marketplace\Shopify\Checkout;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Service\Checkout;
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Service\Checkout;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
 use Psr\Log\LoggerInterface;
 
 /**
- * Asks Shopify what became of a draft order, and settles the market order to
+ * Asks Shopify what became of a draft order, and settles the marketplace order to
  * match.
  *
  * This exists because a Shopify invoice checkout has no return leg: the buyer

@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Shopify\Api\Money;
+use Base\Marketplace\Shopify\Api\Money;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

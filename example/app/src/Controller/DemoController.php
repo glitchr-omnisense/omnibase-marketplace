@@ -3,14 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Store;
-use Base\Market\Event\OrderPaidEvent;
-use Base\Market\Payment\PaymentGatewayRegistry;
-use Base\Market\Service\Cart;
-use Base\Market\Service\Checkout;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Event\OrderPaidEvent;
+use Base\Marketplace\Payment\PaymentGatewayRegistry;
+use Base\Marketplace\Service\Cart;
+use Base\Marketplace\Service\Checkout;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -100,7 +100,7 @@ class DemoController extends AbstractController
                 implode(', ', $this->paidEvents) ?: 'nobody');
         });
 
-        $demo('Checkout, paid later', 'A bank transfer answers "pending": the order waits with the instructions from market.gateways.virement, and nothing is dispatched yet.', function () {
+        $demo('Checkout, paid later', 'A bank transfer answers "pending": the order waits with the instructions from marketplace.gateways.virement, and nothing is dispatched yet.', function () {
             $this->cart->add($this->product('badges'));
             $cart = $this->cart->of($this->store());
             $result = $this->checkout->pay($cart, $this->method('virement'));

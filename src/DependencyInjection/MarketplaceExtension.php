@@ -1,27 +1,27 @@
 <?php
 
-namespace Base\Market\DependencyInjection;
+namespace Base\Marketplace\DependencyInjection;
 
 use Base\Bundle\AbstractBaseExtension;
-use Base\Market\Enum\Barcode;
-use Base\Market\Enum\OrderState;
-use Base\Market\Enum\PaymentState;
-use Base\Market\Enum\ProductAvailability;
-use Base\Market\Enum\ShippingRate;
+use Base\Marketplace\Enum\Barcode;
+use Base\Marketplace\Enum\OrderState;
+use Base\Marketplace\Enum\PaymentState;
+use Base\Marketplace\Enum\ProductAvailability;
+use Base\Marketplace\Enum\ShippingRate;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-class MarketExtension extends AbstractBaseExtension implements PrependExtensionInterface
+class MarketplaceExtension extends AbstractBaseExtension implements PrependExtensionInterface
 {
     /** The bundle's enums, registered as the Doctrine column types its entities name. */
     public const ENUMS = [OrderState::class, PaymentState::class, ProductAvailability::class, ShippingRate::class, Barcode::class];
 
-    public function getConfiguration(array $config, ContainerBuilder $container): MarketConfiguration
+    public function getConfiguration(array $config, ContainerBuilder $container): MarketplaceConfiguration
     {
-        return new MarketConfiguration();
+        return new MarketplaceConfiguration();
     }
 
     /**
@@ -49,28 +49,28 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
         // only when the integration is switched on: a host that does not use
         // Shopify gets no extra table, not even an empty one.
         if ($this->shopifyEnabled($container)) {
-            $container->prependExtensionConfig('doctrine', ['orm' => ['mappings' => ['MarketShopify' => [
+            $container->prependExtensionConfig('doctrine', ['orm' => ['mappings' => ['MarketplaceShopify' => [
                 'is_bundle' => false,
                 'type' => 'attribute',
                 'dir' => \dirname(__DIR__) . '/Shopify/Entity',
-                'prefix' => 'Base\\Market\\Shopify\\Entity',
-                'alias' => 'MarketShopify',
+                'prefix' => 'Base\\Marketplace\\Shopify\\Entity',
+                'alias' => 'MarketplaceShopify',
             ]]]]);
         }
     }
 
     /**
-     * Whether market.shopify.enabled is a literal true somewhere in the raw,
+     * Whether marketplace.shopify.enabled is a literal true somewhere in the raw,
      * unprocessed configuration.
      *
      * Raw on purpose: prepend() runs before processing, and reading the value
      * as written is what keeps this honest. An env placeholder is still the
      * string "%env(...)%" at this point, so only a real boolean matches - see
-     * the note on the node in MarketConfiguration.
+     * the note on the node in MarketplaceConfiguration.
      */
     private function shopifyEnabled(ContainerBuilder $container): bool
     {
-        foreach ($container->getExtensionConfig('market') as $config) {
+        foreach ($container->getExtensionConfig('marketplace') as $config) {
             if (true === ($config['shopify']['enabled'] ?? null)) {
                 return true;
             }
@@ -83,20 +83,20 @@ class MarketExtension extends AbstractBaseExtension implements PrependExtensionI
     {
         // Tag every gateway, the application's included: the instanceof rule
         // in config/services.php only reaches services defined in that file.
-        $container->registerForAutoconfiguration(\Base\Market\Payment\PaymentGatewayInterface::class)
-            ->addTag('market.payment_gateway');
+        $container->registerForAutoconfiguration(\Base\Marketplace\Payment\PaymentGatewayInterface::class)
+            ->addTag('marketplace.payment_gateway');
         // Asked by Pricing whether an order is sold without VAT.
-        $container->registerForAutoconfiguration(\Base\Market\Pricing\VatExemptionInterface::class)
-            ->addTag('market.vat_exemption');
+        $container->registerForAutoconfiguration(\Base\Marketplace\Pricing\VatExemptionInterface::class)
+            ->addTag('marketplace.vat_exemption');
 
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
 
         $processor = new Processor();
-        $configuration = new MarketConfiguration();
+        $configuration = new MarketplaceConfiguration();
         $config = $processor->processConfiguration($configuration, $configs);
 
-        // market.default_currency, market.gateways, market.gateways.<slug>...
+        // marketplace.default_currency, marketplace.gateways, marketplace.gateways.<slug>...
         $this->setConfiguration($container, $config, $configuration->getTreeBuilder()->buildTree()->getName());
 
         // The optional Shopify integration, in its own file so that nothing

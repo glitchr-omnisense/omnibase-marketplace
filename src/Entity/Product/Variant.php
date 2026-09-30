@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Product;
+namespace Base\Marketplace\Entity\Product;
 
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Store;
-use Base\Market\Repository\Product\VariantRepository;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Store;
+use Base\Marketplace\Repository\Product\VariantRepository;
 use Base\Database\Attribute\Hierarchify;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;

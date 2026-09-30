@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Entity\Store;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Entity\Store;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -17,7 +17,7 @@ class RegionResolver
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        #[Autowire('%market.default_currency%')] private readonly string $defaultCurrency = 'EUR',
+        #[Autowire('%marketplace.default_currency%')] private readonly string $defaultCurrency = 'EUR',
     ) {
     }
 
@@ -29,7 +29,7 @@ class RegionResolver
         }
 
         $currency = $store?->getCurrency() ?: $this->defaultCurrency;
-        $slug = 'market-'.strtolower($currency);
+        $slug = 'marketplace-'.strtolower($currency);
 
         $region = $this->entityManager->getRepository(Region::class)->findOneBy(['slug' => $slug]);
         if (!$region) {

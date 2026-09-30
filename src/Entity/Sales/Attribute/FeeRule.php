@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute;
+namespace Base\Marketplace\Entity\Sales\Attribute;
 
-use Base\Market\Entity\Sales\Fee;
-use Base\Market\Repository\Sales\Attribute\FeeRuleRepository;
+use Base\Marketplace\Entity\Sales\Fee;
+use Base\Marketplace\Repository\Sales\Attribute\FeeRuleRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Common\AbstractRule;

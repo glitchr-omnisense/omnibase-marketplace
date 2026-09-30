@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Enum;
+namespace Base\Marketplace\Enum;
 
 use Base\Database\Type\EnumType;
 use Base\Service\Model\ColorizeInterface;

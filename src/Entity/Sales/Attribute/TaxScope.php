@@ -1,9 +1,9 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute;
+namespace Base\Marketplace\Entity\Sales\Attribute;
 
-use Base\Market\Entity\Sales\Tax;
-use Base\Market\Repository\Sales\Attribute\TaxScopeRepository;
+use Base\Marketplace\Entity\Sales\Tax;
+use Base\Marketplace\Repository\Sales\Attribute\TaxScopeRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Common\AbstractScope;

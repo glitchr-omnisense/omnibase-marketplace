@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Api;
+namespace Base\Marketplace\Shopify\Api;
 
 /**
  * The Admin GraphQL API of the configured shop: the GraphQL client bound to
@@ -32,7 +32,7 @@ class AdminApi
     public function query(string $document, array $variables = []): array
     {
         if (!$this->endpoint->isConfigured()) {
-            throw new ShopifyApiException('Shopify is not configured: set market.shopify.shop_domain and admin_token.');
+            throw new ShopifyApiException('Shopify is not configured: set marketplace.shopify.shop_domain and admin_token.');
         }
 
         return $this->graphql->query(

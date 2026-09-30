@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Webhook;
+namespace Base\Marketplace\Shopify\Webhook;
 
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -26,7 +26,7 @@ use Psr\Cache\CacheItemPoolInterface;
 class ReplayGuard
 {
     private const TTL = 86400;
-    private const PREFIX = 'market.shopify.webhook.';
+    private const PREFIX = 'marketplace.shopify.webhook.';
 
     public function __construct(private readonly ?CacheItemPoolInterface $cache = null)
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Validator;
+namespace Base\Marketplace\Validator;
 
 use Symfony\Component\Validator\Constraint;
 

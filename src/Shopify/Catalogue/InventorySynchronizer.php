@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Shopify\Catalogue;
+namespace Base\Marketplace\Shopify\Catalogue;
 
 /**
  * inventory_levels/update -> stock.

@@ -1,15 +1,15 @@
 <?php
 
-namespace Base\Market\Shopify\Webhook;
+namespace Base\Marketplace\Shopify\Webhook;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Transaction;
-use Base\Market\Service\Checkout;
-use Base\Market\Service\Shipping;
-use Base\Market\Shopify\Catalogue\InventorySynchronizer;
-use Base\Market\Shopify\Catalogue\ProductMapper;
-use Base\Market\Shopify\Catalogue\ProductSynchronizer;
-use Base\Market\Shopify\Checkout\DraftOrderMapper;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Service\Checkout;
+use Base\Marketplace\Service\Shipping;
+use Base\Marketplace\Shopify\Catalogue\InventorySynchronizer;
+use Base\Marketplace\Shopify\Catalogue\ProductMapper;
+use Base\Marketplace\Shopify\Catalogue\ProductSynchronizer;
+use Base\Marketplace\Shopify\Checkout\DraftOrderMapper;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -33,8 +33,8 @@ class ShopifyWebhookHandler
         private readonly ProductMapper $mapper,
         private readonly ProductSynchronizer $products,
         private readonly InventorySynchronizer $inventory,
-        #[Autowire('%market.shopify.catalogue.enabled%')] private readonly bool $catalogueEnabled = false,
-        #[Autowire('%market.shopify.checkout.enabled%')] private readonly bool $checkoutEnabled = false,
+        #[Autowire('%marketplace.shopify.catalogue.enabled%')] private readonly bool $catalogueEnabled = false,
+        #[Autowire('%marketplace.shopify.checkout.enabled%')] private readonly bool $checkoutEnabled = false,
         private readonly ?Shipping $shipping = null,
         private readonly ?LoggerInterface $logger = null,
     ) {
@@ -160,7 +160,7 @@ class ShopifyWebhookHandler
     }
 
     /**
-     * Find the market order this payload is about.
+     * Find the marketplace order this payload is about.
      *
      * By reference first - it is unique and indexed, and travels on the order
      * as a note attribute we put there - then by the draft order gid recorded

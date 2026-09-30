@@ -1,4 +1,4 @@
-# Labels of the market's enums (Base\Market\Enum\*), singular and plural.
+# Labels of the marketplace's enums (Base\Marketplace\Enum\*), singular and plural.
 product_availability:
   aval_backorder:
     _singular: "backorder"

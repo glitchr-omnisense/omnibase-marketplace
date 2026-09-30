@@ -1,12 +1,12 @@
 <?php
 
-namespace Base\Market\Entity;
+namespace Base\Marketplace\Entity;
 
-use Base\Market\Entity\Product\Taxon as ProductTaxon;
-use Base\Market\Entity\Review\Taxon as ReviewTaxon;
-use Base\Market\Entity\Sales\Region;
-use Base\Market\Model\MerchantInterface;
-use Base\Market\Repository\StoreRepository;
+use Base\Marketplace\Entity\Product\Taxon as ProductTaxon;
+use Base\Marketplace\Entity\Review\Taxon as ReviewTaxon;
+use Base\Marketplace\Entity\Sales\Region;
+use Base\Marketplace\Model\MerchantInterface;
+use Base\Marketplace\Repository\StoreRepository;
 use Base\Database\Attribute\Hierarchify;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\Alias;
@@ -19,7 +19,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Base\Market\Validator\VatNumber as KnownVatNumber;
+use Base\Marketplace\Validator\VatNumber as KnownVatNumber;
 use Omnistate\Identifier\VatNumber;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -39,7 +39,7 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        return $this->getRouter()->generate('market_store', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
+        return $this->getRouter()->generate('marketplace_store', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
     }
 
     public function __construct(?MerchantInterface $merchant = null)
@@ -50,7 +50,7 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
         $this->reviews = new ArrayCollection();
         $this->products = new ArrayCollection();
 
-        $this->currency = $this->getParameterBag('market.default_currency');
+        $this->currency = $this->getParameterBag('marketplace.default_currency');
 
         $this->productTaxa = new ArrayCollection();
         $this->reviewTaxa = new ArrayCollection();

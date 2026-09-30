@@ -1,6 +1,6 @@
 <?php
 
-namespace Base\Market\Model;
+namespace Base\Marketplace\Model;
 
 /**
  * A French company as the State's register knows it (API Recherche

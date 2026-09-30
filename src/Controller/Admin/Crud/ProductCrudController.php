@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Controller\Admin\AbstractMarketCrudController;
+use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\SelectField;
 use Base\Field\CurrencyField;
@@ -11,17 +11,17 @@ use Base\Field\IntegerField;
 use Base\Field\SlugField;
 use Base\Field\TextareaField;
 use Base\Field\TextField;
-use Base\Market\Entity\Product;
-use Base\Market\Entity\Product\Feature;
-use Base\Market\Entity\Sales\Channel;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Product\Feature;
+use Base\Marketplace\Entity\Sales\Channel;
 
 /**
  * Admin CRUD for the products. Prices are integers in the currency's
  * smallest unit (cents, or one token); an empty stock means unlimited.
  */
-class ProductCrudController extends AbstractMarketCrudController
+class ProductCrudController extends AbstractMarketplaceCrudController
 {
-    /** VAT and prices: the shops' owners set them too (MARKET_PRICING). */
+    /** VAT and prices: the shops' owners set them too (MARKETPLACE_PRICING). */
     protected function isPricing(): bool
     {
         return true;

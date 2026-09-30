@@ -1,11 +1,11 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
 use Base\Controller\Backoffice\Crud\Layout\Attribute\AdapterCrudController;
 use Base\Field\SelectField;
-use Base\Market\Entity\Product\Attribute\Adapter\BarcodeAdapter;
-use Base\Market\Controller\Admin\MarketAdminTrait;
+use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
+use Base\Marketplace\Controller\Admin\MarketplaceAdminTrait;
 
 /**
  * The barcode standards products can be identified with (EAN-13, UPC...):
@@ -13,7 +13,7 @@ use Base\Market\Controller\Admin\MarketAdminTrait;
  */
 class BarcodeStandardCrudController extends AdapterCrudController
 {
-    use MarketAdminTrait;
+    use MarketplaceAdminTrait;
 
     public static function getEntityFqcn(): string
     {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Controller\Admin\Crud;
+namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Market\Entity\Sales\Tax\Vat;
+use Base\Marketplace\Entity\Sales\Tax\Vat;
 
 /**
  * The VAT rates, the taxes Pricing charges on each line (Service/Pricing.php

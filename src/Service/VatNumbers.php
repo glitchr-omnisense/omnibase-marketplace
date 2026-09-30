@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Service;
+namespace Base\Marketplace\Service;
 
-use Base\Market\Model\VatCustomerInterface;
+use Base\Marketplace\Model\VatCustomerInterface;
 use Omnistate\Exception\OmnistateException;
 use Omnistate\Identifier\VatNumber;
 use Omnistate\Model\VatCheck;

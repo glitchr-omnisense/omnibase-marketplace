@@ -1,19 +1,19 @@
 <?php
 
-namespace Base\Market\Entity;
+namespace Base\Marketplace\Entity;
 
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Product\Attribute;
-use Base\Market\Entity\Product\Attribute\Hyperlink;
-use Base\Market\Entity\Product\Feature;
-use Base\Market\Entity\Product\Identifier;
-use Base\Market\Entity\Product\Image;
-use Base\Market\Entity\Sales\Channel;
-use Base\Market\Model\MerchantInterface;
-use Base\Market\Enum\Barcode;
-use Base\Market\Enum\ProductAvailability;
-use Base\Market\Model\ShippingUnitInterface;
-use Base\Market\Repository\ProductRepository;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Product\Attribute;
+use Base\Marketplace\Entity\Product\Attribute\Hyperlink;
+use Base\Marketplace\Entity\Product\Feature;
+use Base\Marketplace\Entity\Product\Identifier;
+use Base\Marketplace\Entity\Product\Image;
+use Base\Marketplace\Entity\Sales\Channel;
+use Base\Marketplace\Model\MerchantInterface;
+use Base\Marketplace\Enum\Barcode;
+use Base\Marketplace\Enum\ProductAvailability;
+use Base\Marketplace\Model\ShippingUnitInterface;
+use Base\Marketplace\Repository\ProductRepository;
 use Base\Database\Attribute\Hierarchify;
 use Base\Database\Attribute\Uploader;
 use Base\Database\Attribute\Cache;
@@ -93,7 +93,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
             return null;
         }
 
-        $routeName = 'market_product';
+        $routeName = 'marketplace_product';
         $routeParameters = array_merge($routeParameters, [
             'store' => $this->getStore()->getSlug(),
             'slug' => $this->getSlug(),
@@ -141,7 +141,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $this->stock = null;
 
         $this->unitPrice = $unitPrice;
-        $this->currency = $currency ?? $this->getParameterBag('market.default_currency') ?? 'USD';
+        $this->currency = $currency ?? $this->getParameterBag('marketplace.default_currency') ?? 'USD';
 
         $this->rating = 0;
 

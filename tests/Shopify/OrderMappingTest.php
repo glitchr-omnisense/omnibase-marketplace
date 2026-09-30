@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Order\Method\PaymentMethod;
-use Base\Market\Entity\Order\OrderItem;
-use Base\Market\Entity\Product;
-use Base\Market\Shopify\Checkout\DraftOrderMapper;
-use Base\Market\Shopify\Export\OrderMapper;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Shopify\Checkout\DraftOrderMapper;
+use Base\Marketplace\Shopify\Export\OrderMapper;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 
@@ -90,7 +90,7 @@ final class OrderMappingTest extends TestCase
         $input = (new DraftOrderMapper())->map($this->order());
 
         self::assertSame(
-            [['key' => 'market_reference', 'value' => 'ABC-1234-XYZ']],
+            [['key' => 'marketplace_reference', 'value' => 'ABC-1234-XYZ']],
             $input['customAttributes'],
         );
     }

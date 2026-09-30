@@ -1,14 +1,14 @@
 <?php
 
-namespace Tests\Base\Market\Shopify;
+namespace Tests\Base\Marketplace\Shopify;
 
-use Base\Market\Entity\Order;
-use Base\Market\Event\PaymentCancelledEvent;
-use Base\Market\Service\Checkout;
-use Base\Market\Shopify\Catalogue\InventorySynchronizer;
-use Base\Market\Shopify\Catalogue\ProductMapper;
-use Base\Market\Shopify\Catalogue\ProductSynchronizer;
-use Base\Market\Shopify\Webhook\ShopifyWebhookHandler;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Event\PaymentCancelledEvent;
+use Base\Marketplace\Service\Checkout;
+use Base\Marketplace\Shopify\Catalogue\InventorySynchronizer;
+use Base\Marketplace\Shopify\Catalogue\ProductMapper;
+use Base\Marketplace\Shopify\Catalogue\ProductSynchronizer;
+use Base\Marketplace\Shopify\Webhook\ShopifyWebhookHandler;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -186,7 +186,7 @@ final class ShopifyWebhookHandlerTest extends TestCase
         $order = $this->createMock(Order::class);
         $order->method('getReference')->willReturn($reference);
         $order->method('getTransactions')->willReturn(new \Doctrine\Common\Collections\ArrayCollection([
-            (new \Base\Market\Entity\Order\Transaction())->setWebhook('gid://shopify/DraftOrder/990011'),
+            (new \Base\Marketplace\Entity\Order\Transaction())->setWebhook('gid://shopify/DraftOrder/990011'),
         ]));
 
         return $order;

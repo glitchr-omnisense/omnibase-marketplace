@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Discount;
+namespace Base\Marketplace\Repository\Sales\Discount;
 
-use Base\Market\Entity\Sales\Discount\Promotion;
+use Base\Marketplace\Entity\Sales\Discount\Promotion;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

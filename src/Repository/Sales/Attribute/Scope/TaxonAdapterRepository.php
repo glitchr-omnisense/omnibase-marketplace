@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Repository\Sales\Attribute\Scope;
+namespace Base\Marketplace\Repository\Sales\Attribute\Scope;
 
-use Base\Market\Entity\Sales\Attribute\Scope\TaxonAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\TaxonAdapter;
 use Base\Database\Repository\ServiceEntityRepository;
 
 /**

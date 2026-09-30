@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Shopify\Repository;
+namespace Base\Marketplace\Shopify\Repository;
 
-use Base\Market\Shopify\Entity\ProductLink;
+use Base\Marketplace\Shopify\Entity\ProductLink;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

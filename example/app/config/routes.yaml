@@ -11,9 +11,9 @@ base_controller:
     type: attribute
     prefix: /
 
-# The shop itself. MarketBundle::getPath() returns the package root (modern
+# The shop itself. MarketplaceBundle::getPath() returns the package root (modern
 # layout, code under src/), hence the src/ in the resource path.
-market_controller:
-    resource: "@MarketBundle/src/Controller/Client"
+marketplace_controller:
+    resource: "@MarketplaceBundle/src/Controller/Client"
     type: attribute
     prefix: /

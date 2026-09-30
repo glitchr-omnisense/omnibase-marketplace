@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Shopify\Console;
+namespace Base\Marketplace\Shopify\Console;
 
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
-use Base\Market\Shopify\Catalogue\Query;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Shopify\Catalogue\Query;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * for topics no longer wanted. It never touches a subscription belonging to
  * another app: matching is on the callback URL, not the topic.
  */
-#[AsCommand(name: 'market:shopify:webhooks', description: 'List, install or prune the Shopify webhook subscriptions')]
+#[AsCommand(name: 'marketplace:shopify:webhooks', description: 'List, install or prune the Shopify webhook subscriptions')]
 class WebhooksCommand extends Command
 {
     /** The topics this integration knows how to handle. */
@@ -59,13 +59,13 @@ class WebhooksCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         if (!$this->api->isConfigured()) {
-            $io->error('Shopify is not configured. Run market:shopify:ping.');
+            $io->error('Shopify is not configured. Run marketplace:shopify:ping.');
 
             return Command::FAILURE;
         }
 
         $callback = (string) ($input->getOption('callback')
-            ?: $this->urls->generate('market_shopify_webhook', [], UrlGeneratorInterface::ABSOLUTE_URL));
+            ?: $this->urls->generate('marketplace_shopify_webhook', [], UrlGeneratorInterface::ABSOLUTE_URL));
 
         if (!str_starts_with($callback, 'https://')) {
             $io->warning(sprintf('Shopify only calls https endpoints; this is %s. Pass --callback with a tunnel URL in development.', $callback));

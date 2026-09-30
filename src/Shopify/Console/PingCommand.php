@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Shopify\Console;
+namespace Base\Marketplace\Shopify\Console;
 
-use Base\Market\Shopify\Api\AdminApi;
-use Base\Market\Shopify\Api\ShopifyApiException;
-use Base\Market\Shopify\Catalogue\Query;
+use Base\Marketplace\Shopify\Api\AdminApi;
+use Base\Marketplace\Shopify\Api\ShopifyApiException;
+use Base\Marketplace\Shopify\Catalogue\Query;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * right before anything else is blamed. The first thing to run against a new
  * shop, and the first thing to run when something stops working.
  */
-#[AsCommand(name: 'market:shopify:ping', description: 'Check the Shopify credentials with one API call')]
+#[AsCommand(name: 'marketplace:shopify:ping', description: 'Check the Shopify credentials with one API call')]
 class PingCommand extends Command
 {
     public function __construct(private readonly AdminApi $api)
@@ -30,7 +30,7 @@ class PingCommand extends Command
         $endpoint = $this->api->endpoint();
 
         if (!$this->api->isConfigured()) {
-            $io->error('Shopify is not configured. Set market.shopify.shop_domain and market.shopify.admin_token.');
+            $io->error('Shopify is not configured. Set marketplace.shopify.shop_domain and marketplace.shopify.admin_token.');
             $io->writeln(sprintf('  shop_domain: %s', $endpoint->shopDomain ?: '<empty>'));
             $io->writeln(sprintf('  admin_token: %s', '' !== $endpoint->adminToken ? '<set>' : '<empty>'));
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace Base\Market\Entity\Sales\Attribute\Scope;
+namespace Base\Marketplace\Entity\Sales\Attribute\Scope;
 
-use Base\Market\Entity\Order;
-use Base\Market\Entity\Product;
-use Base\Market\Repository\Sales\Attribute\Scope\ProductAdapterRepository;
+use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Repository\Sales\Attribute\Scope\ProductAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;

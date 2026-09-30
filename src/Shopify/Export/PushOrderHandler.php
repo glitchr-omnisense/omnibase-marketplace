@@ -1,8 +1,8 @@
 <?php
 
-namespace Base\Market\Shopify\Export;
+namespace Base\Marketplace\Shopify\Export;
 
-use Base\Market\Entity\Order;
+use Base\Marketplace\Entity\Order;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
