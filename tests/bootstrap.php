@@ -1,7 +1,7 @@
 <?php
 
 // Standalone (composer install in this checkout) or inside a host application
-// (vendor/glitchr/base-bundle-marketplace): whichever autoloader exists is used,
+// (vendor/omnibase/marketplace): whichever autoloader exists is used,
 // and the test namespace is registered by hand because a host's autoloader
 // never reads a dependency's autoload-dev.
 $candidates = [__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'];

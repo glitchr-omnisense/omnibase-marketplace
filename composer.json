@@ -1,5 +1,5 @@
 {
-    "name": "glitchr/base-bundle-marketplace",
+    "name": "omnibase/marketplace",
     "type": "symfony-bundle",
     "description": "Marketplace for base-bundle: stores, products and variants, carts and orders, payment through pluggable gateways, sales rules (discounts, fees, taxes), reviews",
     "keywords": [
@@ -75,8 +75,8 @@
     "require": {
         "php": "^8.2",
         "doctrine/orm": "^2.15|^3.0",
-        "glitchr/base-bundle": "3.0.*-dev",
-        "glitchr/base-bundle-admin": "dev-main",
+        "glitchr/omnibase": "3.0.*-dev",
+        "omnibase/admin": "dev-main",
         "glitchr/omnistate": "1.x-dev",
         "omnistate/annuaire-entreprises": "1.x-dev",
         "omnistate/vies": "1.x-dev",

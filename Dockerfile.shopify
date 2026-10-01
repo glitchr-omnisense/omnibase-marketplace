@@ -70,12 +70,12 @@ COPY . /srv/base-bundle-marketplace
 # are the APPLICATION's dependencies, not the bundle's - that asymmetry is
 # exactly what config/shopify.php's class_exists guard is checking.
 RUN composer config repositories.base-bundle-marketplace '{"type": "path", "url": "/srv/base-bundle-marketplace", "options": {"symlink": false}}' \
-    && composer require "glitchr/base-bundle:3.x-dev as 3.0.x-dev" "glitchr/base-bundle-marketplace:*@dev" \
+    && composer require "glitchr/omnibase:3.x-dev as 3.0.x-dev" "omnibase/marketplace:*@dev" \
         symfony/translation symfony/http-client symfony/messenger \
         --no-interaction --no-progress --no-scripts \
     && rm -f config/packages/google_recaptcha.yaml config/packages/webauthn.yaml config/routes/webauthn_routes.yaml config/routes/api_platform.yaml
 
-RUN cd vendor/glitchr/base-bundle \
+RUN cd vendor/glitchr/omnibase \
     && git apply -p1 /srv/base-bundle-marketplace/example/patches/glitchr-base-bundle-doctrine-collections-3.patch
 
 # --- demo app overlay --------------------------------------------------------

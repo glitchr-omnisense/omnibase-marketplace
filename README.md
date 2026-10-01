@@ -1,8 +1,8 @@
 # base-bundle-marketplace
 
-A shop for [glitchr/base-bundle](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of a shop site, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [glitchr/omnibase](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of a shop site, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
 
-Namespace `Base\Marketplace`, package `glitchr/base-bundle-marketplace`.
+Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
 ## What it gives you
 
@@ -44,7 +44,7 @@ The demo app under [example/app/](example/app/) doubles as the minimal host. It 
 ## Install
 
 ```bash
-composer require glitchr/base-bundle-marketplace:dev-main
+composer require omnibase/marketplace:dev-main
 ```
 
 Register the bundle in `config/bundles.php`:
@@ -265,7 +265,7 @@ A refusal reason is a translation key in the `marketplace` domain.
 
 ## Requirements
 
-PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, glitchr/base-bundle 3.x and glitchr/base-bundle-admin.
+PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, glitchr/omnibase 3.x and omnibase/admin.
 
 ## Licence
 
