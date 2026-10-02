@@ -39,11 +39,21 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final class OmnitradeGateway implements PaymentGatewayInterface
 {
+    /** @param array<string, mixed> $options the gateway's options as it runs on: configured, and typed in the back office over them */
     public function __construct(
         private readonly string $gatewayName,
         private readonly GatewayInterface $gateway,
         private readonly UrlGeneratorInterface $urls,
+        private readonly array $options = [],
     ) {
+    }
+
+    /** One of the options the gateway runs on (api_key, webhook_secret...), null when unset or empty. */
+    public function option(string $name): ?string
+    {
+        $value = $this->options[$name] ?? null;
+
+        return \is_scalar($value) && '' !== (string) $value ? (string) $value : null;
     }
 
     /** Every bridge answers to this; the registry keys them by their omnitrade gateway's name (getName()). */

@@ -165,4 +165,28 @@ final class OmnitradeGatewayTest extends TestCase
         self::assertSame('card', $registry->get('card')->getName());
         self::assertNull($registry->get('stripe'));
     }
+
+    public function testOptionsTypedInTheBackOfficeWinOverTheConfiguration(): void
+    {
+        $factory = new class() extends \Omnitrade\GatewayFactory {
+            protected function populateConfig(\Omnitrade\Config $config): void
+            {
+                $config->defaults(['omnitrade.factory_name' => 'stub', 'omnitrade.factory_title' => 'Stub']);
+            }
+        };
+        $settings = $this->createMock(\Base\Service\SettingBagInterface::class);
+        $settings->method('get')->willReturnCallback(static fn (string $path) => 'api.payment_method.card' === $path
+            ? ['_self' => null, 'api_key' => ['_self' => ' sk_typed '], 'webhook_secret' => ['_self' => '']]
+            : ['_self' => null]);
+        $gateways = new OmnitradeGateways(new Registry([$factory], [
+            'card' => ['factory' => 'stub', 'options' => ['api_key' => 'sk_configured', 'webhook_secret' => 'whsec_configured']],
+            'paypal' => ['factory' => 'stub', 'options' => ['secret' => 'configured']],
+        ]), $this->createMock(UrlGeneratorInterface::class), $settings);
+
+        self::assertSame(['api_key' => 'sk_typed'], $gateways->typed('card'), 'trimmed, the empty ones left out');
+        self::assertSame('sk_typed', $gateways->get('card')->option('api_key'));
+        self::assertSame('whsec_configured', $gateways->get('card')->option('webhook_secret'), 'an empty setting: the configuration serves');
+        self::assertSame('configured', $gateways->get('paypal')->option('secret'));
+        self::assertNull($gateways->get('paypal')->option('client_id'));
+    }
 }

@@ -4,6 +4,7 @@ namespace Base\Marketplace\Console;
 
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateway;
+use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
 use Base\Marketplace\Payment\PaymentGatewayRegistry;
 use Base\Service\SettingBagInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,12 +29,14 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *     `stripe listen` there): nothing to do, said so, success;
  *   - the endpoint exists: its events are completed if some are missing;
  *   - it does not: it is created, and the signing secret Stripe returns -
- *     ONLY at creation - is printed and stored in the settings: put it in the
- *     omnitrade gateway's webhook_secret (STRIPE_WEBHOOK_SECRET), where
- *     omnitrade/stripe checks every event's signature.
+ *     ONLY at creation - is stored in the back office's setting
+ *     api.payment_method.<gateway>.webhook_secret, which the omnitrade
+ *     gateway runs on from then on: every event's signature is checked
+ *     against it. No secret to copy.
  *
- * The API key: the method's `api_key` setting (marketplace.gateways.<slug>.api_key),
- * else STRIPE_API_KEY - the same key the omnitrade gateway runs on. The
+ * The API key: the one the omnitrade gateway runs on - typed in the back
+ * office (api.payment_method.<gateway>.api_key) or configured
+ * (omnitrade.gateways.<gateway>.options.api_key, STRIPE_API_KEY). The
  * address: --url, else the method's `webhook_url` setting, else the route's
  * absolute URL under the router's default URI.
  *
@@ -93,9 +96,9 @@ final class StripeWebhookCommand extends Command
         foreach ($methods as [$method, $bridge]) {
             $slug = (string) $method->getSlug();
             $parameters = $method->getGatewayParameters();
-            $key = (string) (($parameters['api_key'] ?? '') ?: ($_SERVER['STRIPE_API_KEY'] ?? getenv('STRIPE_API_KEY') ?: ''));
+            $key = (string) $bridge->option('api_key');
             if ('' === $key) {
-                $io->note(sprintf('%s: no Stripe API key yet (the method\'s api_key, or STRIPE_API_KEY), nothing to do.', $slug));
+                $io->note(sprintf('%s: no Stripe API key yet (typed in the back office, or STRIPE_API_KEY), nothing to do.', $slug));
                 continue;
             }
 
@@ -106,7 +109,7 @@ final class StripeWebhookCommand extends Command
             }
 
             try {
-                $status = max($status, $this->ensure($io, $method, $key, $url, (bool) $input->getOption('recreate'), $dry));
+                $status = max($status, $this->ensure($io, $method, $bridge, $key, $url, (bool) $input->getOption('recreate'), $dry));
             } catch (ExceptionInterface|\RuntimeException $e) {
                 $io->error(sprintf('%s: Stripe did not answer: %s', $slug, $e->getMessage()));
                 $status = Command::FAILURE;
@@ -116,7 +119,7 @@ final class StripeWebhookCommand extends Command
         return $status;
     }
 
-    private function ensure(SymfonyStyle $io, PaymentMethod $method, string $key, string $url, bool $recreate, bool $dry): int
+    private function ensure(SymfonyStyle $io, PaymentMethod $method, OmnitradeGateway $bridge, string $key, string $url, bool $recreate, bool $dry): int
     {
         $slug = (string) $method->getSlug();
         $mode = str_starts_with($key, 'sk_live_') || str_starts_with($key, 'rk_live_') ? 'live' : 'test';
@@ -149,8 +152,8 @@ final class StripeWebhookCommand extends Command
                 $io->warning(sprintf('%s: %s is disabled in Stripe - enable it in the Dashboard.', $slug, $found['id']));
             }
             $io->success(sprintf('%s: Stripe (%s mode) already sends the marketplace\'s events to %s (%s).', $slug, $mode, $url, $found['id']));
-            if (null === $this->webhookSecret($method)) {
-                $io->warning(sprintf('%s: its signing secret is known nowhere, and Stripe only gives it out at creation. Reveal it in the Dashboard (Developers > Webhooks) into the gateway\'s webhook_secret, or run again with --recreate.', $slug));
+            if (null === $bridge->option('webhook_secret')) {
+                $io->warning(sprintf('%s: its signing secret is known nowhere, and Stripe only gives it out at creation. Reveal it in the Dashboard (Developers > Webhooks) and type it in the back office (%s.%s.webhook_secret), or run again with --recreate.', $slug, OmnitradeGateways::SETTINGS, $bridge->getName()));
 
                 return Command::FAILURE;
             }
@@ -170,30 +173,13 @@ final class StripeWebhookCommand extends Command
             'metadata' => ['created_by' => 'marketplace:stripe:webhook', 'payment_method' => $slug],
         ]);
         $secret = (string) ($created['secret'] ?? '');
-        $setting = self::webhookSecretSetting($method);
+        $setting = OmnitradeGateways::SETTINGS.'.'.$bridge->getName().'.webhook_secret';
         $this->settings->set($setting, $secret);
         $this->settings->secure($setting);
 
-        $io->success(sprintf('%s: created %s. Its signing secret is %s - set it as STRIPE_WEBHOOK_SECRET (the omnitrade gateway\'s webhook_secret); it is also kept in the setting %s.', $slug, $created['id'] ?? '?', $secret, $setting));
+        $io->success(sprintf('%s: created %s; its signing secret (%s…) is stored in the setting %s, which the gateway checks events with.', $slug, $created['id'] ?? '?', substr($secret, 0, 10), $setting));
 
         return Command::SUCCESS;
-    }
-
-    /** Where the secret of the endpoint created for $method is kept. */
-    public static function webhookSecretSetting(PaymentMethod $method): string
-    {
-        return 'marketplace.stripe.'.str_replace(['-', '.'], '_', (string) $method->getSlug()).'.webhook_secret';
-    }
-
-    /** The endpoint's signing secret: the method's webhook_secret, else STRIPE_WEBHOOK_SECRET, else the one stored at creation; null when none. */
-    private function webhookSecret(PaymentMethod $method): ?string
-    {
-        $secret = (string) (($method->getGatewayParameters()['webhook_secret'] ?? '') ?: ($_SERVER['STRIPE_WEBHOOK_SECRET'] ?? getenv('STRIPE_WEBHOOK_SECRET') ?: ''));
-        if ('' === $secret) {
-            $secret = (string) ($this->settings->getScalar(self::webhookSecretSetting($method)) ?? '');
-        }
-
-        return '' === $secret ? null : $secret;
     }
 
     /** @return iterable<array> every endpoint of the account, page by page */
