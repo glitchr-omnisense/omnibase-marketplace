@@ -3,6 +3,7 @@
 namespace Base\Marketplace\Payment\Omnitrade;
 
 use Base\Service\SettingBagInterface;
+use Omnitrade\Exception\InvalidConfigException;
 use Omnitrade\Registry;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -24,7 +25,7 @@ final class OmnitradeGateways
 {
     public const SETTINGS = 'api.payment_method';
 
-    /** @var array<string, OmnitradeGateway> by name and typed options */
+    /** @var array<string, ?OmnitradeGateway> by name and typed options */
     private array $bridges = [];
 
     public function __construct(
@@ -34,6 +35,11 @@ final class OmnitradeGateways
     ) {
     }
 
+    /**
+     * The bridge to the gateway of that name; null when there is none, or
+     * when it lacks what it needs to run (no API key yet, typed or
+     * configured): such a method is simply not offered at checkout.
+     */
     public function get(string $name): ?OmnitradeGateway
     {
         if (!$this->registry->has($name)) {
@@ -41,13 +47,17 @@ final class OmnitradeGateways
         }
         $typed = $this->typed($name);
         $key = $name.($typed ? '#'.md5(serialize($typed)) : '');
+        if (\array_key_exists($key, $this->bridges)) {
+            return $this->bridges[$key];
+        }
 
-        return $this->bridges[$key] ??= new OmnitradeGateway(
-            $name,
-            $typed ? $this->registry->create($name, $typed) : $this->registry->get($name),
-            $this->urls,
-            array_replace($this->registry->options($name), $typed),
-        );
+        try {
+            $gateway = $typed ? $this->registry->create($name, $typed) : $this->registry->get($name);
+        } catch (InvalidConfigException) {
+            return $this->bridges[$key] = null;
+        }
+
+        return $this->bridges[$key] = new OmnitradeGateway($name, $gateway, $this->urls, array_replace($this->registry->options($name), $typed));
     }
 
     /** @return list<string> */

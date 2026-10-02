@@ -189,4 +189,18 @@ final class OmnitradeGatewayTest extends TestCase
         self::assertSame('configured', $gateways->get('paypal')->option('secret'));
         self::assertNull($gateways->get('paypal')->option('client_id'));
     }
+
+    public function testAGatewayMissingWhatItNeedsIsSimplyOff(): void
+    {
+        $factory = new class() extends \Omnitrade\GatewayFactory {
+            protected function populateConfig(\Omnitrade\Config $config): void
+            {
+                $config->defaults(['omnitrade.factory_name' => 'stub', 'omnitrade.factory_title' => 'Stub', 'omnitrade.required_options' => ['api_key']]);
+            }
+        };
+        $gateways = new OmnitradeGateways(new Registry([$factory], ['card' => ['factory' => 'stub', 'options' => ['api_key' => '']]]), $this->createMock(UrlGeneratorInterface::class));
+
+        self::assertNull($gateways->get('card'), 'no key yet: not offered, no exception');
+        self::assertNull((new PaymentGatewayRegistry([], $gateways))->get('card'));
+    }
 }
