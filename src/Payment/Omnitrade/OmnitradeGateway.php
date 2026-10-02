@@ -93,7 +93,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
     /** Where the provider's payment stands now. */
     public function fetch(Transaction $transaction): OmnitradeTransaction
     {
-        $paid = $this->gateway->fetch((string) $transaction->getWebhook());
+        $paid = $this->gateway->fetch(self::reference($transaction));
         $this->record($transaction, $paid);
 
         return $paid;
@@ -120,7 +120,15 @@ final class OmnitradeGateway implements PaymentGatewayInterface
      */
     public function refund(Transaction $transaction, int $amount, string $currency, string $idempotencyKey, ?string $reason = null): string
     {
-        return $this->gateway->refund((string) $transaction->getWebhook(), Money::of($amount, $currency), $idempotencyKey, $reason)->reference;
+        return $this->gateway->refund(self::reference($transaction), Money::of($amount, $currency), $idempotencyKey, $reason)->reference;
+    }
+
+    /** The provider's reference the transaction was paid under: kept as its webhook, else in its details (an older payment's stripe_session too). */
+    public static function reference(Transaction $transaction): string
+    {
+        $details = $transaction->getDetails();
+
+        return (string) ($transaction->getWebhook() ?: ($details['reference'] ?? $details['stripe_session'] ?? ''));
     }
 
     /** What the provider is asked for: the order, as omnitrade describes a payment. */
