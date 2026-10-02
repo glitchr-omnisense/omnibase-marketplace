@@ -76,10 +76,11 @@ state:
   order_returning: "Being returned"
   order_return_partial: "Partly returned"
   order_return_received: "Return received"
-stripe:
-  unavailable: "Card payment is unavailable right now. {reason}"
+payment:
+  unavailable: "Payment is unavailable right now. {reason}"
+  refused: "Payment refused. {reason}"
   cancelled: "Payment cancelled: your order is waiting in your cart."
-  pending: "Your order {reference} is recorded; it will be confirmed as soon as Stripe clears the payment."
+  pending: "Your order {reference} is recorded; it will be confirmed as soon as the payment clears."
 coupon:
   placeholder: "Promo code"
   apply: "Apply"

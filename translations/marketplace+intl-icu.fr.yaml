@@ -76,10 +76,11 @@ state:
   order_returning: "Retour en cours"
   order_return_partial: "Retournée en partie"
   order_return_received: "Retour reçu"
-stripe:
-  unavailable: "Le paiement par carte est indisponible pour le moment. {reason}"
+payment:
+  unavailable: "Le paiement est indisponible pour le moment. {reason}"
+  refused: "Paiement refusé. {reason}"
   cancelled: "Paiement annulé : ta commande t'attend dans ton panier."
-  pending: "Ta commande {reference} est enregistrée ; elle sera confirmée dès que Stripe aura validé le paiement."
+  pending: "Ta commande {reference} est enregistrée ; elle sera confirmée dès que le paiement aura été validé."
 coupon:
   placeholder: "Code promo"
   apply: "Appliquer"

@@ -8,6 +8,14 @@ use Base\Marketplace\Entity\Order\Method\ShippingMethod;
 use Base\Marketplace\Entity\Order\Shipment;
 use Base\Marketplace\Enum\ShippingRate;
 use Doctrine\ORM\EntityManagerInterface;
+use Omnibus\GatewayInterface as Carrier;
+use Omnibus\Model\Address;
+use Omnibus\Model\Label;
+use Omnibus\Model\Parcel;
+use Omnibus\Model\Shipment as Consignment;
+use Omnibus\Model\Tracking;
+use Omnibus\Registry as Carriers;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 /**
  * Posting physical goods: whether an order needs it, the methods that can
@@ -17,12 +25,23 @@ use Doctrine\ORM\EntityManagerInterface;
  * Rates: a flat rate costs its unit price once per order; a priority rate
  * costs its unit price per shipping unit (weight-based when products have
  * one, else one per item); an international rate is flat. A method in a
- * currency other than the order's is not offered.
+ * currency other than the order's is not offered. What the buyer pays is
+ * set by hand on the method - the shop's price - whatever the carrier
+ * charges the shop.
+ *
+ * The carrier itself is glitchr/omnibus's: a ShippingMethod names a gateway
+ * configured under omnibus.gateways (`gatewayName`), and when that package
+ * is installed the shipment is booked there (book(): the label, the
+ * tracking number on the Shipment) and followed (track()). The sender is
+ * marketplace.shipping.sender.
  */
 final class Shipping
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly ?ParameterBagInterface $parameters = null,
+        private readonly ?Carriers $carriers = null,
+    ) {
     }
 
     public function needsShipping(Order $order): bool
@@ -172,5 +191,92 @@ final class Shipping
         return str_contains($method->getTrackingUrl(), '{number}')
             ? str_replace('{number}', rawurlencode($number), $method->getTrackingUrl())
             : $method->getTrackingUrl().rawurlencode($number);
+    }
+
+    // --- The carrier (glitchr/omnibus) ----------------------------------------
+
+    /** The omnibus carrier the method names (its gatewayName), when that package is installed and the gateway configured. */
+    public function carrierFor(?ShippingMethod $method): ?Carrier
+    {
+        $name = $method?->getGatewayName();
+        if (null === $this->carriers || null === $name || '' === $name || !$this->carriers->has($name)) {
+            return null;
+        }
+
+        return $this->carriers->get($name);
+    }
+
+    /** The order as a carrier sees it: from the shop's sender to the buyer's address, one parcel. */
+    public function consignmentFor(Order $order, ?ShippingMethod $method = null): Consignment
+    {
+        $method ??= $order->getShippingMethod();
+        $address = $order->getShippingAddress() ?? throw new \LogicException('The order has no shipping address.');
+        $customer = $order->getCustomer();
+        $parameters = $method?->getGatewayParameters() ?? [];
+
+        return new Consignment(
+            $this->sender(),
+            new Address((string) $address->getName(), array_values(array_filter([(string) $address->getStreetAddress(), (string) $address->getAffix()])), (string) $address->getZipCode(), (string) $address->getCity(), strtoupper((string) ($address->getCountry() ?: 'FR')), null, $customer?->getEmail(), $address->getPhone()),
+            [$this->parcelFor($order)],
+            $parameters['service'] ?? null,
+            $parameters['pickup_point'] ?? null,
+            (string) ($order->getReference() ?? '#'.$order->getId()),
+            array_diff_key($parameters, ['service' => 1, 'pickup_point' => 1, 'rates' => 1]),
+        );
+    }
+
+    /** What the carrier's own tariff says for the order, for information: the buyer pays chargeFor(). */
+    public function ratesFor(Order $order, ShippingMethod $method): array
+    {
+        return $this->carrierFor($method)?->rate($this->consignmentFor($order, $method)) ?? [];
+    }
+
+    /** The shipment booked with its carrier: the label, the tracking number on the shipment. */
+    public function book(Shipment $shipment): Label
+    {
+        $order = $shipment->getOrder() ?? throw new \LogicException('The shipment belongs to no order.');
+        $method = $shipment->getMethod() ?? $order->getShippingMethod();
+        $carrier = $this->carrierFor($method) ?? throw new \LogicException(sprintf('The shipping method "%s" names no configured carrier.', $method?->getSlug() ?? '?'));
+
+        $label = $carrier->ship($this->consignmentFor($order, $method));
+        $shipment->setNumber($label->trackingNumber);
+
+        return $label;
+    }
+
+    /** Where the carrier says the shipment is; null when it names no carrier. */
+    public function track(Shipment $shipment, string $locale = 'fr'): ?Tracking
+    {
+        $method = $shipment->getMethod() ?? $shipment->getOrder()?->getShippingMethod();
+        $number = $shipment->getNumber();
+
+        return null !== $number && '' !== $number ? $this->carrierFor($method)?->track($number, $locale) : null;
+    }
+
+    /** The parcel: the shippable items' weights (grams) and the order's value. */
+    public function parcelFor(Order $order): Parcel
+    {
+        $grams = 0;
+        foreach ($order->getItems() as $item) {
+            $product = $item->getProduct();
+            if (!$product?->isShippable()) {
+                continue;
+            }
+            $weight = (float) ($product->getWeight() ?? 0);
+            $grams += (int) round(match (strtolower((string) $product->getWeightUnit())) { 'kg' => $weight * 1000, 'lb', 'lbs' => $weight * 453.592, 'oz' => $weight * 28.3495, default => $weight }) * (int) $item->getQuantity();
+        }
+
+        return new Parcel(max(100, $grams), null, null, null, (int) $order->getNetPrice(), strtoupper((string) $order->getCurrency()), (string) ($order->getReference() ?? ''));
+    }
+
+    /** The shop's address, marketplace.shipping.sender. */
+    public function sender(): Address
+    {
+        $sender = $this->parameters?->has('marketplace.shipping.sender') ? (array) $this->parameters->get('marketplace.shipping.sender') : [];
+        if ('' === (string) ($sender['name'] ?? '')) {
+            throw new \LogicException('No sender: set marketplace.shipping.sender (name, street, postcode, city, country).');
+        }
+
+        return new Address((string) $sender['name'], array_values(array_filter((array) ($sender['street'] ?? []))), (string) ($sender['postcode'] ?? ''), (string) ($sender['city'] ?? ''), strtoupper((string) ($sender['country'] ?? 'FR')), $sender['company'] ?? null, $sender['email'] ?? null, $sender['phone'] ?? null);
     }
 }

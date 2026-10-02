@@ -20,7 +20,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *
  * The admin CRUD controllers are loaded only when base-bundle-admin is there.
  * The company register and the VAT number checks ask Omnistate: the app
- * registers Omnistate\Bridge\Symfony\OmnistateBundle.
+ * registers Omnistate\Bridge\Symfony\OmnistateBundle. Payments go through
+ * glitchr/omnitrade's gateways and parcels through glitchr/omnibus's
+ * carriers when those packages are installed (their bundles registered);
+ * without them, the manual gateway and hand-priced shipping remain.
  */
 return function (ContainerConfigurator $configurator) {
 
@@ -50,10 +53,12 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
             $src . '/Payment/PaymentResult.php',
-            // Omnipay's own objects (a gateway, a request), built by Omnipay::create().
-            $src . '/Payment/Stripe/',
-            // Card payment needs omnipay/stripe; without it the gateway is left out.
-            ...(class_exists('Omnipay\\Stripe\\CheckoutGateway') ? [] : [$src . '/Payment/StripeGateway.php']),
+            // The bridges to glitchr/omnitrade's gateways: built by
+            // OmnitradeGateways, registered below when that package is there.
+            $src . '/Payment/Omnitrade/OmnitradeGateway.php',
+            ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Payment/Omnitrade/']),
+            // The buyer's return page and the providers' webhooks: only with omnitrade.
+            ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Controller/Client/PaymentController.php', $src . '/Console/StripeWebhookCommand.php']),
             // The Shopify subtree is wired by config/shopify.php, loaded only
             // when marketplace.shopify.enabled is true. This load() is recursive
             // over src/, so without this line the subtree is never dormant.
@@ -63,7 +68,15 @@ return function (ContainerConfigurator $configurator) {
 
     if (is_dir($src . '/Controller/Client')) {
         $services->load('Base\\Marketplace\\Controller\\Client\\', $src . '/Controller/Client/')
+            ->exclude(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Controller/Client/PaymentController.php'])
             ->tag('controller.service_arguments');
+    }
+
+    // The carriers (glitchr/omnibus) the shipping methods name: Shipping
+    // books and tracks through Omnibus\Registry when the package is there.
+    if (class_exists('Omnibus\\Registry')) {
+        $services->get('Base\\Marketplace\\Service\\Shipping')
+            ->arg('$carriers', service('Omnibus\\Registry')->nullOnInvalid());
     }
 
     if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {

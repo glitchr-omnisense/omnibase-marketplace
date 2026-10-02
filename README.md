@@ -10,7 +10,7 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 - **Products.** Products belong to a store and carry a price in the currency's smallest unit. Stock is optional, and an empty stock means unlimited. Subclass `Product` for what your shop really sells.
 - **Carts and checkout.** A member gets one cart order per store. Checkout creates a transaction, hands it to a payment gateway, then confirms or cancels the order.
 - **Orders.** Each order gets a readable reference such as `CCC-XXXX-YYY`, a state, a paid date and its transactions.
-- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `stripe` (card payment through Stripe Checkout, the default) and `manual`, which records a pending payment and shows the method's instructions.
+- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions, and - with [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade) installed - a bridge to every gateway configured there (Stripe, PayPal, a Shopify or WooCommerce shop): a payment method names one, and that is where the money goes.
 - **Admin CRUDs.** Store, Product, Order and PaymentMethod get CRUDs under `Controller/Admin/Crud`, loaded only when base-bundle-admin is installed.
 - **Pages.** Client pages are in French by default:
 
@@ -23,8 +23,8 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 | `marketplace_checkout` | `/panier/{order}/commander` |
 | `marketplace_orders` | `/commandes` |
 | `marketplace_order` | `/commandes/{reference}` |
-| `marketplace_stripe_return` | `/panier/{order}/stripe` |
-| `marketplace_stripe_webhook` | `/marketplace/stripe/webhook` (POST) |
+| `marketplace_payment_return` | `/panier/{order}/paiement/{gateway}` |
+| `marketplace_payment_webhook` | `/marketplace/{gateway}/webhook` (POST) |
 
 The promotions, fees, taxes, shipping and review entities come from a shop site and are mapped. The shop pages do not use them yet.
 
@@ -124,29 +124,51 @@ A shipping method in the order's currency is offered with its charge. `RATE_FLAT
 
 Staff see the paid orders waiting at `/commandes/a-expedier` (`marketplace_shipping_queue`, `ROLE_ADMIN`). They mark one shipped with its tracking number, which creates a Shipment, and later delivered. The member follows the parcel on their order page, and a tracking URL may hold `{number}`.
 
-## Card payment with Stripe
+The carrier itself is [glitchr/omnibus](https://github.com/glitchr-studio/omnibus)'s: a shipping
+method names a gateway configured under `omnibus.gateways` (`gatewayName`), and when that package
+is installed `Service\Shipping` books the parcel there (`book()`: the label, the tracking number
+on the shipment) and follows it (`track()`). What the buyer pays stays the method's own price,
+set by hand; `ratesFor()` says what the carrier's tariff would be. The sender is
+`marketplace.shipping.sender` (name, street, postcode, city, country).
 
-Stripe is the default way to pay real money. The bundle ships a `stripe` gateway on omnipay/stripe's Checkout gateway, like a shop site. The member pays on Stripe's hosted page and comes back to `marketplace_stripe_return`. The webhook `marketplace_stripe_webhook` confirms the order even if they never come back.
+## Paying through glitchr/omnitrade
+
+Real money goes through [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade), the
+sibling family: one contract for payment providers (`omnitrade/stripe`, `omnitrade/paypal`) and
+commerce platforms (`omnitrade/shopify`, `omnitrade/woocommerce`). Install the core and a
+provider, register `Omnitrade\Bridge\Symfony\OmnitradeBundle`, configure its gateways:
 
 ```bash
-composer require omnipay/stripe
+composer require glitchr/omnitrade omnitrade/stripe
 ```
 
 ```yaml
-# config/packages/marketplace.yaml
-marketplace:
-    default_gateway: stripe          # offered first at checkout
+# config/packages/omnitrade.yaml
+omnitrade:
     gateways:
-        stripe:                      # the payment method's slug
-            api_key: '%env(default::STRIPE_API_KEY)%'
-            webhook_secret: '%env(default::STRIPE_WEBHOOK_SECRET)%'   # optional, see below
-            webhook_url: '%env(default::STRIPE_WEBHOOK_URL)%'         # for marketplace:stripe:webhook
-            currencies: [EUR]
+        card:                        # what a payment method's gatewayFactory names
+            factory: stripe
+            options:
+                api_key: '%env(STRIPE_API_KEY)%'
+                webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
 ```
 
-Create a payment method with the slug `stripe` and the gateway `stripe`. While `api_key` is empty, checkout doesn't offer it.
+A payment method is a proxy: create one with the gateway `card` (its `gatewayFactory`), and
+`PaymentGatewayRegistry` finds, after the application's own gateways, the bridge
+`Payment\Omnitrade\OmnitradeGateway` to that omnitrade gateway. The bridge describes the order
+as an omnitrade `Payment` (its lines when they add up to the net price, else one line; the
+buyer; where to come back), takes the provider's answer as a `PaymentResult` - paid, a page to
+send the buyer to, pending, refused - and keeps the provider's reference on the `Transaction`.
+`marketplace.gateways.<slug>` still holds what is the method's own (`currencies`, `instructions`,
+`method` to insist on a provider's payment method).
 
-The webhook endpoint - `https://<host>/marketplace/stripe/webhook` with the `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` events - is created by a command, safe to run on every deploy:
+The buyer comes back to `marketplace_payment_return`, which asks the provider where the payment
+stands; the provider's webhook posts to `marketplace_payment_webhook`, checked and read by the
+provider package. Both confirm the same transaction, once (`Checkout::confirm()` is idempotent).
+Refunds go back the same way (`OmnitradeGateway::refund()`), as the forge's hour refunds do.
+
+For Stripe, the webhook endpoint - `https://<host>/marketplace/card/webhook` with the Checkout
+events - is created by a command, safe to run on every deploy:
 
 ```bash
 bin/console marketplace:stripe:webhook              # creates it if Stripe lacks it, completes its events otherwise
@@ -154,9 +176,11 @@ bin/console marketplace:stripe:webhook --dry-run    # says what it would do
 bin/console marketplace:stripe:webhook --recreate   # a new endpoint, hence a new signing secret
 ```
 
-The address is `--url`, else `webhook_url`, else the route under the router's default URI. With no API key, or an address Stripe cannot reach (localhost - use `stripe listen` there), it does nothing and succeeds. Stripe returns an endpoint's signing secret only when it is created: the command stores it in the settings (`marketplace.stripe.<slug>.webhook_secret`, secured), and the gateway reads it there when `webhook_secret` is empty - nothing to copy. Every event's signature is checked against that secret; a `webhook_secret` that is set wins, which is how `stripe listen`'s secret is used locally. An endpoint made by hand in the dashboard is found by its URL; its secret has to be revealed there into `webhook_secret`, or replaced with `--recreate`.
-
-A cancelled or expired payment puts the order back in the cart. A gateway error does the same, and the member sees why.
+The API key is the method's `api_key` setting, else `STRIPE_API_KEY`; the address is `--url`, else
+the method's `webhook_url`, else the route under the router's default URI. Stripe gives an
+endpoint's signing secret only when it is created: the command prints it - put it in
+`STRIPE_WEBHOOK_SECRET`, the omnitrade gateway's `webhook_secret`, which is what checks every
+event's signature (`stripe listen`'s secret goes there too, locally).
 
 ## Shopify (optional)
 

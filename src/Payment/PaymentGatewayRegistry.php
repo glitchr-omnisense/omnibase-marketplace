@@ -4,16 +4,22 @@ namespace Base\Marketplace\Payment;
 
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
+use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-/** Every gateway of the application, by name(). */
+/**
+ * Every gateway of the application, by name(): its own first (manual, and
+ * whatever it wrote), then - when glitchr/omnitrade is installed - a bridge
+ * to each gateway configured under omnitrade.gateways, by that name. A
+ * PaymentMethod's gatewayFactory is one of these names.
+ */
 class PaymentGatewayRegistry
 {
     /** @var array<string, PaymentGatewayInterface> */
     private array $gateways = [];
 
     /** @param iterable<PaymentGatewayInterface> $gateways */
-    public function __construct(#[AutowireIterator('marketplace.payment_gateway')] iterable $gateways)
+    public function __construct(#[AutowireIterator('marketplace.payment_gateway')] iterable $gateways, private readonly ?OmnitradeGateways $omnitrade = null)
     {
         foreach ($gateways as $gateway) {
             $this->gateways[$gateway::name()] = $gateway;
@@ -22,7 +28,11 @@ class PaymentGatewayRegistry
 
     public function get(?string $name): ?PaymentGatewayInterface
     {
-        return null !== $name ? ($this->gateways[$name] ?? null) : null;
+        if (null === $name) {
+            return null;
+        }
+
+        return $this->gateways[$name] ?? $this->omnitrade?->get($name);
     }
 
     public function for(PaymentMethod $method): ?PaymentGatewayInterface
@@ -33,7 +43,7 @@ class PaymentGatewayRegistry
     /** @return string[] */
     public function names(): array
     {
-        return array_keys($this->gateways);
+        return array_values(array_unique([...array_keys($this->gateways), ...($this->omnitrade?->names() ?? [])]));
     }
 
     /**

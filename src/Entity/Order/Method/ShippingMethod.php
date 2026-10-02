@@ -92,6 +92,12 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
+    /**
+     * The carrier: the name of a glitchr/omnibus gateway configured under
+     * omnibus.gateways (Service\Shipping::carrierFor()). Its parameters
+     * (omnibus.<slug> in the parameter bag: service, pickup_point, the
+     * carrier's options) go with every shipment booked through it.
+     */
     #[ORM\Column(type: 'string', length: 255)]
     protected $gatewayName;
 
@@ -112,27 +118,6 @@ class ShippingMethod implements IconizeInterface
         $this->gatewayName = $gatewayName;
 
         return $this;
-    }
-
-    /**
-     * @return mixed|null
-     */
-    public function gateway()
-    {
-        $gateway = null;
-        try {
-            $gateway = null; // Omnibus::create($this->gatewayName);
-            if (!$gateway) {
-                return null;
-            }
-
-            foreach ($this->getGatewayParameters() as $name => $parameter) {
-                $gateway->setParameter($name, $parameter);
-            }
-        } catch (\RuntimeException $e) {
-        }
-
-        return $gateway;
     }
 
     #[ORM\Column(type: 'string', length: 255)]

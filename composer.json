@@ -45,6 +45,8 @@
         "symfony/security-bundle": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
+        "glitchr/omnibus": "2.x-dev",
+        "glitchr/omnitrade": "1.x-dev",
         "phpunit/phpunit": "^9.6",
         "symfony/console": "^6.0|^7.0|^8.0",
         "symfony/framework-bundle": "^6.0|^7.0|^8.0",
@@ -68,5 +70,15 @@
             "glitchr/doctrine-dc2type": true,
             "php-http/discovery": true
         }
-    }
+    },
+    "suggest": {
+        "glitchr/omnitrade": "Pay through its gateways (omnitrade/stripe, omnitrade/paypal...): a PaymentMethod names one",
+        "glitchr/omnibus": "Ship through its carriers (omnibus/mondial-relay, omnibus/ups...): a ShippingMethod names one"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/glitchr-studio/omnitrade"
+        }
+    ]
 }
