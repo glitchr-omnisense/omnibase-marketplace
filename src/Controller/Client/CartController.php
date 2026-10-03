@@ -104,7 +104,18 @@ class CartController extends AbstractController
             }
 
             if ($shipping->needsShipping($cart)) {
-                $error = $shipping->apply($cart, (array) $request->request->all('address'), $request->request->getInt('shipping'));
+                $address = (array) $request->request->all('address');
+                $error = $shipping->apply($cart, $address, $request->request->getInt('shipping'));
+                // Outside the shop's regions (Japan for a French cellar): the
+                // cart does not go there; a quote does.
+                if (Shipping::OUT_OF_ZONE === $error && $this->getParameter('marketplace.quotes.enabled')) {
+                    $this->addFlash('info', $this->translator->trans('@marketplace.'.$error));
+
+                    return $this->redirectToRoute('marketplace_quote_request', [
+                        'country' => strtoupper((string) ($address['country'] ?? '')),
+                        'product' => array_values(array_filter(array_map(fn ($item) => $item->getProduct()?->getId(), $cart->getItems()->toArray()))),
+                    ]);
+                }
                 if ($error) {
                     $this->addFlash('error', $this->translator->trans('@marketplace.'.$error));
 

@@ -1,0 +1,67 @@
+{#
+ # A quote as its client reads it (/cotation/<token>): the terms, the lines
+ # by the lot, the total before VAT - none on an export -, accept or decline.
+ #}
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ quote.reference }} · {{ quote.title }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> {% if is_granted('ROLE_USER') %}<a href="{{ path('marketplace_quotes') }}">{{ '@marketplace.quote.mine'|trans }}</a> <span>›</span> {% endif %}<span>{{ quote.reference }}</span>{% endblock %}
+
+{% block marketplace_body %}
+<article class="marketplace-quote">
+    <header class="marketplace-quote-head">
+        <p class="marketplace-quote-reference">{{ quote.reference }} · <span class="marketplace-quote-state is-{{ quote.status.value }}">{{ ('@marketplace.quote.state.' ~ quote.status.value)|trans }}</span></p>
+        <h2>{{ quote.title }}</h2>
+        <dl class="marketplace-quote-terms">
+            {% if quote.companyName %}<div><dt>{{ '@marketplace.quote.company'|trans }}</dt><dd>{{ quote.companyName }}</dd></div>{% endif %}
+            {% if quote.direction %}<div><dt>{{ '@marketplace.quote.form.direction'|trans }}</dt><dd>{{ ('@marketplace.quote.direction.' ~ quote.direction.value)|trans }}</dd></div>{% endif %}
+            {% if quote.terms %}<div><dt>Incoterm</dt><dd>{{ quote.terms }}</dd></div>{% endif %}
+            {% if quote.country %}<div><dt>{{ '@marketplace.quote.form.country'|trans }}</dt><dd>{{ quote.country|country_name(app.request.locale) }}</dd></div>{% endif %}
+            {% if quote.targetDate %}<div><dt>{{ '@marketplace.quote.form.target_date'|trans }}</dt><dd>{{ quote.targetDate|format_date('long', locale: app.request.locale) }}</dd></div>{% endif %}
+            {% if quote.validUntil %}<div><dt>{{ '@marketplace.quote.valid_until'|trans }}</dt><dd>{{ quote.validUntil|format_date('long', locale: app.request.locale) }}</dd></div>{% endif %}
+        </dl>
+    </header>
+
+    {% if quote.message %}<div class="marketplace-quote-message">{{ quote.message|nl2br }}</div>{% endif %}
+
+    <table class="marketplace-quote-lines">
+        <thead><tr><th>{{ '@marketplace.quote.line.label'|trans }}</th><th>{{ '@marketplace.quote.line.quantity'|trans }}</th><th>{{ '@marketplace.quote.line.lot_price_short'|trans }}</th><th>{{ '@marketplace.quote.line.amount'|trans }}</th></tr></thead>
+        <tbody>
+        {% for line in quote.lines %}
+            <tr>
+                <td>{{ line.label ?: line.product }}</td>
+                <td>{{ line.quantity }}{% if line.lotSize > 1 %} × {{ line.lotSize }}{% endif %}</td>
+                <td>{% include '@Marketplace/client/_price.html.twig' with {amount: line.lotPrice, currency: quote.currency} %}</td>
+                <td>{% include '@Marketplace/client/_price.html.twig' with {amount: line.amount, currency: quote.currency} %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            {% if quote.discountPercent %}<tr><th colspan="3">{{ '@marketplace.quote.discount'|trans }} ({{ quote.discountPercent }} %)</th><td>−{% include '@Marketplace/client/_price.html.twig' with {amount: quote.discountAmount, currency: quote.currency} %}</td></tr>{% endif %}
+            <tr><th colspan="3">{{ '@marketplace.quote.total_ht'|trans }}</th><td>{% include '@Marketplace/client/_price.html.twig' with {amount: quote.total, currency: quote.currency} %}</td></tr>
+        </tfoot>
+    </table>
+    <p class="marketplace-quote-vat">{{ (export ? '@marketplace.quote.vat_export' : '@marketplace.quote.vat_added')|trans }}</p>
+
+    {% if quote.acceptable or awaiting_payment %}
+        {% if is_granted('ROLE_USER') %}
+        <div class="marketplace-quote-actions">
+            <form method="post" action="{{ path('marketplace_quote_accept', {token: quote.token}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('marketplace_quote_' ~ quote.id) }}">
+                <button class="marketplace-btn marketplace-btn-primary" type="submit">{{ (awaiting_payment ? '@marketplace.quote.pay' : '@marketplace.quote.accept')|trans }}</button>
+            </form>
+            {% if quote.acceptable %}
+            <form method="post" action="{{ path('marketplace_quote_decline', {token: quote.token}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('marketplace_quote_' ~ quote.id) }}">
+                <button class="marketplace-btn" type="submit">{{ '@marketplace.quote.decline'|trans }}</button>
+            </form>
+            {% endif %}
+        </div>
+        {% else %}
+            <p>{{ '@marketplace.quote.login'|trans({'{login}': path('security_login')})|raw }}</p>
+        {% endif %}
+    {% elseif quote.expired %}
+        <p class="marketplace-soldout">{{ '@marketplace.quote.expired'|trans }}</p>
+    {% endif %}
+</article>
+{% endblock %}

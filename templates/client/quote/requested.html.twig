@@ -1,0 +1,10 @@
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ quote.reference }}{% endblock %}
+
+{% block marketplace_body %}
+<section class="marketplace-quote-requested">
+    <h2>{{ '@marketplace.quote.requested_title'|trans }}</h2>
+    <p>{{ '@marketplace.quote.requested_text'|trans({'{reference}': quote.reference, '{email}': quote.email}) }}</p>
+</section>
+{% endblock %}

@@ -44,8 +44,41 @@ final class Shipping
     ) {
     }
 
+    /** What apply() answers for a country none of the store's regions holds: the buyer asks for a quote instead. */
+    public const OUT_OF_ZONE = 'shipping.error.out_of_zone';
+
+    /**
+     * Whether the shop sells by post to this country: one of its store's
+     * regions (or the order's) lists it - or none lists any country, and
+     * the shop goes everywhere. A quote's order goes where its quote says.
+     */
+    public function deliversTo(Order $order, string $country): bool
+    {
+        if ($order->isQuoted()) {
+            return true;
+        }
+        $country = strtoupper($country);
+        $regions = $order->getStore()?->getRegions()?->toArray() ?? [];
+        if ($order->getRegion() && !\in_array($order->getRegion(), $regions, true)) {
+            $regions[] = $order->getRegion();
+        }
+        $listed = [];
+        foreach ($regions as $region) {
+            if (method_exists($region, 'getCountries') && method_exists($region, 'isEnabled') && $region->isEnabled()) {
+                $listed = array_merge($listed, array_map('strtoupper', (array) $region->getCountries()));
+            }
+        }
+
+        return [] === $listed || \in_array($country, $listed, true);
+    }
+
     public function needsShipping(Order $order): bool
     {
+        // A quote's order arrives with its address and its transport priced
+        // in its lines (the Incoterm says who carries it).
+        if ($order->isQuoted()) {
+            return false;
+        }
         foreach ($order->getItems() as $item) {
             if ($item->getProduct()?->isShippable()) {
                 return true;
@@ -125,6 +158,9 @@ final class Shipping
         }
         if (!preg_match('/^[A-Za-z]{2}$/', $fields['country'])) {
             return 'shipping.error.country';
+        }
+        if (!$this->deliversTo($order, $fields['country'])) {
+            return self::OUT_OF_ZONE;
         }
         $option = null;
         foreach ($this->optionsFor($order) as $candidate) {

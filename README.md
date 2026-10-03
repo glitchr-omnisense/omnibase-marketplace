@@ -10,7 +10,7 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 - **Products.** Products belong to a store and carry a price in the currency's smallest unit. Stock is optional, and an empty stock means unlimited. Subclass `Product` for what your shop really sells.
 - **Carts and checkout.** A member gets one cart order per store. Checkout creates a transaction, hands it to a payment gateway, then confirms or cancels the order.
 - **Orders.** Each order gets a readable reference such as `CCC-XXXX-YYY`, a state, a paid date and its transactions.
-- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions, and - with [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade) installed - a bridge to every gateway configured there (Stripe, PayPal, a Shopify or WooCommerce shop): a payment method names one, and that is where the money goes.
+- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions, and - with [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade) installed - a bridge to every gateway configured there (Stripe, PayPal, a Shopify or WooCommerce shop): a payment method names one, and that is where the money goes. The same gateways can hold the catalogue (see below).
 - **Admin CRUDs.** Store, Product, Order and PaymentMethod get CRUDs under `Controller/Admin/Crud`, loaded only when base-bundle-admin is installed.
 - **Pages.** Client pages are in French by default:
 
@@ -182,64 +182,17 @@ endpoint's signing secret only when it is created: the command prints it - put i
 `STRIPE_WEBHOOK_SECRET`, the omnitrade gateway's `webhook_secret`, which is what checks every
 event's signature (`stripe listen`'s secret goes there too, locally).
 
-## Shopify (optional)
+## Brands, typed sheets, lots, the age gate
 
-An existing Shopify shop can be plugged in as a catalogue, as a checkout, as a fulfilment desk, or as all three. It is **off unless you ask for it**: `src/Shopify/` is excluded from the container, its entity is not mapped, and no dependency is added — an application that does not set `marketplace.shopify` gets exactly the bundle it had before.
+A product can name its maker (`Brand`: a wine estate, a house - Shopify's vendor, WooCommerce's brand), carry a typed sheet set per taxon without code (`AttributeSet`: which of omnibase's attributes, required, filterable, with a unit), sell by the lot (`packSize`, `minimumQuantity`: a case of 6, a minimum of 12) and to adults only (`ageRestricted` on the product or its taxon: the age gate asks once, 18 by default, 20 in Japan). Pairings, cross-sells and upsells link products (`Product\Association`), and a blog post features products through its connexes. See [docs/catalogue.md](docs/catalogue.md) and [docs/selling-rules.md](docs/selling-rules.md).
 
-```bash
-composer require symfony/http-client   # required; symfony/messenger for the order push
-```
+## Business quotes and exports
 
-```yaml
-# config/packages/marketplace.yaml
-marketplace:
-    shopify:
-        enabled: true                                   # a literal true — see the note below
-        shop_domain: '%env(default::SHOPIFY_SHOP_DOMAIN)%'
-        api_version: '2026-07'
-        admin_token: '%env(default::SHOPIFY_ADMIN_TOKEN)%'
-        webhook_secret: '%env(default::SHOPIFY_WEBHOOK_SECRET)%'
+A professional asks for a quotation (`/cotation`); the seller prices lines - a product or a free line, by the lot - with the trade's terms (export or import, an Incoterm and its place, the country, the volumes, a date), sends it; the client accepts it and pays its order like any other. An order delivered outside the EU carries no VAT (`Pricing\ExportExemption`, art. 262 I CGI), and a cart that should go there is sent to the quotation form instead. omnibase/forge's quotes (hours) are the same `AbstractQuote`. See [docs/quotes.md](docs/quotes.md).
 
-        catalogue:                      # role 1: products and stock come from Shopify
-            enabled: true
-            store: boutique             # the Store slug they attach to
-        checkout:                       # role 2: the member pays on Shopify
-            enabled: true
-        export:                         # role 3: paid orders go to Shopify to be shipped
-            enabled: false
-```
+## A catalogue kept on a platform
 
-`enabled` must be a literal boolean, never an env placeholder. The extension branches on it while compiling the container, where `%env(...)%` is still an unresolved string — so an env var there would read as "on" for every host that merely declared it. Secrets stay env vars as usual; an unset one resolves to an empty string and every consumer treats that as "not configured" and declines quietly.
-
-In the Shopify admin, create a **custom app** (Settings → Apps → Develop apps) with the narrowest scopes for the roles you turned on — `read_products` and `read_inventory` for the catalogue, `write_draft_orders` and `read_orders` for the checkout, `write_orders` for the push. Do not grant `write_products`: the sync is one way. Copy the Admin API access token and the app's API secret key into your env.
-
-```bash
-bin/console marketplace:shopify:ping                              # domain, token and version, in one call
-bin/console marketplace:shopify:catalogue:sync --dry-run --limit=5 # read-only: prints what would change
-bin/console marketplace:shopify:catalogue:sync                     # then for real
-bin/console marketplace:shopify:webhooks --install                 # subscribe to the seven topics
-bin/console marketplace:shopify:orders:reconcile                   # cron, every 10 minutes
-```
-
-**The catalogue** is read one way, Shopify → shop, one row per variant. Only the fields under `catalogue.owned_fields` are ever written, so taxa, channels, owners and anything your own `Product` subclass adds survive untouched. A product whose owned fields have not moved is skipped without a write, which keeps `updatedAt` — and every cache keyed on it — still. Tag a product `shopify-unmanaged` in the admin to pin it and have the sync leave it alone entirely. Nothing is ever deleted: a product that goes away in Shopify is marked `DISCONTINUED`, because `Product` is the inverse side of `OrderItem` and deleting one would tear a hole in order history.
-
-**The checkout** creates a Shopify draft order and sends the member to its invoice page. Draft orders rather than a Storefront cart because their line items take *your* prices: `Pricing` has just applied promotions, coupons, fees, shipping and VAT, and a Storefront cart would throw all that away and recompute. It also means the checkout works before any catalogue sync — a custom line item needs no variant id.
-
-Note there is **no return leg**: a Shopify invoice checkout ends on Shopify's own thank-you page and never comes back. The `orders/paid` webhook is the real confirmation; `marketplace_shopify_check` ("I have paid — check now") lets an impatient member poll from their pending order, and `marketplace:shopify:orders:reconcile` sweeps up anything a lost webhook left behind. That last one is also what makes the whole thing usable with no webhooks at all, which is what local development needs.
-
-**The order push** listens to `OrderPaidEvent` and goes through Messenger rather than calling Shopify inline — `Checkout::confirm()` runs inside somebody else's webhook, and a failed synchronous call there would be retried by the payment provider, hit `confirm()`'s idempotency guard, and be lost silently. Route it and run a worker:
-
-```yaml
-# config/packages/messenger.yaml
-framework:
-    messenger:
-        routing:
-            Base\Marketplace\Shopify\Export\PushOrderMessage: async
-```
-
-Orders Shopify created itself are never pushed back, and neither are orders made entirely of things that do not ship (`export.only_shippable`). Writing customer emails and addresses needs Shopify's **protected customer data** approval — a review with a lead time, so apply for it before you need it.
-
-**Webhooks** are verified with `X-Shopify-Hmac-Sha256` (base64 of the raw digest, unlike Stripe's hex, and with no timestamp — so there is no freshness window and replay defence is the delivery id plus the fact that every action is idempotent). The shop domain is checked too. An unrecognised topic answers 200: Shopify deletes a subscription after eight hours of continuous failure.
+Stripe's Products, a Shopify shop, a WooCommerce site: any glitchr/omnitrade gateway that reads a catalogue (`FetchProducts`, `FetchProduct`, `FetchInventory`) can be the source of the shop's products - `marketplace.catalogue.source`, then `bin/console marketplace:catalogue:sync`, and the platform's product webhooks through `/marketplace/{gateway}/webhook`. It replaces the former `src/Shopify` module and its `marketplace.shopify` configuration. See [docs/platform-catalogue.md](docs/platform-catalogue.md).
 
 ## Business customers: VAT numbers and company numbers
 

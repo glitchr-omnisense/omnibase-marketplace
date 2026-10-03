@@ -1,0 +1,18 @@
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ '@marketplace.quote.request_title'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.quote.request_title'|trans }}</span>{% endblock %}
+
+{% block marketplace_body %}
+<section class="marketplace-quote-request">
+    <h2>{{ '@marketplace.quote.request_title'|trans }}</h2>
+    <p class="marketplace-lead">{{ '@marketplace.quote.request_lead'|trans }}</p>
+    {% if products %}
+        <ul class="marketplace-quote-products">{% for product in products %}<li>{{ product.title }}</li>{% endfor %}</ul>
+    {% endif %}
+    {{ form_start(form, {attr: {class: 'marketplace-form', novalidate: 'novalidate'}}) }}
+        {{ form_widget(form) }}
+        <button type="submit" class="marketplace-btn marketplace-btn-primary">{{ '@marketplace.quote.form.submit'|trans }}</button>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+marketplace:
+  store:
+    _singular: "ショップ"
+    _plural: "ショップ"
+  product:
+    _singular: "商品"
+    _plural: "商品"
+    attribute_set:
+      _singular: "属性セット"
+      _plural: "属性セット"
+  brand:
+    _singular: "ブランド"
+    _plural: "ブランド"
+  quote:
+    _singular: "お見積もり"
+    _plural: "お見積もり"
+  order:
+    _singular: "注文"
+    _plural: "注文"
+    method:
+      paymentMethod:
+        _singular: "支払い方法"
+        _plural: "支払い方法"
+      payment_method:
+        _singular: "支払い方法"
+        _plural: "支払い方法"

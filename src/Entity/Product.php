@@ -3,6 +3,7 @@
 namespace Base\Marketplace\Entity;
 
 use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Product\Association;
 use Base\Marketplace\Entity\Product\Attribute;
 use Base\Marketplace\Entity\Product\Attribute\Hyperlink;
 use Base\Marketplace\Entity\Product\Feature;
@@ -10,6 +11,7 @@ use Base\Marketplace\Entity\Product\Identifier;
 use Base\Marketplace\Entity\Product\Image;
 use Base\Marketplace\Entity\Sales\Channel;
 use Base\Marketplace\Model\MerchantInterface;
+use Base\Marketplace\Enum\AssociationType;
 use Base\Marketplace\Enum\Barcode;
 use Base\Marketplace\Enum\ProductAvailability;
 use Base\Marketplace\Model\ShippingUnitInterface;
@@ -154,6 +156,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $this->orderItems = new ArrayCollection();
         $this->identifiers = new ArrayCollection();
         $this->channels = new ArrayCollection();
+        $this->associations = new ArrayCollection();
     }
 
     public function getHeadline(?string $locale = null, int $inheritanceDepthIfNotSet = 0): ?string
@@ -845,5 +848,201 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $this->channels->removeElement($channel);
 
         return $this;
+    }
+
+    /**
+     * Who makes it: the estate, the house, the maker (Brand). Shopify's
+     * vendor, WooCommerce's brand. A variant has its principal's.
+     */
+    #[ORM\ManyToOne(targetEntity: Brand::class, inversedBy: 'products')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    protected $brand;
+
+    public function getBrand(): ?Brand
+    {
+        return $this->brand ?? ($this->isVariant() && method_exists($this, 'getPrincipal') ? $this->getPrincipal()?->getBrand() : null);
+    }
+
+    public function setBrand(?Brand $brand): self
+    {
+        $this->brand = $brand;
+
+        return $this;
+    }
+
+    /**
+     * Sold by the lot: a cart holds a multiple of it (a case of 6, of 12).
+     * null: by the unit - or, for a variant, as its principal.
+     */
+    #[ORM\Column(type: 'integer', nullable: true)]
+    protected $packSize;
+
+    public function getPackSize(): int
+    {
+        $own = $this->packSize;
+        if (null === $own && $this->isVariant() && method_exists($this, 'getPrincipal')) {
+            return $this->getPrincipal()?->getPackSize() ?? 1;
+        }
+
+        return max(1, (int) ($own ?? 1));
+    }
+
+    public function getOwnPackSize(): ?int
+    {
+        return $this->packSize;
+    }
+
+    public function setPackSize(?int $packSize): self
+    {
+        $this->packSize = null === $packSize ? null : max(1, $packSize);
+
+        return $this;
+    }
+
+    /**
+     * The fewest one order may hold (a minimum of 6 bottles across cases of
+     * 6, of 12...); rounded up to the lot. null: one lot - or, for a variant,
+     * as its principal.
+     */
+    #[ORM\Column(type: 'integer', nullable: true)]
+    protected $minimumQuantity;
+
+    public function getMinimumQuantity(): int
+    {
+        $own = $this->minimumQuantity;
+        if (null === $own && $this->isVariant() && method_exists($this, 'getPrincipal')) {
+            return $this->getPrincipal()?->getMinimumQuantity() ?? $this->getPackSize();
+        }
+        $pack = $this->getPackSize();
+
+        return (int) (ceil(max(1, (int) ($own ?? $pack)) / $pack) * $pack);
+    }
+
+    public function getOwnMinimumQuantity(): ?int
+    {
+        return $this->minimumQuantity;
+    }
+
+    public function setMinimumQuantity(?int $minimumQuantity): self
+    {
+        $this->minimumQuantity = null === $minimumQuantity ? null : max(1, $minimumQuantity);
+
+        return $this;
+    }
+
+    /**
+     * A quantity a cart may hold of it: at least the minimum, a whole number
+     * of lots, at most $max (the shop's cart_max_quantity, the stock) rounded
+     * down to the lot. 0 when not even the minimum fits under $max.
+     */
+    public function boundQuantity(int $wanted, ?int $max = null): int
+    {
+        $pack = $this->getPackSize();
+        $quantity = (int) (ceil(max($wanted, $this->getMinimumQuantity()) / $pack) * $pack);
+        if (null !== $max) {
+            $ceiling = intdiv(max(0, $max), $pack) * $pack;
+            if ($ceiling < $this->getMinimumQuantity()) {
+                return 0;
+            }
+            $quantity = min($quantity, $ceiling);
+        }
+
+        return $quantity;
+    }
+
+    /**
+     * Sold to adults only (wine, spirits, sake): the age gate stands before
+     * its page (Service\AgeGate). Its taxa may say so for it.
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    protected $ageRestricted = false;
+
+    public function isAgeRestricted(): bool
+    {
+        if ($this->ageRestricted) {
+            return true;
+        }
+        if ($this->isVariant() && method_exists($this, 'getPrincipal') && $this->getPrincipal()?->isAgeRestricted()) {
+            return true;
+        }
+        foreach ($this->getTaxa() as $taxon) {
+            if ($taxon instanceof Product\Taxon && $taxon->isAgeRestricted()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getAgeRestricted(): bool
+    {
+        return (bool) $this->ageRestricted;
+    }
+
+    public function setAgeRestricted(bool $ageRestricted): self
+    {
+        $this->ageRestricted = $ageRestricted;
+
+        return $this;
+    }
+
+    /** @var Collection<int, Association> what its page leads to: pairings, cross-sells, upsells */
+    #[ORM\OneToMany(targetEntity: Association::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    protected $associations;
+
+    /** @return Collection<int, Association> */
+    public function getAssociations(?AssociationType $type = null): Collection
+    {
+        $associations = $this->associations ?? new ArrayCollection();
+
+        return null === $type ? $associations : $associations->filter(fn (Association $a) => $a->getType() === $type);
+    }
+
+    public function addAssociation(Association $association): self
+    {
+        $this->associations ??= new ArrayCollection();
+        if (!$this->associations->contains($association)) {
+            $association->setProduct($this);
+            $association->setPosition($this->associations->count());
+            $this->associations->add($association);
+        }
+
+        return $this;
+    }
+
+    public function removeAssociation(Association $association): self
+    {
+        $this->associations?->removeElement($association);
+
+        return $this;
+    }
+
+    /** A pairing, a cross-sell or an upsell to another product, with its note by language. */
+    public function associate(Product $target, AssociationType $type = AssociationType::PAIRING, array $notes = []): Association
+    {
+        foreach ($this->getAssociations($type) as $association) {
+            if ($association->getTarget() === $target) {
+                return $association->setNotes($notes ?: $association->getNotes());
+            }
+        }
+        $this->addAssociation($association = new Association($this, $target, $type, $notes));
+
+        return $association;
+    }
+
+    /**
+     * Its attribute of this code (an AttributeSet's field), resolved in a
+     * language: "Margaux", 13.5, ["Merlot", "Cabernet sauvignon"]. A variant
+     * without it reads its principal's.
+     */
+    public function getAttributeValue(string $code, ?string $locale = null): mixed
+    {
+        $attribute = $this->getAttribute($code);
+        if (null === $attribute && $this->isVariant() && method_exists($this, 'getPrincipal')) {
+            return $this->getPrincipal()?->getAttributeValue($code, $locale);
+        }
+
+        return $attribute?->resolve($locale);
     }
 }

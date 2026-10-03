@@ -5,6 +5,15 @@ marketplace:
   product:
     _singular: "produit"
     _plural: "produits"
+    attribute_set:
+      _singular: "fiche type"
+      _plural: "fiches types"
+  brand:
+    _singular: "marque"
+    _plural: "marques"
+  quote:
+    _singular: "cotation"
+    _plural: "cotations"
   order:
     _singular: "commande"
     _plural: "commandes"

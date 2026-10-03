@@ -1,0 +1,24 @@
+{#
+ # The age gate (Service\AgeGate): before a page of products sold to adults
+ # only, once - its answer kept a year. Works without JavaScript (a form, a
+ # dialog open from the start). The application styles .marketplace-age-gate
+ # (its --marketplace-age-* properties) or overrides this template.
+ #
+ #   {% if marketplace_age_gate(product) %}{% include '@Marketplace/client/_age_gate.html.twig' with {away: 'https://…'} %}{% endif %}
+ #}
+{% set age = marketplace_age_minimum() %}
+<dialog class="marketplace-age-gate" open aria-modal="true" aria-labelledby="marketplace-age-title" data-turbo="false">
+    <form method="post" action="{{ path('marketplace_age_gate') }}" class="marketplace-age-gate-box">
+        {% block age_gate_mark %}{% endblock %}
+        <h2 id="marketplace-age-title">{{ '@marketplace.age_gate.title'|trans }}</h2>
+        <p>{{ '@marketplace.age_gate.question'|trans({'{age}': age}) }}</p>
+        <input type="hidden" name="_token" value="{{ csrf_token('marketplace_age_gate') }}">
+        <input type="hidden" name="_target" value="{{ app.request.requestUri }}">
+        <input type="hidden" name="_away" value="{{ away ?? 'https://www.google.com' }}">
+        <div class="marketplace-age-gate-actions">
+            <button type="submit" name="answer" value="yes" class="marketplace-btn marketplace-btn-primary" autofocus>{{ '@marketplace.age_gate.yes'|trans({'{age}': age}) }}</button>
+            <button type="submit" name="answer" value="no" class="marketplace-btn">{{ '@marketplace.age_gate.no'|trans({'{age}': age}) }}</button>
+        </div>
+        {% if marketplace_age_notice() %}<p class="marketplace-age-gate-notice">{{ marketplace_age_notice()|trans }}</p>{% endif %}
+    </form>
+</dialog>

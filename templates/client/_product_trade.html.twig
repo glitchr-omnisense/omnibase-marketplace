@@ -1,0 +1,41 @@
+{#
+ # What a product's page says beyond its price: its brand, its typed sheet
+ # (AttributeSet), its lots, the health notice when it is sold to adults,
+ # what goes with it, and the way to a quote for a professional.
+ #}
+{% if product.brand %}
+    <p class="marketplace-product-brand">{% set link = product.brand.__toLink() %}{% if link %}<a href="{{ link }}">{{ product.brand.title }}</a>{% else %}{{ product.brand.title }}{% endif %}{% if product.brand.region %} · {{ product.brand.region }}{% endif %}</p>
+{% endif %}
+
+{% set rows = marketplace_attributes(product, app.request.locale) %}
+{% if rows %}
+<dl class="marketplace-product-sheet">
+    {% for row in rows %}
+        <div><dt>{{ row.label }}</dt><dd>{{ row.value }}{% if row.unit %} {{ row.unit }}{% endif %}</dd></div>
+    {% endfor %}
+</dl>
+{% endif %}
+
+{% if product.packSize > 1 or product.minimumQuantity > 1 %}
+    <p class="marketplace-product-lot">{{ '@marketplace.product.lot'|trans({'{pack}': product.packSize, '{minimum}': product.minimumQuantity}) }}</p>
+{% endif %}
+
+{% if product.ageRestricted and marketplace_age_notice() %}
+    <p class="marketplace-product-notice">{{ marketplace_age_notice()|trans }}</p>
+{% endif %}
+
+{% set pairings = marketplace_associations(product) %}
+{% if pairings %}
+<section class="marketplace-associations">
+    <h3>{{ '@marketplace.association.title'|trans }}</h3>
+    <ul>
+    {% for association in pairings %}
+        <li class="is-{{ association.type.value }}"><a href="{{ association.target.__toLink() }}">{{ association.target.title }}</a>{% set note = association.note(app.request.locale) %}{% if note %} — <span>{{ note }}</span>{% endif %}</li>
+    {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if quotes_enabled ?? true %}
+    <p class="marketplace-product-quote"><a href="{{ path('marketplace_quote_request', {product: product.id}) }}">{{ '@marketplace.product.quote'|trans }}</a></p>
+{% endif %}

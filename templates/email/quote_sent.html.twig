@@ -1,0 +1,11 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}{{ '@marketplace.quote.mail.sent_subject'|trans({'{reference}': quote.reference, '{title}': quote.title}) }}{% endblock %}
+{% block action_url %}{{ url('marketplace_quote', {token: quote.token}) }}{% endblock %}
+{% block action_text %}{{ '@marketplace.quote.mail.sent_action'|trans }}{% endblock %}
+
+{% block content %}
+<p>{{ '@marketplace.quote.mail.hello'|trans({'{name}': quote.contactName}) }}</p>
+<p>{{ '@marketplace.quote.mail.sent_text'|trans({'{title}': quote.title, '{total}': quote.total|format_currency(quote.currency, {use_rate: false}), '{terms}': quote.terms ?? '—'}) }}</p>
+{% if quote.validUntil %}<p>{{ '@marketplace.quote.mail.valid'|trans({'{date}': quote.validUntil|date('d/m/Y')}) }}</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{#
+ # The quotes by status (QuotePipelineController): one column per status,
+ # a card per quote - its reference, client, company, terms, total, age -,
+ # a click from its form. In the back office's frame, so in the nest.
+ #}
+{% extends '@Admin/layout.html.twig' %}
+
+{% block page_title %}{{ '@marketplace.quote.admin.pipeline'|trans }}{% endblock %}
+
+{% block content_header %}
+<div class="admin-header">
+    <span class="admin-header-icon"><i class="fa-solid fa-diagram-next"></i></span>
+    <div class="admin-header-titles">
+        <h1>{{ '@marketplace.quote.admin.pipeline'|trans }}</h1>
+        <div class="admin-header-subtitle">{{ '@marketplace.quote.admin.pipeline_lead'|trans }}</div>
+    </div>
+    <a class="btn btn-primary" href="{{ new }}"><i class="fa-solid fa-plus"></i> {{ '@marketplace.quote.admin.new'|trans }}</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .mq-pipeline { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(15rem, 1fr); gap: .9rem; overflow-x: auto; padding-bottom: 1rem; }
+    .mq-column { background: var(--admin-surface-2, rgba(127,127,127,.08)); border-radius: .6rem; padding: .7rem; min-height: 12rem; }
+    .mq-column h2 { display: flex; justify-content: space-between; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .6rem; }
+    .mq-column h2 span { opacity: .6; }
+    .mq-card { display: block; background: var(--admin-surface, #fff); color: inherit; text-decoration: none; border-radius: .5rem; padding: .65rem .75rem; margin-bottom: .55rem; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 3px solid var(--mq-accent, #888); }
+    .mq-card:hover, .mq-card:focus-visible { box-shadow: 0 2px 8px rgba(0,0,0,.16); }
+    .mq-card strong { display: block; font-size: .95rem; }
+    .mq-card small { display: block; opacity: .75; margin-top: .15rem; }
+    .mq-card .mq-total { font-variant-numeric: tabular-nums; font-weight: 700; margin-top: .35rem; }
+    .mq-requested { --mq-accent: #b8860b; } .mq-draft { --mq-accent: #6c757d; } .mq-sent { --mq-accent: #0d6efd; }
+    .mq-accepted { --mq-accent: #6f42c1; } .mq-paid { --mq-accent: #198754; } .mq-declined { --mq-accent: #dc3545; }
+    .mq-empty { opacity: .5; font-size: .85rem; }
+</style>
+<div class="mq-pipeline">
+    {% for status in statuses %}
+        {% set quotes = columns[status.value] ?? [] %}
+        <section class="mq-column mq-{{ status.value }}" aria-label="{{ ('@marketplace.quote.state.' ~ status.value)|trans }}">
+            <h2>{{ ('@marketplace.quote.state.' ~ status.value)|trans }} <span>{{ quotes|length }}</span></h2>
+            {% for quote in quotes %}
+                <a class="mq-card" href="{{ links[quote.id] }}">
+                    <strong>{{ quote.reference }} · {{ quote.title }}</strong>
+                    <small>{{ quote.contactName }}{% if quote.companyName %} — {{ quote.companyName }}{% endif %}</small>
+                    {% if quote.terms or quote.country %}<small>{{ quote.terms }}{% if quote.country %} · {{ quote.country }}{% endif %}{% if quote.volume %} · {{ quote.volume }}{% endif %}</small>{% endif %}
+                    <small>{{ quote.createdAt|date('d/m/Y') }}{% if quote.validUntil %} → {{ quote.validUntil|date('d/m/Y') }}{% endif %}</small>
+                    {% if quote.total %}<div class="mq-total">{{ quote.total|format_currency(quote.currency, {use_rate: false}) }}</div>{% endif %}
+                </a>
+            {% else %}
+                <p class="mq-empty">—</p>
+            {% endfor %}
+        </section>
+    {% endfor %}
+</div>
+{% endblock %}

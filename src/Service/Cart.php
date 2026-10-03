@@ -101,7 +101,8 @@ class Cart
 
         $order = $this->of($store, true);
         $line = $this->lineOf($order, $product);
-        $wanted = ($line ? (int) $line->getQuantity() : 0) + max(1, $quantity);
+        // Adding one case of 6 adds 6: a quantity below a lot means one lot.
+        $wanted = ($line ? (int) $line->getQuantity() : 0) + max($product->getPackSize(), $quantity);
         $wanted = $this->bounded($product, $wanted);
 
         if ($line) {
@@ -160,20 +161,40 @@ class Cart
         return null;
     }
 
-    /** @throws CartException */
+    /**
+     * The quantity a line may hold: the product's lots (a case of 6: 6, 12,
+     * 18...) and its minimum, under the shop's cart_max_quantity, the
+     * product's own maximum and its stock.
+     *
+     * @throws CartException
+     */
     private function bounded(?Product $product, int $quantity): int
     {
         // The product may sell fewer at once than the shop allows (one of an
         // item a member keeps forever, say): the stricter bound wins.
-        $quantity = min($quantity, $this->maxQuantity, $product?->getMaxQuantity() ?? $this->maxQuantity);
+        $max = min($this->maxQuantity, $product?->getMaxQuantity() ?? $this->maxQuantity);
         $stock = $product?->getStock();
-        if (null !== $stock && $quantity > $stock) {
-            if ($stock <= 0) {
-                throw new CartException('cart.error.sold_out', ['{product}' => (string) $product]);
-            }
-            $quantity = $stock;
+        if (null !== $stock && $stock <= 0) {
+            throw new CartException('cart.error.sold_out', ['{product}' => (string) $product]);
+        }
+        if (null !== $stock) {
+            $max = min($max, $stock);
+        }
+        if (!$product) {
+            return max(1, min($quantity, $max));
         }
 
-        return max(1, $quantity);
+        $bounded = $product->boundQuantity($quantity, $max);
+        if (0 === $bounded) {
+            // Not even one lot, or the minimum, fits: what is left, or what
+            // the shop lets one order hold, is less than a case.
+            throw new CartException(null !== $stock && $stock < $product->getMinimumQuantity() ? 'cart.error.sold_out' : 'cart.error.minimum', [
+                '{product}' => (string) $product,
+                '{minimum}' => $product->getMinimumQuantity(),
+                '{pack}' => $product->getPackSize(),
+            ]);
+        }
+
+        return $bounded;
     }
 }

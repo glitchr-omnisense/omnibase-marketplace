@@ -53,6 +53,8 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
             $src . '/Payment/PaymentResult.php',
+            // The quotes' repositories' parent, not a repository of its own.
+            $src . '/Quote/',
             // Registered in debug only, by MarketplaceExtension.
             $src . '/Payment/DevGateway.php',
             // The bridges to glitchr/omnitrade's gateways: built by
@@ -61,10 +63,8 @@ return function (ContainerConfigurator $configurator) {
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Payment/Omnitrade/']),
             // The buyer's return page and the providers' webhooks: only with omnitrade.
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Controller/Client/PaymentController.php', $src . '/Console/StripeWebhookCommand.php']),
-            // The Shopify subtree is wired by config/shopify.php, loaded only
-            // when marketplace.shopify.enabled is true. This load() is recursive
-            // over src/, so without this line the subtree is never dormant.
-            $src . '/Shopify/',
+            // The catalogue read from a platform needs glitchr/omnitrade's catalogue (FetchProducts).
+            ...(class_exists('Omnitrade\\Request\\FetchProducts') ? [] : [$src . '/Catalogue/', $src . '/Console/CatalogueSyncCommand.php']),
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),

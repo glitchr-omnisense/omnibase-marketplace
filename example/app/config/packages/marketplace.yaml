@@ -8,27 +8,7 @@ marketplace:
             currencies: [EUR]
             instructions: "Transfer the amount to FR76 0000 0000 0000 0000 0000 000, with the order reference as label."
 
-    # The optional Shopify integration. Off unless SHOPIFY_ENABLED is set in
-    # the environment (docker-compose.shopify.yml does it), so the plain demo
-    # image is exactly what it was.
-    #
-    # `enabled` is read while the container compiles, where an env placeholder
-    # is still an unresolved string - so it cannot itself be one. The
-    # Dockerfile writes this file's `enabled:` line from SHOPIFY_ENABLED at
-    # startup instead. Every secret below is a real env var.
-    shopify:
-        enabled: false
-        shop_domain: '%env(default::SHOPIFY_SHOP_DOMAIN)%'
-        api_version: '%env(default::SHOPIFY_API_VERSION)%'
-        admin_token: '%env(default::SHOPIFY_ADMIN_TOKEN)%'
-        webhook_secret: '%env(default::SHOPIFY_WEBHOOK_SECRET)%'
-        catalogue:
-            enabled: true
-            store: boutique
-            images: false            # not implemented yet; see MarketplaceConfiguration
-            owned_fields: [title, description, price, stock, availability, identifiers, tags]
-        checkout:
-            enabled: true
-            draft_order_tags: ['base-bundle-marketplace-demo']
-        export:
-            enabled: false
+    # The catalogue may be read from a platform instead of the back office
+    # (an omnitrade gateway: stripe, shopify, woocommerce):
+    #     catalogue: { source: shopify, store: boutique }
+    # then `bin/console marketplace:catalogue:sync`.

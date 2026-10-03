@@ -729,6 +729,31 @@ class Order implements IconizeInterface, LinkableInterface
         return null !== $this->vatExemption;
     }
 
+    /**
+     * The quote it was made from (its reference: "D-2026-0007"), when it was:
+     * its prices are the quote's, its terms too - it may go where the shop's
+     * regions do not (an export), and the address comes from the quote.
+     */
+    #[ORM\Column(type: 'string', length: 64, nullable: true)]
+    protected ?string $quoteReference = null;
+
+    public function getQuoteReference(): ?string
+    {
+        return $this->quoteReference;
+    }
+
+    public function setQuoteReference(?string $quoteReference): self
+    {
+        $this->quoteReference = $quoteReference;
+
+        return $this;
+    }
+
+    public function isQuoted(): bool
+    {
+        return null !== $this->quoteReference;
+    }
+
     public function getNetPrice(): int
     {
         return max(

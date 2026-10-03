@@ -39,4 +39,30 @@ class Taxon extends \Base\Entity\Thread\Taxon
 
         return $this;
     }
+
+    /** Everything filed under it is sold to adults only (wine, spirits): Product::isAgeRestricted(). */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    protected $ageRestricted = false;
+
+    public function isAgeRestricted(): bool
+    {
+        if ($this->ageRestricted) {
+            return true;
+        }
+        $parent = $this->getParent();
+
+        return $parent instanceof self && $parent !== $this && $parent->isAgeRestricted();
+    }
+
+    public function getAgeRestricted(): bool
+    {
+        return (bool) $this->ageRestricted;
+    }
+
+    public function setAgeRestricted(bool $ageRestricted): self
+    {
+        $this->ageRestricted = $ageRestricted;
+
+        return $this;
+    }
 }

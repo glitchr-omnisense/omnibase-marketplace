@@ -4,6 +4,7 @@
 {% block marketplace_crumbs %}<span>›</span> <a href="{{ path('marketplace_store', {slug: store.slug}) }}">{{ store.title }}</a> <span>›</span> <span>{{ product.title }}</span>{% endblock %}
 
 {% block marketplace_body %}
+{% if marketplace_age_gate(product) %}{% include '@Marketplace/client/_age_gate.html.twig' %}{% endif %}
 <article class="marketplace-product">
     <div class="marketplace-product-media">{% include '@Marketplace/client/_product_media.html.twig' with {product: product, size: 'large'} %}</div>
     <div class="marketplace-product-text">
@@ -16,6 +17,7 @@
             {% if is_granted('ROLE_USER') %}
             <form method="post" action="{{ path('marketplace_cart_add', {id: product.id}) }}" class="marketplace-add">
                 <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+                {% if product.packSize > 1 or product.minimumQuantity > 1 %}<input type="hidden" name="quantity" value="{{ product.minimumQuantity }}">{% endif %}
                 <button class="marketplace-btn marketplace-btn-primary" type="submit"><i class="fa-solid fa-basket-shopping"></i> {{ '@marketplace.product.add'|trans }}</button>
             </form>
             {% else %}
@@ -24,6 +26,8 @@
         {% else %}
             <p class="marketplace-soldout">{{ '@marketplace.product.unavailable'|trans }}</p>
         {% endif %}
+
+        {% include '@Marketplace/client/_product_trade.html.twig' %}
 
         {% if product.content %}<div class="marketplace-product-content">{{ product.content|striptags('<p><b><i><em><strong><ul><li><br>')|raw }}</div>{% endif %}
     </div>

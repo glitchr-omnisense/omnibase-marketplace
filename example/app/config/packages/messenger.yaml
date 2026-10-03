@@ -1,10 +1,8 @@
-# The order push goes through the bus so that a Shopify call never happens
-# inside somebody else's webhook request. In the demo the transport is
-# synchronous, which is correct but does not retry; a real application routes
-# it to a doctrine:// or redis:// transport and runs messenger:consume.
+# What the marketplace queues (the catalogue's webhooks, mails) goes through
+# the bus. In the demo the transport is synchronous, which is correct but does
+# not retry; a real application routes it to a doctrine:// or redis://
+# transport and runs messenger:consume.
 framework:
     messenger:
         transports:
             async: 'sync://'
-        routing:
-            Base\Marketplace\Shopify\Export\PushOrderMessage: async

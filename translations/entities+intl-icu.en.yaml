@@ -5,6 +5,15 @@ marketplace:
   product:
     _singular: "product"
     _plural: "products"
+    attribute_set:
+      _singular: "attribute set"
+      _plural: "attribute sets"
+  brand:
+    _singular: "brand"
+    _plural: "brands"
+  quote:
+    _singular: "quotation"
+    _plural: "quotations"
   order:
     _singular: "order"
     _plural: "orders"

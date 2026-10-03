@@ -1,0 +1,27 @@
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ '@marketplace.quote.mine'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.quote.mine'|trans }}</span>{% endblock %}
+
+{% block marketplace_body %}
+<section class="marketplace-quotes">
+    <h2>{{ '@marketplace.quote.mine'|trans }}</h2>
+    {% if quotes is empty %}
+        <p>{{ '@marketplace.quote.none'|trans }} <a href="{{ path('marketplace_quote_request') }}">{{ '@marketplace.quote.request_title'|trans }}</a></p>
+    {% else %}
+    <ul class="marketplace-quote-list">
+        {% for quote in quotes %}
+        <li>
+            {% if quote.status.value in ['requested'] %}
+                <span>{{ quote.reference }} · {{ quote.title }}</span>
+            {% else %}
+                <a href="{{ path('marketplace_quote', {token: quote.token}) }}">{{ quote.reference }} · {{ quote.title }}</a>
+            {% endif %}
+            <span class="marketplace-quote-state is-{{ quote.status.value }}">{{ ('@marketplace.quote.state.' ~ quote.status.value)|trans }}</span>
+            {% if quote.total %}<span>{% include '@Marketplace/client/_price.html.twig' with {amount: quote.total, currency: quote.currency} %}</span>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+{% endblock %}

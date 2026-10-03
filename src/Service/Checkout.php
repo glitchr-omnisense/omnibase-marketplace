@@ -236,6 +236,10 @@ class Checkout
             if (null !== $product->getStock() && $product->getStock() < (int) $item->getQuantity()) {
                 throw new CartException('cart.error.sold_out', ['{product}' => (string) $product]);
             }
+            // A case of 6 sells by 6, from its minimum - unless a quote set the quantities.
+            if (!$order->isQuoted() && $product->boundQuantity((int) $item->getQuantity()) !== (int) $item->getQuantity()) {
+                throw new CartException('cart.error.minimum', ['{product}' => (string) $product, '{minimum}' => $product->getMinimumQuantity(), '{pack}' => $product->getPackSize()]);
+            }
         }
     }
 }
