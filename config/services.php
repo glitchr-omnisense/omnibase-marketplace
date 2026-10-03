@@ -53,6 +53,8 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Service/*Exception.php',
             $src . '/Payment/*Exception.php',
             $src . '/Payment/PaymentResult.php',
+            // Registered in debug only, by MarketplaceExtension.
+            $src . '/Payment/DevGateway.php',
             // The bridges to glitchr/omnitrade's gateways: built by
             // OmnitradeGateways, registered below when that package is there.
             $src . '/Payment/Omnitrade/OmnitradeGateway.php',
@@ -64,6 +66,8 @@ return function (ContainerConfigurator $configurator) {
             // over src/, so without this line the subtree is never dormant.
             $src . '/Shopify/',
             $src . '/MarketplaceBundle.php',
+            // A section of omnibase/admin's API keys page: only with that bundle.
+            ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),
         ]);
 
     if (is_dir($src . '/Controller/Client')) {

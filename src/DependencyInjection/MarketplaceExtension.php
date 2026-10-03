@@ -92,6 +92,14 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
 
+        // The "dev" gateway - paid by nobody, at once - exists in debug only.
+        if ($container->hasParameter('kernel.debug') && $container->getParameter('kernel.debug')) {
+            $container->register(\Base\Marketplace\Payment\DevGateway::class)
+                ->setAutowired(true)
+                ->setAutoconfigured(true)
+                ->addTag('marketplace.payment_gateway');
+        }
+
         $processor = new Processor();
         $configuration = new MarketplaceConfiguration();
         $config = $processor->processConfiguration($configuration, $configs);
