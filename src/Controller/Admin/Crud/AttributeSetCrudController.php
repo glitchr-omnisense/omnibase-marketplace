@@ -35,6 +35,6 @@ class AttributeSetCrudController extends AbstractMarketplaceCrudController
         yield TextField::new('name', '@marketplace.attribute_set.name')->setColumns(6);
         yield SelectField::new('taxon', '@marketplace.attribute_set.taxon')->setClass(Taxon::class)->setRequired(false)->setColumns(6);
         yield CollectionField::new('fields', '@marketplace.attribute_set.fields')->setEntryType(AttributeSetFieldType::class)
-            ->allowAdd()->allowDelete()->hideOnIndex()->setFormTypeOptions(['by_reference' => false]);
+            ->allowAdd()->allowDelete()->hideOnIndex()->setFormTypeOptions(['by_reference' => false, 'allow_object' => true]);
     }
 }

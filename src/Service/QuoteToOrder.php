@@ -12,6 +12,7 @@ use Base\Marketplace\Entity\Quote\AbstractQuote;
 use Base\Marketplace\Entity\Quote\QuoteLine;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Enum\OrderState;
+use Base\Marketplace\Enum\QuoteStatus;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -56,10 +57,14 @@ class QuoteToOrder
                 $this->entityManager->lock($quote, LockMode::PESSIMISTIC_WRITE);
                 $this->entityManager->refresh($quote);
             }
+            // Its order again when one waits for its money; else a new one.
             $order = $quote->getOrder();
-            if (!$order || (!$order->isPaid() && OrderState::CART !== $order->getState() && !$order->isPending())) {
+            $waiting = $order && !$order->isPaid() && (OrderState::CART === $order->getState() || $order->isPending());
+            if (!$waiting) {
                 $order = $this->orderOf($quote, $client);
                 $quote->setOrder($order);
+            }
+            if (QuoteStatus::ACCEPTED !== $quote->getStatus()) {
                 $quote->setClient($quote->getClient() ?? $client);
                 $quote->accept();
             }

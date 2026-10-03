@@ -233,7 +233,8 @@ class Checkout
             if (!$product || !$product->isForSell()) {
                 throw new CartException('cart.error.not_for_sale', ['{product}' => (string) ($product ?? $item)]);
             }
-            if (null !== $product->getStock() && $product->getStock() < (int) $item->getQuantity()) {
+            // A quote's quantities are the seller's commitment (sourced for it), not the shelf's.
+            if (!$order->isQuoted() && null !== $product->getStock() && $product->getStock() < (int) $item->getQuantity()) {
                 throw new CartException('cart.error.sold_out', ['{product}' => (string) $product]);
             }
             // A case of 6 sells by 6, from its minimum - unless a quote set the quantities.

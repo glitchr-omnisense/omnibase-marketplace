@@ -115,7 +115,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         yield TextareaField::new('request', '@marketplace.quote.request')->hideOnIndex()->setHelp('@marketplace.quote.request_help');
         yield TextareaField::new('message', '@marketplace.quote.message')->hideOnIndex()->setHelp('@marketplace.quote.message_help');
         yield CollectionField::new('lines', '@marketplace.quote.lines')->setEntryType(QuoteLineType::class)->allowAdd()->allowDelete()->hideOnIndex()
-            ->setFormTypeOptions(['by_reference' => false]);
+            ->setFormTypeOptions(['by_reference' => false, 'allow_object' => true]);
         yield IntegerField::new('total', '@marketplace.quote.total_cents')->onlyOnIndex();
         yield DateTimeField::new('createdAt')->onlyOnIndex();
     }

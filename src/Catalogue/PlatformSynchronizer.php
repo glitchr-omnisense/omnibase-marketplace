@@ -357,6 +357,7 @@ class PlatformSynchronizer
             $attribute = new Attribute($adapter, $value);
             $attribute->setProduct($product);
             $product->addAttribute($attribute);
+            $this->entityManager->persist($attribute);
         }
     }
 
@@ -440,6 +441,7 @@ class PlatformSynchronizer
             $identifier = new Identifier();
             $identifier->setProduct($product);
             $product->getIdentifiers()->add($identifier);
+            $this->entityManager->persist($identifier);
         }
         foreach ($wanted as $standard => $value) {
             if ($existing = $identifier->getBarcode($standard)) {
@@ -448,7 +450,9 @@ class PlatformSynchronizer
             }
             $adapter = new BarcodeAdapter();
             $adapter->setStandard($standard);
-            $identifier->addBarcode(new BarcodeAttribute($adapter, $value));
+            $this->entityManager->persist($adapter);
+            $identifier->addBarcode($barcode = new BarcodeAttribute($adapter, $value));
+            $this->entityManager->persist($barcode);
         }
     }
 

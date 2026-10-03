@@ -40,6 +40,16 @@ marketplace:
         recipient: '%env(MAILER_CONTACT)%'
 ```
 
+The pipeline is a page of the back office outside the CRUDs: import it in
+the application's routes (as omnibase/agenda's calendar page):
+
+```yaml
+# config/routes.yaml
+marketplace_admin_controller:
+    resource: "@MarketplaceBundle/src/Controller/Admin/QuotePipelineController.php"
+    type: attribute
+```
+
 Routes: `marketplace_quote_request` (/cotation), `marketplace_quote`
 (/cotation/{token}), `marketplace_quote_accept`, `marketplace_quote_decline`
 (POST), `marketplace_quotes` (/mes-cotations), `marketplace_admin_quotes`

@@ -20,7 +20,7 @@
     <p class="marketplace-product-lot">{{ '@marketplace.product.lot'|trans({'{pack}': product.packSize, '{minimum}': product.minimumQuantity}) }}</p>
 {% endif %}
 
-{% if product.ageRestricted and marketplace_age_notice() %}
+{% if product.isAgeRestricted() and marketplace_age_notice() %}
     <p class="marketplace-product-notice">{{ marketplace_age_notice()|trans }}</p>
 {% endif %}
 

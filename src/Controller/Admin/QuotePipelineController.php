@@ -31,7 +31,7 @@ class QuotePipelineController extends AbstractController
     ) {
     }
 
-    #[Route('/admin/marketplace/quotes', name: 'marketplace_admin_quotes', methods: ['GET'])]
+    #[Route('/admin/marketplace/quotes', name: 'marketplace_admin_quotes', methods: ['GET'], defaults: ['_nest' => true])]
     public function index(): Response
     {
         if ([] === $this->adminContext->getMainMenu()) {
