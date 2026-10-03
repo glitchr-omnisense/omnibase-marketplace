@@ -13,6 +13,8 @@ use Omnitrade\Exception\InvalidNotificationException;
 use Omnitrade\Exception\OmnitradeException;
 use Omnitrade\Model\Status;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Base\Marketplace\Event\CatalogueNotificationEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,6 +34,7 @@ class PaymentController extends AbstractController
         private readonly Checkout $checkout,
         private readonly PaymentGatewayRegistry $gateways,
         private readonly TranslatorInterface $translator,
+        private readonly ?EventDispatcherInterface $dispatcher = null,
     ) {
     }
 
@@ -89,6 +92,14 @@ class PaymentController extends AbstractController
             $notification = $bridge->notify($request->getContent(), $request->headers->all());
         } catch (InvalidNotificationException $e) {
             return new JsonResponse(['error' => 'Invalid signature.'], 400);
+        }
+
+        // A product or a stock level changed there: the catalogue's business
+        // (Catalogue\CatalogueNotificationListener), not a payment's.
+        if (method_exists($notification, 'isCatalogue') && $notification->isCatalogue()) {
+            $event = $this->dispatcher?->dispatch(new CatalogueNotificationEvent($gateway, $notification));
+
+            return new JsonResponse(['received' => $notification->event, 'catalogue' => $event?->getOutcome() ?? 'ignored']);
         }
 
         $transaction = $notification->reference ? $this->entityManager->getRepository(Transaction::class)->findOneBy(['webhook' => $notification->reference]) : null;
