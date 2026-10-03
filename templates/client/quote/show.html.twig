@@ -16,7 +16,7 @@
             {% if quote.companyName %}<div><dt>{{ '@marketplace.quote.company'|trans }}</dt><dd>{{ quote.companyName }}</dd></div>{% endif %}
             {% if quote.direction %}<div><dt>{{ '@marketplace.quote.form.direction'|trans }}</dt><dd>{{ ('@marketplace.quote.direction.' ~ quote.direction.value)|trans }}</dd></div>{% endif %}
             {% if quote.terms %}<div><dt>Incoterm</dt><dd>{{ quote.terms }}</dd></div>{% endif %}
-            {% if quote.country %}<div><dt>{{ '@marketplace.quote.form.country'|trans }}</dt><dd>{{ quote.country|country_name(app.request.locale) }}</dd></div>{% endif %}
+            {% if quote.country %}<div><dt>{{ '@marketplace.quote.form.country'|trans }}</dt><dd>{{ marketplace_country(quote.country, app.request.locale) }}</dd></div>{% endif %}
             {% if quote.targetDate %}<div><dt>{{ '@marketplace.quote.form.target_date'|trans }}</dt><dd>{{ quote.targetDate|format_date('long', locale: app.request.locale) }}</dd></div>{% endif %}
             {% if quote.validUntil %}<div><dt>{{ '@marketplace.quote.valid_until'|trans }}</dt><dd>{{ quote.validUntil|format_date('long', locale: app.request.locale) }}</dd></div>{% endif %}
         </dl>

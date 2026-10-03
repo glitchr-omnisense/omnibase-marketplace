@@ -9,6 +9,7 @@ use Base\Marketplace\Enum\AssociationType;
 use Base\Marketplace\Repository\Product\AttributeSetRepository;
 use Base\Marketplace\Service\AgeGate;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Intl\Countries;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -21,6 +22,7 @@ use Twig\TwigFunction;
  *   {% for row in marketplace_attributes(product) %}{{ row.label }}: {{ row.value }}{% endfor %}
  *   {% for a in marketplace_associations(product, 'pairing') %}{{ a.target }} - {{ a.note(app.request.locale) }}{% endfor %}
  *   {% for product in marketplace_products_of(post) %}…{% endfor %}   a blog post's wines
+ *   {{ marketplace_country('JP', app.request.locale) }}           Japon
  */
 final class CatalogueTwigExtension extends AbstractExtension
 {
@@ -41,6 +43,8 @@ final class CatalogueTwigExtension extends AbstractExtension
             new TwigFunction('marketplace_attributes', [$this, 'attributes']),
             new TwigFunction('marketplace_associations', [$this, 'associations']),
             new TwigFunction('marketplace_products_of', [$this, 'productsOf']),
+            // A country's name from its code: glitchr/omnibase's |country_name reads a locale, not a country.
+            new TwigFunction('marketplace_country', [$this, 'country']),
         ];
     }
 
@@ -96,5 +100,17 @@ final class CatalogueTwigExtension extends AbstractExtension
         }
 
         return $products;
+    }
+
+    public function country(?string $code, ?string $locale = null): string
+    {
+        if (null === $code || '' === $code) {
+            return '';
+        }
+        try {
+            return Countries::getName(strtoupper($code), $locale ? substr($locale, 0, 2) : null);
+        } catch (\Throwable) {
+            return strtoupper($code);
+        }
     }
 }
