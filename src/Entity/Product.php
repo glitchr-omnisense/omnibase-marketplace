@@ -1043,6 +1043,12 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
             return $this->getPrincipal()?->getAttributeValue($code, $locale);
         }
 
-        return $attribute?->resolve($locale);
+        $value = $attribute?->resolve($locale);
+        // Not written in this language: the default one's (a grape's name is the same in Japanese).
+        if (null !== $attribute && null !== $locale && (null === $value || '' === $value || [] === $value)) {
+            $value = $attribute->resolve(null);
+        }
+
+        return $value;
     }
 }
