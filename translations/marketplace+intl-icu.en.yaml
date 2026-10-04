@@ -279,6 +279,34 @@ wishlist:
     minimum: "The smallest contribution is €{minimum}."
     too_much: "Only €{left} is missing for this gift."
     payment: "Payment is unavailable for the moment. Please try again a little later."
+supply:
+  status:
+    draft: "Draft"
+    submitted: "Sent"
+    accepted: "Accepted"
+    in_production: "In production"
+    shipped: "Shipped"
+    delivered: "Delivered"
+    cancelled: "Cancelled"
+    failed: "Refused"
+  brief:
+    subject: "Order to make {reference}"
+    cancelled_subject: "Order {reference} cancelled"
+    intro: "Here is order {reference}, to make and to send."
+    draft: "It is a draft: start nothing before it is confirmed."
+    cancelled: "Order {reference} is cancelled: do not make it."
+    recipient: "Recipient"
+    file: "File {number}"
+    link: "Accept the order, say where it stands and give the parcel's tracking"
+  page:
+    title: "Order {reference}"
+    saved: "Noted, thank you."
+    status: "Where does it stand?"
+    carrier: "Carrier"
+    tracking_number: "Tracking number"
+    tracking_url: "Tracking link"
+    message: "A word (a delay, a refusal)"
+    save: "Save"
 catalogue:
   synced: "{count} product(s) read from {gateway}."
 company:

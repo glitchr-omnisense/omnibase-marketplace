@@ -1,0 +1,28 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}{% if cancelled|default(false) %}{{ '@marketplace.supply.brief.cancelled_subject'|trans({reference: reference}) }}{% else %}{{ '@marketplace.supply.brief.subject'|trans({reference: supply.reference}) }}{% endif %}{% endblock %}
+
+{% block content %}
+{% if cancelled|default(false) %}
+<p>{{ '@marketplace.supply.brief.cancelled'|trans({reference: reference}) }}</p>
+{% else %}
+<p>{{ '@marketplace.supply.brief.intro'|trans({reference: supply.reference}) }}{% if draft %} {{ '@marketplace.supply.brief.draft'|trans }}{% endif %}</p>
+<table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;width:100%">
+{% for line in supply.lines %}
+    <tr style="border-top:1px solid #ddd">
+        <td style="vertical-align:top"><strong>{{ line.quantity }} ×</strong></td>
+        <td>
+            <strong>{{ line.title ?? line.productReference }}</strong> <small>({{ line.productReference }})</small>
+            {% for key, value in line.options %}{% if value is not iterable %}<br>{{ key }}: {{ value }}{% endif %}{% endfor %}
+            {% for file in line.files %}<br><a href="{{ file }}">{{ '@marketplace.supply.brief.file'|trans({number: loop.index}) }}</a>{% endfor %}
+        </td>
+    </tr>
+{% endfor %}
+</table>
+<p><strong>{{ '@marketplace.supply.brief.recipient'|trans }}</strong><br>
+{{ supply.recipient.name }}{% if supply.recipient.company %} · {{ supply.recipient.company }}{% endif %}<br>
+{{ supply.recipient.street|join(', ') }}<br>
+{{ supply.recipient.postcode }} {{ supply.recipient.city }} · {{ supply.recipient.country }}{% if supply.recipient.phone %}<br>{{ supply.recipient.phone }}{% endif %}</p>
+{% endif %}
+<p><a href="{{ link }}">{{ '@marketplace.supply.brief.link'|trans }}</a></p>
+{% endblock %}

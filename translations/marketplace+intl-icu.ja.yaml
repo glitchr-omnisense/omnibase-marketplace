@@ -278,6 +278,34 @@ wishlist:
     minimum: "ご支援は{minimum}ユーロからです。"
     too_much: "この贈り物に必要なのはあと{left}ユーロです。"
     payment: "ただいまお支払いをご利用いただけません。しばらくしてからお試しください。"
+supply:
+  status:
+    draft: "下書き"
+    submitted: "送信済み"
+    accepted: "受付済み"
+    in_production: "製作中"
+    shipped: "発送済み"
+    delivered: "配達済み"
+    cancelled: "キャンセル"
+    failed: "お断り"
+  brief:
+    subject: "製作のご依頼 {reference}"
+    cancelled_subject: "ご依頼 {reference} のキャンセル"
+    intro: "ご依頼 {reference} の製作と発送をお願いいたします。"
+    draft: "下書きです。確定までは着手しないでください。"
+    cancelled: "ご依頼 {reference} はキャンセルされました。製作しないでください。"
+    recipient: "お届け先"
+    file: "ファイル {number}"
+    link: "ご依頼の受付、進行状況と追跡番号の入力"
+  page:
+    title: "ご依頼 {reference}"
+    saved: "承りました。ありがとうございます。"
+    status: "進行状況"
+    carrier: "配送業者"
+    tracking_number: "追跡番号"
+    tracking_url: "追跡リンク"
+    message: "ひとこと（遅延、お断りの理由）"
+    save: "保存"
 catalogue:
   synced: "{gateway} から {count} 件の商品を読み込みました。"
 company:

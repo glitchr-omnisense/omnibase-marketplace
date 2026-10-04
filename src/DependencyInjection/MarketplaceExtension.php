@@ -55,6 +55,10 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         $container->registerForAutoconfiguration(\Base\Marketplace\Pricing\VatExemptionInterface::class)
             ->addTag('marketplace.vat_exemption');
 
+        // Who makes what is made to order: the bundle's suppliers and the application's.
+        $container->registerForAutoconfiguration(\Base\Marketplace\Supply\SupplierInterface::class)
+            ->addTag('marketplace.supplier');
+
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
 

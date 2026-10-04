@@ -279,6 +279,34 @@ wishlist:
     minimum: "La participation minimale est de {minimum} €."
     too_much: "Il ne manque plus que {left} € pour ce cadeau."
     payment: "Le paiement est indisponible pour le moment. Réessayez un peu plus tard."
+supply:
+  status:
+    draft: "Brouillon"
+    submitted: "Envoyé"
+    accepted: "Accepté"
+    in_production: "En fabrication"
+    shipped: "Expédié"
+    delivered: "Livré"
+    cancelled: "Annulé"
+    failed: "Refusé"
+  brief:
+    subject: "Commande à fabriquer {reference}"
+    cancelled_subject: "Commande {reference} annulée"
+    intro: "Voici la commande {reference} à fabriquer et à expédier."
+    draft: "C'est un brouillon : ne lancez rien avant sa confirmation."
+    cancelled: "La commande {reference} est annulée : ne la fabriquez pas."
+    recipient: "Destinataire"
+    file: "Fichier {number}"
+    link: "Accepter la commande, indiquer son avancement et le suivi du colis"
+  page:
+    title: "Commande {reference}"
+    saved: "C'est noté, merci."
+    status: "Où en est-elle ?"
+    carrier: "Transporteur"
+    tracking_number: "Numéro de suivi"
+    tracking_url: "Lien de suivi"
+    message: "Un mot (un retard, un refus)"
+    save: "Enregistrer"
 catalogue:
   synced: "{count} produit(s) lus depuis {gateway}."
 company:

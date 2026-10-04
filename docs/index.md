@@ -17,3 +17,4 @@ glitchr/omnitrade - and what any trade adds to it:
 - [Plans, subscriptions, rights and credits](plans.md)
 - [Lists of wishes, reservations, contributions](wishlists.md)
 - [Referrals](referrals.md)
+- [Made to order: suppliers](supply.md)

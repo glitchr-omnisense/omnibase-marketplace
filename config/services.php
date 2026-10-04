@@ -37,6 +37,8 @@ return function (ContainerConfigurator $configurator) {
 
     $services->instanceof('Base\\Marketplace\\Payment\\PaymentGatewayInterface')
         ->tag('marketplace.payment_gateway');
+    $services->instanceof('Base\\Marketplace\\Supply\\SupplierInterface')
+        ->tag('marketplace.supplier');
 
     $services->load('Base\\Marketplace\\', $src . '/')
         ->exclude([
@@ -71,6 +73,10 @@ return function (ContainerConfigurator $configurator) {
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Wishlist/ProductLookup.php']),
             ...(class_exists('Omnitrade\\Model\\Account') ? [] : [$src . '/Wishlist/Contributions.php', $src . '/Wishlist/PayoutAccounts.php', $src . '/EventListener/WishlistNotificationListener.php']),
             $src . '/Wishlist/WishlistException.php',
+            $src . '/Supply/Model/',
+            $src . '/Supply/SupplyException.php',
+            // The partner workshop is written to: needs symfony/mailer and the Twig bridge.
+            ...(interface_exists('Symfony\\Component\\Mailer\\MailerInterface') && class_exists('Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail') ? [] : [$src . '/Supply/OfflineSupplier.php']),
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),

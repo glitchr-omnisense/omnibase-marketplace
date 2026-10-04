@@ -1020,6 +1020,51 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     /**
+     * Made to order by a supplier (Supply\SupplierInterface: "gelato",
+     * "offline", an application's own): once paid, Service\Supply hands the
+     * line to it. null: the shop sends it itself - or, for a variant, as its
+     * principal.
+     */
+    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    protected $supplier = null;
+
+    public function getSupplier(): ?string
+    {
+        if (null === $this->supplier && $this->isVariant() && method_exists($this, 'getPrincipal')) {
+            return $this->getPrincipal()?->getSupplier();
+        }
+
+        return $this->supplier;
+    }
+
+    public function setSupplier(?string $supplier): self
+    {
+        $this->supplier = '' === $supplier ? null : $supplier;
+
+        return $this;
+    }
+
+    /** What the supplier calls it: Gelato's productUid, a workshop's own reference. */
+    #[ORM\Column(type: 'string', length: 190, nullable: true)]
+    protected $supplierReference = null;
+
+    public function getSupplierReference(): ?string
+    {
+        if (null === $this->supplierReference && $this->isVariant() && method_exists($this, 'getPrincipal')) {
+            return $this->getPrincipal()?->getSupplierReference();
+        }
+
+        return $this->supplierReference;
+    }
+
+    public function setSupplierReference(?string $supplierReference): self
+    {
+        $this->supplierReference = '' === $supplierReference ? null : $supplierReference;
+
+        return $this;
+    }
+
+    /**
      * Sold to adults only (wine, spirits, sake): the age gate stands before
      * its page (Service\AgeGate). Its taxa may say so for it.
      */

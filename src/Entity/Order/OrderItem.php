@@ -99,6 +99,46 @@ class OrderItem
         return $this;
     }
 
+    /**
+     * Who this line is for, when it is not the order's shipping address: a
+     * card sent to each guest, a gift to somebody else.
+     * {name, street: [..], postcode, city, country, email?, phone?, company?}
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected $recipient = null;
+
+    public function getRecipient(): ?array
+    {
+        return $this->recipient;
+    }
+
+    public function setRecipient(?array $recipient): self
+    {
+        $this->recipient = $recipient ?: null;
+
+        return $this;
+    }
+
+    /**
+     * How this line is made: {files: [addresses of the print files], and any
+     * words of the personalisation (a text, a monogram)}. Handed to the
+     * product's supplier (Service\Supply).
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected $personalisation = null;
+
+    public function getPersonalisation(): ?array
+    {
+        return $this->personalisation;
+    }
+
+    public function setPersonalisation(?array $personalisation): self
+    {
+        $this->personalisation = $personalisation ?: null;
+
+        return $this;
+    }
+
     #[ORM\Column(type: 'text', nullable: true)]
     protected $comment;
 

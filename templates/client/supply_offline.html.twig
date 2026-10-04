@@ -1,0 +1,49 @@
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ '@marketplace.supply.page.title'|trans({reference: job.reference}) }}{% endblock %}
+{% block marketplace_crumbs %}{% endblock %}
+
+{% block marketplace_body %}
+<section class="marketplace-supply">
+    <h2>{{ '@marketplace.supply.page.title'|trans({reference: job.reference}) }} <span class="marketplace-state marketplace-state-{{ job.status.value }}">{{ ('@marketplace.supply.status.' ~ job.status.value)|trans }}</span></h2>
+    {% if saved %}<p class="marketplace-flash marketplace-flash-success" role="status">{{ '@marketplace.supply.page.saved'|trans }}</p>{% endif %}
+
+    <table class="marketplace-table">
+        <tbody>
+        {% for line in job.lines %}
+            <tr>
+                <td><strong>{{ line.quantity }} ×</strong></td>
+                <td>
+                    <strong>{{ line.title ?? line.product }}</strong> <small>({{ line.product }})</small>
+                    {% for key, value in line.options|default({}) %}{% if value is not iterable %}<br>{{ key }}: {{ value }}{% endif %}{% endfor %}
+                    {% for file in line.files|default([]) %}<br><a href="{{ file }}" rel="noopener">{{ '@marketplace.supply.brief.file'|trans({number: loop.index}) }}</a>{% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <p><strong>{{ '@marketplace.supply.brief.recipient'|trans }}</strong><br>
+        {{ job.recipient.name ?? '' }}{% if job.recipient.company ?? false %} · {{ job.recipient.company }}{% endif %}<br>
+        {{ (job.recipient.street ?? [])|join(', ') }}<br>
+        {{ job.recipient.postcode ?? '' }} {{ job.recipient.city ?? '' }} · {{ job.recipient.country ?? '' }}</p>
+
+    {% if not job.status.final %}
+    <form method="post" action="{{ action }}" class="marketplace-form">
+        <p>
+            <label for="supply-status">{{ '@marketplace.supply.page.status'|trans }}</label>
+            <select id="supply-status" name="status" required>
+                {% for state in states %}<option value="{{ state.value }}"{{ state == job.status ? ' selected' }}>{{ ('@marketplace.supply.status.' ~ state.value)|trans }}</option>{% endfor %}
+            </select>
+        </p>
+        <p><label for="supply-carrier">{{ '@marketplace.supply.page.carrier'|trans }}</label> <input id="supply-carrier" name="carrier" value="{{ job.carrier }}" maxlength="80"></p>
+        <p><label for="supply-tracking">{{ '@marketplace.supply.page.tracking_number'|trans }}</label> <input id="supply-tracking" name="tracking_number" value="{{ job.trackingNumber }}" maxlength="128"></p>
+        <p><label for="supply-url">{{ '@marketplace.supply.page.tracking_url'|trans }}</label> <input id="supply-url" name="tracking_url" type="url" value="{{ job.trackingUrl }}"></p>
+        <p><label for="supply-message">{{ '@marketplace.supply.page.message'|trans }}</label> <textarea id="supply-message" name="message" rows="3">{{ job.message }}</textarea></p>
+        <p><button type="submit" class="marketplace-button">{{ '@marketplace.supply.page.save'|trans }}</button></p>
+    </form>
+    {% elseif job.trackingNumber %}
+    <p>{{ job.carrier }} {{ job.trackingNumber }}{% if job.trackingUrl %} · <a href="{{ job.trackingUrl }}" rel="noopener">{{ job.trackingUrl }}</a>{% endif %}</p>
+    {% endif %}
+</section>
+{% endblock %}
