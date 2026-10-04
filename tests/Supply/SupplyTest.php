@@ -153,6 +153,7 @@ final class SupplyTest extends MarketplaceKernelTestCase
         self::assertCount(1, $sent);
         self::assertInstanceOf(TemplatedEmail::class, $sent[0]);
         self::assertSame('atelier@example.org', $sent[0]->getTo()[0]->getAddress());
+        self::assertSame($job->getReference(), $sent[0]->getSubject(), 'a subject, whatever the translator');
         $context = $sent[0]->getContext();
         self::assertSame('menu-a5-vergé', $context['supply']->lines[0]->productReference);
         self::assertTrue($signer->checkRequest(Request::create($context['link'])), 'the link is the workshop\'s key');

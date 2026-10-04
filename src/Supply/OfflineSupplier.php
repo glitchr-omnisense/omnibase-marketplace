@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A supplier without an API: the shop's partner workshop, a local printer.
@@ -40,6 +41,7 @@ class OfflineSupplier implements SupplierInterface
         #[Autowire('%marketplace.supply.offline.email%')] private readonly ?string $email = null,
         #[Autowire('%marketplace.supply.offline.name%')] private readonly ?string $partner = null,
         #[Autowire('%marketplace.supply.offline.link_ttl%')] private readonly int $linkTtl = 7776000,
+        private readonly ?TranslatorInterface $translator = null,
     ) {
     }
 
@@ -73,6 +75,7 @@ class OfflineSupplier implements SupplierInterface
         try {
             $this->mailer->send((new TemplatedEmail())
                 ->to(new Address($this->email, (string) $this->partner))
+                ->subject($this->subject('brief.subject', $order->reference))
                 ->htmlTemplate('@Marketplace/email/supply_brief.html.twig')
                 ->context(['supply' => $order, 'link' => $link, 'draft' => $draft, 'partner' => $this->partner]));
         } catch (\Throwable $e) {
@@ -103,6 +106,7 @@ class OfflineSupplier implements SupplierInterface
         if ($this->isConfigured()) {
             $this->mailer->send((new TemplatedEmail())
                 ->to(new Address($this->email, (string) $this->partner))
+                ->subject($this->subject('brief.cancelled_subject', $reference))
                 ->htmlTemplate('@Marketplace/email/supply_brief.html.twig')
                 ->context(['supply' => null, 'reference' => $reference, 'link' => $this->link($reference), 'cancelled' => true, 'draft' => false, 'partner' => $this->partner]));
         }
@@ -113,6 +117,11 @@ class OfflineSupplier implements SupplierInterface
     public function notify(string $body, array $headers = []): ?SupplyResult
     {
         return null; // it answers through its page, not a webhook
+    }
+
+    private function subject(string $key, string $reference): string
+    {
+        return $this->translator?->trans('@marketplace.supply.'.$key, ['{reference}' => $reference]) ?? $reference;
     }
 
     /** The workshop's page for a job: signed, valid marketplace.supply.offline.link_ttl seconds (90 days). */
