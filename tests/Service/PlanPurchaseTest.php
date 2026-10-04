@@ -4,12 +4,8 @@ namespace Tests\Base\Marketplace\Service;
 
 use Base\Marketplace\Entity\Entitlement;
 use Base\Marketplace\Entity\Order;
-use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Order\Subscription;
-use Base\Marketplace\Entity\Order\Transaction;
 use Base\Marketplace\Entity\Product;
-use Base\Marketplace\Entity\Sales\Region;
-use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Enum\ProductKind;
 use Base\Marketplace\Enum\SubscriptionStatus;
 use Base\Marketplace\Event\EntitlementEndedEvent;
@@ -23,37 +19,18 @@ use Base\Marketplace\Service\Entitlements;
 use Base\Marketplace\Service\Subscriptions;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\Base\Marketplace\MarketplaceKernelTestCase;
+use Tests\Base\Marketplace\ShopFixtureTrait;
 
 /** A plan or a credit pack paid: the rights and the credits of its buyer; then their end. */
 final class PlanPurchaseTest extends MarketplaceKernelTestCase
 {
-    private ?Store $store = null;
-    private ?Region $region = null;
+    use ShopFixtureTrait;
 
     private function product(ProductKind $kind, PlanTerms $terms, string $slug): Product
     {
-        if (null === $this->store) {
-            $this->store = new Store();
-            $this->store->setTitle('Plans');
-            $this->store->setSlug('plans-'.bin2hex(random_bytes(3)));
-            $this->store->setCurrency('EUR');
-            $this->entityManager->persist($this->store);
-            $this->region = new Region();
-            $this->region->setLabel('France');
-            $this->region->setSlug('fr-'.bin2hex(random_bytes(3)));
-            $this->region->setCurrency('EUR');
-            $this->region->setCountries(['FR']);
-            $this->region->setEnabled(true);
-            $this->store->addRegion($this->region);
-            $this->entityManager->persist($this->region);
-        }
-        $product = new Product(null, $this->store, 1900, 'EUR');
-        $product->setStore($this->store);
-        $product->setTitle($slug);
-        $product->setSlug($slug.'-'.bin2hex(random_bytes(3)));
+        $product = $this->goods($slug);
         $product->setKind($kind);
         $product->setPlan($terms);
-        $this->entityManager->persist($product);
         $this->entityManager->flush();
 
         return $product;
@@ -62,24 +39,7 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
     /** @param list<array{Product, int}> $lines */
     private function order(\Base\Entity\User $buyer, array $lines, array $details = []): Order
     {
-        $order = new Order($this->store);
-        $order->setCustomer($buyer);
-        $order->setRegion($this->region);
-        $this->entityManager->persist($order);
-        foreach ($lines as [$product, $quantity]) {
-            $item = new OrderItem($product, $quantity);
-            $order->addItem($item);
-            $this->entityManager->persist($item);
-        }
-        $transaction = new Transaction();
-        $transaction->setTotalAmount(1900);
-        $transaction->setCurrencyCode('EUR');
-        $transaction->setDetails($details);
-        $order->addTransaction($transaction);
-        $this->entityManager->persist($transaction);
-        $this->entityManager->flush();
-
-        return $order;
+        return $this->paidOrder($buyer, $lines, $details);
     }
 
     public function testAPassGrantsItsRightsAndItsCredits(): void
