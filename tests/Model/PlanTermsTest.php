@@ -37,7 +37,9 @@ final class PlanTermsTest extends TestCase
     {
         $pass = (new \ReflectionClass(Product::class))->newInstanceWithoutConstructor();
         self::assertSame(ProductKind::GOODS, $pass->getKind());
+        self::assertTrue($pass->isShippable());
         $pass->setKind(ProductKind::PLAN);
+        self::assertFalse($pass->isShippable(), 'a right is not sent: no address at checkout');
         $pass->setPlan(new PlanTerms(months: 18, grants: ['events.major' => 1, 'guests' => 30, 'list' => true]));
 
         $large = (new \ReflectionClass(Variant::class))->newInstanceWithoutConstructor();

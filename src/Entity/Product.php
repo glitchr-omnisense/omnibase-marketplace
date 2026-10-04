@@ -241,9 +241,10 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
      * selling something that lives online (an avatar item, in-game coins)
      * returns false and checkout asks for no address.
      */
+    /** Something to send: goods. A plan or a pack of credits is delivered as a right, with no address asked. */
     public function isShippable(): bool
     {
-        return true;
+        return \Base\Marketplace\Enum\ProductKind::GOODS === $this->getKind();
     }
 
     public function getMaxQuantity(): ?int

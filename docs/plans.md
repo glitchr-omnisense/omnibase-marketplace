@@ -74,7 +74,8 @@ $pack = (new Product(null, $store, 900, 'EUR'))->setKind(ProductKind::CREDIT_PAC
 A plan sold by size is a product with **variants**: each has its price, and
 its own terms are laid over its principal's (`['grants' => ['guests' => 150]]`
 on the variant "up to 150 guests"). Plans go through the cart like any
-product: coupons and promotions apply.
+product: coupons and promotions apply. A plan or a credit pack is not
+shippable (`Product::isShippable()`): checkout asks no address for it.
 
 ## What happens when it is paid
 
