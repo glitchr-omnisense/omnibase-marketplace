@@ -15,3 +15,4 @@ glitchr/omnitrade - and what any trade adds to it:
 - [A catalogue kept on a platform](platform-catalogue.md)
 - [The "dev" gateway and the shop's keys](dev-gateway-and-keys.md)
 - [Plans, subscriptions, rights and credits](plans.md)
+- [Lists of wishes, reservations, contributions](wishlists.md)

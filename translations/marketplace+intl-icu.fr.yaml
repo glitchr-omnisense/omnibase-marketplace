@@ -267,6 +267,18 @@ quote:
     valid: "Elle est valable jusqu'au {date}. Vous pouvez l'accepter et la régler en ligne depuis le lien ci-dessous."
   error:
     not_acceptable: "Cette cotation ne peut plus être acceptée."
+wishlist:
+  error:
+    url: "Cette adresse n'est pas celle d'une page."
+    closed: "Cette liste est fermée."
+    not_reservable: "Ce souhait ne se réserve pas : on y participe."
+    not_fund: "Ce souhait se réserve : on n'y participe pas en argent."
+    taken: "{left, plural, =0 {Quelqu'un vient de le réserver.} one {Il n'en reste qu'un.} other {Il n'en reste que #.}}"
+    share_price: "Un cadeau partagé a un prix."
+    no_payout: "Les participations ne sont pas encore ouvertes pour cette liste."
+    minimum: "La participation minimale est de {minimum} €."
+    too_much: "Il ne manque plus que {left} € pour ce cadeau."
+    payment: "Le paiement est indisponible pour le moment. Réessayez un peu plus tard."
 catalogue:
   synced: "{count} produit(s) lus depuis {gateway}."
 company:

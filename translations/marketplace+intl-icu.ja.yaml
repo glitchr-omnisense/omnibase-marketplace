@@ -266,6 +266,18 @@ quote:
     valid: "有効期限は {date} です。下のリンクからオンラインで承諾・お支払いいただけます。"
   error:
     not_acceptable: "このお見積もりは承諾できなくなりました。"
+wishlist:
+  error:
+    url: "ページのアドレスではありません。"
+    closed: "このリストは締め切られました。"
+    not_reservable: "この品は予約ではなく、ご支援で贈れます。"
+    not_fund: "この品は予約制です。金額でのご支援はできません。"
+    taken: "{left, plural, =0 {たった今、予約されました。} other {残りは#点です。}}"
+    share_price: "共同の贈り物には価格が必要です。"
+    no_payout: "このリストへのご支援はまだ受け付けていません。"
+    minimum: "ご支援は{minimum}ユーロからです。"
+    too_much: "この贈り物に必要なのはあと{left}ユーロです。"
+    payment: "ただいまお支払いをご利用いただけません。しばらくしてからお試しください。"
 catalogue:
   synced: "{gateway} から {count} 件の商品を読み込みました。"
 company:

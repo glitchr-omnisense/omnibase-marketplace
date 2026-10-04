@@ -67,6 +67,10 @@ return function (ContainerConfigurator $configurator) {
             ...(class_exists('Omnitrade\\Request\\FetchProducts') ? [] : [$src . '/Catalogue/', $src . '/Console/CatalogueSyncCommand.php']),
             // Subscriptions need glitchr/omnitrade's (Model\Subscription, from its Connect and subscriptions release on).
             ...(class_exists('Omnitrade\\Model\\Subscription') ? [] : [$src . '/Service/Subscriptions.php', $src . '/EventListener/SubscriptionNotificationListener.php', $src . '/Console/SubscriptionsCommand.php']),
+            // Lists: reading an address needs glitchr/omnitrade, contributions and payout accounts its Connect.
+            ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Wishlist/ProductLookup.php']),
+            ...(class_exists('Omnitrade\\Model\\Account') ? [] : [$src . '/Wishlist/Contributions.php', $src . '/Wishlist/PayoutAccounts.php', $src . '/EventListener/WishlistNotificationListener.php']),
+            $src . '/Wishlist/WishlistException.php',
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),

@@ -267,6 +267,18 @@ quote:
     valid: "It is valid until {date}. You can accept and pay it online from the link below."
   error:
     not_acceptable: "This quotation can no longer be accepted."
+wishlist:
+  error:
+    url: "This is not the address of a page."
+    closed: "This list is closed."
+    not_reservable: "This wish is not reserved: one contributes to it."
+    not_fund: "This wish is reserved: it takes no contribution in money."
+    taken: "{left, plural, =0 {Somebody has just reserved it.} one {Only one is left.} other {Only # are left.}}"
+    share_price: "A shared gift has a price."
+    no_payout: "Contributions are not open for this list yet."
+    minimum: "The smallest contribution is €{minimum}."
+    too_much: "Only €{left} is missing for this gift."
+    payment: "Payment is unavailable for the moment. Please try again a little later."
 catalogue:
   synced: "{count} product(s) read from {gateway}."
 company:
