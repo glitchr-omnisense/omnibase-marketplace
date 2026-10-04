@@ -15,7 +15,7 @@
         <tbody>
         {% for line in cart.items %}
             <tr>
-                <td>{% if line.product %}<a href="{{ path('marketplace_product', {store: cart.store.slug, slug: line.product.slug}) }}">{{ line.product.title }}</a>{% else %}{{ line }}{% endif %}</td>
+                <td>{% if line.product %}<a href="{{ path('marketplace_product', {store: cart.store.slug, slug: line.product.slug}) }}">{{ line.product.title }}</a>{% else %}{{ line }}{% endif %}{% if line.optionsLabel %}<small class="marketplace-line-options">{{ line.optionsLabel }}</small>{% endif %}</td>
                 <td class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: line.unitPrice, currency: cart.currency} %}</td>
                 <td class="num">
                     <form method="post" action="{{ path('marketplace_cart_update', {order: cart.id, item: line.id}) }}" class="marketplace-qty">

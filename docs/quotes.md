@@ -38,7 +38,33 @@ marketplace:
         store: cave            # the store a quote's order is made in, when neither it nor its products name one
         validity: 30           # days a quote sent holds when no date is set
         recipient: '%env(MAILER_CONTACT)%'
+        path: cotation         # the public path: "devis" on a site without omnibase/forge
+        phone: true            # the form asks a phone number (optional)
+        attachments: true      # and takes files
+        consent: false         # true: the data-protection box must be ticked
 ```
+
+## The form
+
+`/cotation` by default; `marketplace.quotes.path` moves the form and the
+quote's page together (`/devis`, `/devis/<token>`) - the route names do not
+change. omnibase/forge keeps `/devis` for a studio's quotes: leave
+`cotation` where both are installed.
+
+The request takes a **phone number** (`Quote::$phone`) and **files** - a
+logo, a photo of the shopfront, a plan (PDF, images, AI, SVG...) - kept out
+of the public directory and downloaded from the back office
+([files](pickup-and-options.md)); their number, weight and kinds are
+`marketplace.attachments.*`. A file refused is said on its field and nothing
+is kept.
+
+Robots: the form has a **trap** (a `website` field people do not see): filled,
+the sender is thanked and nothing is stored nor mailed. Under the form,
+glitchr/omnibase's data-protection notice (`Base\Form\Type\PrivacyType`),
+with its box to tick when `consent` is on. `Form\QuoteRequestType` takes the
+same as options: `phone`, `attachments`, `trap`, `privacy` (true, a
+translation key of the site's own notice, or false), `privacy_consent`,
+`privacy_parameters`.
 
 The pipeline is a page of the back office outside the CRUDs: import it in
 the application's routes (as omnibase/agenda's calendar page):
@@ -50,7 +76,7 @@ marketplace_admin_controller:
     type: attribute
 ```
 
-Routes: `marketplace_quote_request` (/cotation), `marketplace_quote`
+Routes: `marketplace_quote_request` (/cotation, or `/<path>`), `marketplace_quote`
 (/cotation/{token}), `marketplace_quote_accept`, `marketplace_quote_decline`
 (POST), `marketplace_quotes` (/mes-cotations), `marketplace_admin_quotes`
 (the pipeline, in the back office's nest).

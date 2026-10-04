@@ -18,3 +18,4 @@ glitchr/omnitrade - and what any trade adds to it:
 - [Lists of wishes, reservations, contributions](wishlists.md)
 - [Referrals](referrals.md)
 - [Made to order: suppliers](supply.md)
+- [Hand-overs, options, starting prices, files](pickup-and-options.md)

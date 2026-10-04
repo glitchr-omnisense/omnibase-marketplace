@@ -51,6 +51,8 @@ class ProductCrudController extends AbstractMarketplaceCrudController
         // fields in the product's form, down to properties nothing can read (Thread::$ownerPositions).
         yield SelectField::new('parent', 'Store')->setColumns(6);
         yield IntegerField::new('unitPrice')->setColumns(3);
+        // A starting price shown as "from" (what is priced on request); empty: the lowest of the variants.
+        yield IntegerField::new('priceFrom', '@marketplace.product.price_from_field')->setColumns(3)->setRequired(false)->hideOnIndex();
         yield CurrencyField::new('currency')->setColumns(3);
         yield IntegerField::new('stock')->setColumns(3);
         yield SelectField::new('availability')->setColumns(3)->hideOnIndex();

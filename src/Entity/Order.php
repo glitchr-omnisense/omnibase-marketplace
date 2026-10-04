@@ -324,6 +324,17 @@ class Order implements IconizeInterface, LinkableInterface
         return $this->items;
     }
 
+    /** @return list<\Base\Marketplace\Entity\Attachment> the files the buyer gave for its lines */
+    public function getAttachments(): array
+    {
+        $files = [];
+        foreach ($this->getItems() as $item) {
+            array_push($files, ...$item->getAttachments()->toArray());
+        }
+
+        return $files;
+    }
+
     public function addItem(OrderItem $item): self
     {
         if (OrderState::CART != $this->getState()) {

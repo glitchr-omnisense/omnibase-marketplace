@@ -6,6 +6,10 @@ store:
   closed: "This store is closed for now: you can look around, but not buy."
   empty: "The shelves are empty for now."
 product:
+  price_from: "from"
+  price_excl_vat: "excl. VAT"
+  price_incl_vat: "incl. VAT"
+  price_from_field: "Starting price shown (cents; empty: the lowest of the variants)"
   add: "Add to cart"
   unavailable: "Unavailable"
   stock: "{count, plural, =0 {Out of stock} one {Only one left} other {# in stock}}"
@@ -170,6 +174,8 @@ filters:
   reset: "Clear the filters"
   count: "{count, plural, =0 {No reference} one {# reference} other {# references}}"
 quote:
+  attachments: "Attachments"
+  phone_invalid: "This phone number does not look valid."
   request_title: "Ask for a quotation"
   request_lead: "Importers, distributors, restaurants: tell us what you are looking for, the volumes and the destination. We come back to you with a priced offer."
   requested_title: "Request received"
@@ -221,6 +227,9 @@ quote:
     DAP: "delivered at place"
     DDP: "delivered duty paid"
   form:
+    phone: "Phone"
+    files: "Attachments"
+    files_help: "A logo, a photo of the place, a plan: PDF, images, AI, SVG."
     name: "Your name"
     email: "Your e-mail address"
     company: "Company"
@@ -309,6 +318,61 @@ supply:
     save: "Save"
 catalogue:
   synced: "{count} product(s) read from {gateway}."
+pickup:
+  title: "Your order"
+  ready_at: "ready at {time}"
+  mode:
+    pickup: "Collected at the shop"
+    delivery: "Local delivery"
+    shipping: "Shipped"
+  status:
+    checkout: "Waiting for payment"
+    received: "Received"
+    accepted: "Accepted"
+    preparing: "Being prepared"
+    ready: "Ready"
+    out_for_delivery: "On its way"
+    done: "Handed over"
+    cancelled: "Cancelled"
+    refused: "Refused"
+    refunded: "Refunded"
+  error:
+    mode: "This way of handing over is not offered."
+    day: "This day is past."
+    out_of_zone: "We do not deliver to {postcode}."
+    address: "The delivery address is missing."
+    placed: "This order is already placed."
+options:
+  required: "to choose"
+  several: "{maximum, plural, =0 {any} other {# at most}}{minimum, plural, =0 {} other {, # at least}}"
+  error:
+    unknown: "{product} has no such option."
+    unavailable: "{option} is no longer available."
+    single: "{group}: one option only."
+    minimum: "{group}: {minimum, plural, one {one choice to make} other {# choices to make}}."
+    maximum: "{group}: {maximum, plural, one {one choice only} other {# choices at most}}."
+  admin:
+    product: "Product"
+    group: "Group (Cooking, Extras…)"
+    multiple: "Several choices"
+    minimum: "Minimum"
+    maximum: "Maximum"
+    position: "Order"
+    options: "Options"
+    label: "Option"
+    price: "Surcharge (cents, before VAT)"
+    default: "Preselected"
+    available: "Available"
+attachment:
+  yours: "Your artwork"
+  send: "Send the file"
+  added: "{count, plural, one {File received} other {# files received}}."
+  line: "The buyer's files"
+  error:
+    count: "{maximum, plural, one {One file only} other {# files at most}}."
+    upload: "{name} could not be uploaded."
+    size: "{name} is over {maximum} MB."
+    type: "{name}: this kind of file is not accepted ({types})."
 company:
   siret: "Your company's SIRET (optional)"
   siret_help: "For a French company: we check its name and address with the State's register."

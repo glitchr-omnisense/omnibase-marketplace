@@ -1,0 +1,29 @@
+{#
+ # A hand-over (Entity\Order\Pickup): how, for when, where it stands.
+ # Variables: pickup. Used by the tracking page; an application includes it
+ # on its own (an order's page, a mail).
+ #}
+<section class="marketplace-pickup marketplace-pickup-{{ pickup.status.value }}">
+    <h2>{{ pickup.order.reference }} <span class="marketplace-state marketplace-state-{{ pickup.status.value }}">{{ ('@marketplace.' ~ pickup.status.trans)|trans }}</span></h2>
+    <p class="marketplace-order-meta">
+        {{ ('@marketplace.' ~ pickup.mode.trans)|trans }} · {{ pickup.day|format_date('full') }}{% if pickup.slot %} · {{ pickup.slot }}{% endif %}
+        {% if pickup.readyAt %} · {{ '@marketplace.pickup.ready_at'|trans({'{time}': pickup.readyAt|date('H:i')}) }}{% endif %}
+    </p>
+    {% if pickup.step >= 0 %}
+    <ol class="marketplace-pickup-steps">
+        {% for step in pickup.flow %}{% if step.value != 'checkout' %}
+        <li class="{{ loop.index0 < pickup.step ? 'is-done' : (loop.index0 == pickup.step ? 'is-current') }}">{{ ('@marketplace.' ~ step.trans)|trans }}</li>
+        {% endif %}{% endfor %}
+    </ol>
+    {% endif %}
+    {% if pickup.mode.needsAddress and pickup.address %}
+    <p class="marketplace-pickup-address">{{ pickup.contactName }}<br>{{ pickup.address|nl2br }}<br>{{ pickup.postcode }} {{ pickup.city }}</p>
+    {% endif %}
+    {% if pickup.trackingNumber %}<p>{{ '@marketplace.shipping.tracking'|trans }} : {{ pickup.trackingNumber }}</p>{% endif %}
+    <ul class="marketplace-plain">
+        {% for line in pickup.order.items %}
+        <li>{{ line.quantity }} × {{ line.product ? line.product.title : line }}{% if line.optionsLabel %} <small>({{ line.optionsLabel }})</small>{% endif %}</li>
+        {% endfor %}
+    </ul>
+    <p class="marketplace-pickup-total">{% include '@Marketplace/client/_price.html.twig' with {amount: pickup.order.netPrice, currency: pickup.order.currency} %}</p>
+</section>

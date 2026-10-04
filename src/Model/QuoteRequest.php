@@ -21,6 +21,10 @@ final class QuoteRequest
     #[Assert\NotBlank, Assert\Email, Assert\Length(max: 180)]
     public string $email = '';
 
+    /** A number to be called back on. */
+    #[Assert\Length(max: 32), Assert\Regex(pattern: '/^[0-9+().\s\-]{6,}$/', message: 'quote.phone_invalid')]
+    public ?string $phone = null;
+
     #[Assert\Length(max: 180)]
     public ?string $companyName = null;
 
@@ -59,4 +63,15 @@ final class QuoteRequest
 
     /** The products the request starts from (ids), when it was asked from their pages. */
     public array $products = [];
+
+    /** @var list<\Symfony\Component\HttpFoundation\File\UploadedFile> a logo, a photo of the place, a plan: checked by Service\Attachments */
+    public array $files = [];
+
+    /** The trap: a field people do not see, and robots fill. */
+    public ?string $website = null;
+
+    public function isRobot(): bool
+    {
+        return '' !== trim((string) $this->website);
+    }
 }

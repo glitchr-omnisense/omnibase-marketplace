@@ -41,7 +41,8 @@
             {% for quote in quotes %}
                 <a class="mq-card" href="{{ links[quote.id] }}">
                     <strong>{{ quote.reference }} · {{ quote.title }}</strong>
-                    <small>{{ quote.contactName }}{% if quote.companyName %} — {{ quote.companyName }}{% endif %}</small>
+                    <small>{{ quote.contactName }}{% if quote.companyName %} — {{ quote.companyName }}{% endif %}{% if quote.phone %} · {{ quote.phone }}{% endif %}</small>
+                    {% if quote.attachments|length %}<small><i class="fa-solid fa-paperclip"></i> {{ quote.attachments|length }}</small>{% endif %}
                     {% if quote.terms or quote.country %}<small>{{ quote.terms }}{% if quote.country %} · {{ quote.country }}{% endif %}{% if quote.volume %} · {{ quote.volume }}{% endif %}</small>{% endif %}
                     <small>{{ quote.createdAt|date('d/m/Y') }}{% if quote.validUntil %} → {{ quote.validUntil|date('d/m/Y') }}{% endif %}</small>
                     {% if quote.total %}<div class="mq-total">{{ quote.total|format_currency(quote.currency, {use_rate: false}) }}</div>{% endif %}

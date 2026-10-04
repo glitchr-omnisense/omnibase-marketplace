@@ -1,0 +1,24 @@
+{#
+ # A product's options (Product\OptionGroup), inside the form that adds it to
+ # the cart: a radio per option of a single-choice group, a box per option of
+ # a multiple one. Posts options[<group id>] (an id, or a list of ids);
+ # Service\ProductOptions checks them. Variables: product.
+ #}
+{% if product.hasOptions %}
+<div class="marketplace-options">
+    {% for group in product.optionGroups %}
+    <fieldset class="marketplace-option-group">
+        <legend>{{ group.label(app.request.locale) }}
+            <small>{% if group.multiple %}{{ '@marketplace.options.several'|trans({'{minimum}': group.minimum, '{maximum}': group.maximum ?? 0}) }}{% elseif group.required %}{{ '@marketplace.options.required'|trans }}{% endif %}</small>
+        </legend>
+        {% for option in group.availableOptions %}
+        <label class="marketplace-option">
+            <input type="{{ group.multiple ? 'checkbox' : 'radio' }}" name="options[{{ group.id }}]{{ group.multiple ? '[]' }}" value="{{ option.id }}"{{ option.default ? ' checked' }}{{ not group.multiple and group.required ? ' required' }}>
+            <span>{{ option.label(app.request.locale) }}</span>
+            {% if option.price > 0 %}<span>+ {% include '@Marketplace/client/_price.html.twig' with {amount: option.price, currency: product.currency} only %}</span>{% endif %}
+        </label>
+        {% endfor %}
+    </fieldset>
+    {% endfor %}
+</div>
+{% endif %}

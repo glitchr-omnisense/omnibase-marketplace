@@ -6,6 +6,10 @@ store:
   closed: "Cette boutique est fermée pour le moment : tu peux regarder, mais pas acheter."
   empty: "Les rayons sont vides pour l'instant."
 product:
+  price_from: "dès"
+  price_excl_vat: "HT"
+  price_incl_vat: "TTC"
+  price_from_field: "Prix de départ affiché (centimes, vide : le plus bas des variantes)"
   add: "Ajouter au panier"
   unavailable: "Indisponible"
   stock: "{count, plural, =0 {Plus en stock} one {Plus qu'un exemplaire} other {# en stock}}"
@@ -170,6 +174,8 @@ filters:
   reset: "Effacer les filtres"
   count: "{count, plural, =0 {Aucune référence} one {# référence} other {# références}}"
 quote:
+  attachments: "Pièces jointes"
+  phone_invalid: "Ce numéro de téléphone ne semble pas valide."
   request_title: "Demander une cotation"
   request_lead: "Professionnels, importateurs, restaurants : dites-nous ce que vous cherchez, les volumes et la destination. Nous revenons vers vous avec une offre chiffrée."
   requested_title: "Demande reçue"
@@ -221,6 +227,9 @@ quote:
     DAP: "rendu au lieu convenu"
     DDP: "rendu droits acquittés"
   form:
+    phone: "Téléphone"
+    files: "Pièces jointes"
+    files_help: "Un logo, une photo des lieux, un plan : PDF, images, AI, SVG."
     name: "Votre nom"
     email: "Votre adresse e-mail"
     company: "Entreprise"
@@ -309,6 +318,61 @@ supply:
     save: "Enregistrer"
 catalogue:
   synced: "{count} produit(s) lus depuis {gateway}."
+pickup:
+  title: "Suivi de votre commande"
+  ready_at: "prête à {time}"
+  mode:
+    pickup: "Retrait sur place"
+    delivery: "Livraison locale"
+    shipping: "Expédition"
+  status:
+    checkout: "En attente de paiement"
+    received: "Reçue"
+    accepted: "Acceptée"
+    preparing: "En préparation"
+    ready: "Prête"
+    out_for_delivery: "En route"
+    done: "Remise"
+    cancelled: "Annulée"
+    refused: "Refusée"
+    refunded: "Remboursée"
+  error:
+    mode: "Ce mode de remise n'est pas proposé."
+    day: "Ce jour est passé."
+    out_of_zone: "Nous ne livrons pas au {postcode}."
+    address: "Il manque l'adresse de livraison."
+    placed: "Cette commande est déjà passée."
+options:
+  required: "à choisir"
+  several: "{maximum, plural, =0 {au choix} other {# au plus}}{minimum, plural, =0 {} other {, # au moins}}"
+  error:
+    unknown: "Cette option n'existe pas pour {product}."
+    unavailable: "{option} n'est plus disponible."
+    single: "{group} : une seule option."
+    minimum: "{group} : {minimum, plural, one {un choix à faire} other {# choix à faire}}."
+    maximum: "{group} : {maximum, plural, one {un seul choix} other {# choix au plus}}."
+  admin:
+    product: "Produit"
+    group: "Groupe (Cuisson, Suppléments…)"
+    multiple: "Plusieurs choix"
+    minimum: "Minimum"
+    maximum: "Maximum"
+    position: "Ordre"
+    options: "Options"
+    label: "Option"
+    price: "Supplément (centimes HT)"
+    default: "Préselectionnée"
+    available: "Disponible"
+attachment:
+  yours: "Votre visuel"
+  send: "Envoyer le fichier"
+  added: "{count, plural, one {Fichier reçu} other {# fichiers reçus}}."
+  line: "Fichiers du client"
+  error:
+    count: "{maximum, plural, one {Un seul fichier} other {# fichiers au plus}}."
+    upload: "{name} n'a pas pu être envoyé."
+    size: "{name} dépasse {maximum} Mo."
+    type: "{name} : ce type de fichier n'est pas accepté ({types})."
 company:
   siret: "SIRET de votre entreprise (facultatif)"
   siret_help: "Pour une entreprise française : nous vérifions sa raison sociale et son adresse auprès du registre de l'État."

@@ -9,6 +9,7 @@ use Base\Marketplace\Entity\Product\Attribute\Hyperlink;
 use Base\Marketplace\Entity\Product\Feature;
 use Base\Marketplace\Entity\Product\Identifier;
 use Base\Marketplace\Entity\Product\Image;
+use Base\Marketplace\Entity\Product\OptionGroup;
 use Base\Marketplace\Entity\Sales\Channel;
 use Base\Marketplace\Model\MerchantInterface;
 use Base\Marketplace\Enum\AssociationType;
@@ -157,6 +158,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $this->identifiers = new ArrayCollection();
         $this->channels = new ArrayCollection();
         $this->associations = new ArrayCollection();
+        $this->optionGroups = new ArrayCollection();
     }
 
     public function getHeadline(?string $locale = null, int $inheritanceDepthIfNotSet = 0): ?string
@@ -318,9 +320,57 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     #[ORM\Column(type: 'integer')]
     protected $unitPrice;
 
+    /**
+     * The lowest and the highest price it sells at: its variants' still for
+     * sale when it has some (a banner by the square metre, a print by the
+     * hundred), its own otherwise. Smallest unit, before VAT.
+     *
+     * @return array{0: int, 1: int}
+     */
     public function getPriceRange(): array
     {
-        return [$this->getPrice(), $this->getPrice()];
+        $prices = [];
+        foreach ($this->getVariants() ?? [] as $variant) {
+            if ($variant instanceof self && $variant->isForSell() && null !== $variant->getUnitPrice()) {
+                $prices[] = (int) $variant->getUnitPrice();
+            }
+        }
+        $prices = $prices ?: [(int) $this->getPrice()];
+
+        return [min($prices), max($prices)];
+    }
+
+    /**
+     * A starting price typed by hand, for what is priced on request (a sign
+     * "from 300 €"): shown as such, never charged - the unit price is.
+     */
+    #[ORM\Column(type: 'integer', nullable: true)]
+    protected $priceFrom = null;
+
+    public function getPriceFrom(): ?int
+    {
+        return $this->priceFrom;
+    }
+
+    public function setPriceFrom(?int $priceFrom): self
+    {
+        $this->priceFrom = null === $priceFrom ? null : max(0, $priceFrom);
+
+        return $this;
+    }
+
+    /** The price a list shows: the one typed (priceFrom), else the lowest of its range. */
+    public function getStartingPrice(): int
+    {
+        return $this->priceFrom ?? $this->getPriceRange()[0];
+    }
+
+    /** Whether that price is a "from": typed as one, or the lowest of several. */
+    public function isPricedFrom(): bool
+    {
+        [$lowest, $highest] = $this->getPriceRange();
+
+        return null !== $this->priceFrom || $lowest !== $highest;
     }
 
     /**
@@ -1144,6 +1194,48 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $this->addAssociation($association = new Association($this, $target, $type, $notes));
 
         return $association;
+    }
+
+    /** @var Collection<int, OptionGroup> what the buyer chooses on it: a cooking, extras, a finish */
+    #[ORM\OneToMany(targetEntity: OptionGroup::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
+    protected $optionGroups;
+
+    /** @return Collection<int, OptionGroup> its own; a variant without any offers its principal's */
+    public function getOptionGroups(): Collection
+    {
+        $groups = $this->optionGroups ?? new ArrayCollection();
+        if ($groups->isEmpty() && $this->isVariant() && method_exists($this, 'getPrincipal') && $this->getPrincipal()) {
+            return $this->getPrincipal()->getOptionGroups();
+        }
+
+        return $groups;
+    }
+
+    public function hasOptions(): bool
+    {
+        return !$this->getOptionGroups()->isEmpty();
+    }
+
+    public function addOptionGroup(OptionGroup $group): self
+    {
+        $this->optionGroups ??= new ArrayCollection();
+        if (!$this->optionGroups->contains($group)) {
+            $group->setProduct($this);
+            if (0 === $group->getPosition()) {
+                $group->setPosition($this->optionGroups->count());
+            }
+            $this->optionGroups->add($group);
+        }
+
+        return $this;
+    }
+
+    public function removeOptionGroup(OptionGroup $group): self
+    {
+        $this->optionGroups?->removeElement($group);
+
+        return $this;
     }
 
     /**

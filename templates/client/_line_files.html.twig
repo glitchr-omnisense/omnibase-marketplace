@@ -1,0 +1,11 @@
+{#
+ # The buyer's files for a line of their cart: the artwork of a printed item.
+ # Not shown by the bundle's cart (most shops sell nothing to print): include
+ # it where a line needs it. Variables: cart, line.
+ #}
+<form method="post" action="{{ path('marketplace_cart_files', {order: cart.id, item: line.id}) }}" enctype="multipart/form-data" class="marketplace-line-files">
+    <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+    {% if line.attachments|length %}<ul class="marketplace-plain">{% for file in line.attachments %}<li><i class="fa-solid fa-paperclip"></i> {{ file.name }}</li>{% endfor %}</ul>{% endif %}
+    <label>{{ '@marketplace.attachment.yours'|trans }} <input type="file" name="files[]" multiple></label>
+    <button class="marketplace-btn marketplace-btn-sm" type="submit">{{ '@marketplace.attachment.send'|trans }}</button>
+</form>

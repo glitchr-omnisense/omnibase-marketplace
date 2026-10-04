@@ -54,7 +54,15 @@ class CartController extends AbstractController
         }
 
         try {
-            $this->cart->add($product, max(1, $request->request->getInt('quantity', 1)));
+            // options[<group id>] = an option's id, or a list of them (Product\OptionGroup).
+            $options = [];
+            $posted = (array) ($request->request->all()['options'] ?? []);
+            array_walk_recursive($posted, function ($id) use (&$options): void {
+                if ('' !== (string) $id) {
+                    $options[] = (int) $id;
+                }
+            });
+            $this->cart->add($product, max(1, $request->request->getInt('quantity', 1)), $options);
             $this->addFlash('success', $this->translator->trans('@marketplace.cart.added', ['{product}' => (string) $product]));
         } catch (CartException $e) {
             $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
@@ -166,6 +174,28 @@ class CartController extends AbstractController
     }
 
     /** @return array{0: Order, 1: OrderItem} */
+    /** The buyer's files for a line of their cart - the artwork of a printed item (Service\Attachments). */
+    #[Route('/panier/{order}/ligne/{item}/fichiers', name: 'marketplace_cart_files', methods: ['POST'], requirements: ['order' => '\d+', 'item' => '\d+'])]
+    public function Files(Request $request, int $order, int $item, \Base\Marketplace\Service\Attachments $attachments): Response
+    {
+        $this->csrf($request, 'marketplace_cart');
+        [$cart, $line] = $this->line($order, $item);
+
+        try {
+            $this->cart->assertMine($cart);
+            $files = $request->files->all()['files'] ?? [];
+            $stored = $attachments->attachToItem($line, \is_array($files) ? $files : [$files]);
+            $this->entityManager->flush();
+            if ($stored) {
+                $this->addFlash('success', $this->translator->trans('@marketplace.attachment.added', ['{count}' => \count($stored)]));
+            }
+        } catch (CartException $e) {
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
+        }
+
+        return $this->redirectToRoute('marketplace_cart');
+    }
+
     private function line(int $order, int $item): array
     {
         $cart = $this->entityManager->getRepository(Order::class)->find($order);

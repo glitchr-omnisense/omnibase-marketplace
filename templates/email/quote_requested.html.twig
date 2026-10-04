@@ -3,9 +3,13 @@
 {% block subject %}{{ '@marketplace.quote.mail.requested_tag'|trans }} {{ quote.reference }}{% endblock %}
 
 {% block content %}
-<p><strong>{{ quote.contactName }}</strong> &lt;{{ quote.email }}&gt;{% if quote.companyName %} · {{ quote.companyName }}{% endif %}</p>
+<p><strong>{{ quote.contactName }}</strong> &lt;{{ quote.email }}&gt;{% if quote.phone %} · {{ quote.phone }}{% endif %}{% if quote.companyName %} · {{ quote.companyName }}{% endif %}</p>
 {% if quote.companyBadge %}<p>{{ quote.companyBadge }}</p>{% elseif quote.vatNumber %}<p>{{ quote.vatNumber }} ({{ quote.company.status ?? '?' }})</p>{% endif %}
 <p><strong>{{ quote.title }}</strong></p>
 <p>{% if quote.direction %}{{ ('@marketplace.quote.direction.' ~ quote.direction.value)|trans }} · {% endif %}{% if quote.terms %}{{ quote.terms }} · {% endif %}{% if quote.country %}{{ quote.country }}{% endif %}{% if quote.volume %} · {{ quote.volume }}{% endif %}{% if quote.targetDate %} · {{ quote.targetDate|date('d/m/Y') }}{% endif %}</p>
 <p>{{ quote.request|nl2br }}</p>
+{% if quote.attachments|length %}
+<p>{{ '@marketplace.quote.attachments'|trans }} :</p>
+<ul>{% for file in quote.attachments %}<li><a href="{{ url('marketplace_attachment', {id: file.id}) }}">{{ file.name }}</a></li>{% endfor %}</ul>
+{% endif %}
 {% endblock %}

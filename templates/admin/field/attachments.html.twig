@@ -1,0 +1,9 @@
+{# The files given with a quote request or an order line (Entity\Attachment): each a download, for whoever may see the shop's screens. #}
+{%- set files = field.value -%}
+{%- if files is empty -%}
+    <span style="color: var(--admin-muted)">—</span>
+{%- else -%}
+    {%- for file in files -%}
+        <a href="{{ path('marketplace_attachment', {id: file.id}) }}" download data-turbo="false" data-transparent="false"><i class="fa-solid fa-paperclip"></i> {{ file.name }}</a> <small>({{ (file.size / 1024)|round(0, 'ceil') }} ko)</small>{{ not loop.last ? '<br>' }}
+    {%- endfor -%}
+{%- endif -%}

@@ -4,12 +4,15 @@ namespace Base\Marketplace\Form;
 
 use Base\Marketplace\Enum\Incoterm;
 use Base\Marketplace\Enum\TradeDirection;
+use Base\Form\Type\PrivacyType;
 use Base\Marketplace\Model\QuoteRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -20,6 +23,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * (checked: a SIRET at the State's register, an EU VAT number at VIES),
  * what, which way, on which terms, where, how much, for when. The trade
  * fields are left out with `trade: false` (a studio's quote needs none).
+ * Options: phone, attachments (files, checked by Service\Attachments), trap
+ * (the `website` field robots fill), privacy / privacy_consent /
+ * privacy_parameters (glitchr/omnibase's PrivacyType).
  */
 class QuoteRequestType extends AbstractType
 {
@@ -32,6 +38,11 @@ class QuoteRequestType extends AbstractType
         $builder
             ->add('contactName', TextType::class, ['label' => '@marketplace.quote.form.name', 'attr' => ['autocomplete' => 'name']])
             ->add('email', EmailType::class, ['label' => '@marketplace.quote.form.email', 'attr' => ['autocomplete' => 'email']])
+        ;
+        if ($options['phone']) {
+            $builder->add('phone', TelType::class, ['label' => '@marketplace.quote.form.phone', 'required' => false, 'attr' => ['autocomplete' => 'tel']]);
+        }
+        $builder
             ->add('companyName', TextType::class, ['label' => '@marketplace.quote.form.company', 'required' => false, 'attr' => ['autocomplete' => 'organization']])
             ->add('siret', TextType::class, [
                 'label' => '@marketplace.company.siret',
@@ -59,6 +70,30 @@ class QuoteRequestType extends AbstractType
                 'help' => '@marketplace.quote.form.request_help',
                 'attr' => ['rows' => 7],
             ]);
+
+        if ($options['attachments']) {
+            // Checked in the controller by Service\Attachments (number, weight, kind): the limits are the shop's configuration.
+            $builder->add('files', FileType::class, [
+                'label' => '@marketplace.quote.form.files',
+                'help' => '@marketplace.quote.form.files_help',
+                'required' => false,
+                'multiple' => true,
+            ]);
+        }
+        if ($options['trap']) {
+            // Off-screen for people (and for screen readers), filled by robots.
+            $builder->add('website', TextType::class, ['required' => false, 'label' => false,
+                'row_attr' => ['class' => 'base-trap', 'aria-hidden' => 'true', 'style' => 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden'],
+                'attr' => ['tabindex' => '-1', 'autocomplete' => 'off']]);
+        }
+        if (false !== $options['privacy'] || $options['privacy_consent']) {
+            // glitchr/omnibase's notice, and the box to tick when the shop asks for it.
+            $builder->add('privacy', PrivacyType::class, [
+                'notice' => $options['privacy'],
+                'notice_parameters' => $options['privacy_parameters'],
+                'consent' => $options['privacy_consent'],
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -68,7 +103,19 @@ class QuoteRequestType extends AbstractType
             'translation_domain' => 'marketplace',
             'trade' => true,
             'preferred_countries' => ['FR', 'JP'],
+            'phone' => true,
+            'attachments' => true,
+            'trap' => true,
+            // true: omnibase's notice; a translation key: the shop's own; false: none.
+            'privacy' => true,
+            'privacy_consent' => false,
+            'privacy_parameters' => [],
         ]);
         $resolver->setAllowedTypes('trade', 'bool');
+        foreach (['phone', 'attachments', 'trap', 'privacy_consent'] as $option) {
+            $resolver->setAllowedTypes($option, 'bool');
+        }
+        $resolver->setAllowedTypes('privacy', ['bool', 'string']);
+        $resolver->setAllowedTypes('privacy_parameters', 'array');
     }
 }

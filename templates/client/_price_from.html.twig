@@ -1,0 +1,6 @@
+{#
+ # A product's price as a list shows it: "dès 130 € HT" when it is a
+ # starting price (typed by hand, or the lowest of its variants), its price
+ # otherwise. Variables: product; price_tax ('excl' | 'incl', optional).
+ #}
+{% include '@Marketplace/client/_price.html.twig' with {amount: product.startingPrice, currency: product.currency, price_from: product.pricedFrom, price_tax: price_tax|default(null)} only %}

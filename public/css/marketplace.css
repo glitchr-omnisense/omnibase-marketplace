@@ -30,6 +30,26 @@
 .marketplace a { color: var(--marketplace-primary); text-decoration: none; }
 .marketplace a:hover { color: var(--marketplace-warn); text-decoration: underline; }
 
+/* A starting price: "dès 130 € HT" (_price.html.twig with price_from, price_tax). */
+.marketplace-price-from, .marketplace-price-tax { font-size: .8em; font-weight: 400; color: var(--marketplace-muted); }
+
+/* A product's options (_options.html.twig): a group per choice, its options as radios or boxes. */
+.marketplace-options { display: grid; gap: .75rem; margin: 0 0 1rem; }
+.marketplace-option-group { margin: 0; padding: .6rem .8rem; border: 1px solid var(--marketplace-line); border-radius: var(--marketplace-radius); }
+.marketplace-option-group legend { padding: 0 .35rem; font-weight: 700; }
+.marketplace-option-group legend small { font-weight: 400; color: var(--marketplace-muted); }
+.marketplace-option { display: flex; align-items: center; gap: .5rem; padding: .2rem 0; }
+.marketplace-option .marketplace-price { margin-left: auto; color: var(--marketplace-muted); }
+.marketplace-line-options { display: block; font-size: .85em; color: var(--marketplace-muted); }
+
+/* A hand-over followed through its link (_pickup.html.twig). */
+.marketplace-pickup { padding: 1rem; margin-bottom: 1rem; border-radius: var(--marketplace-radius); background: var(--marketplace-pale); }
+.marketplace-pickup-steps { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0; padding: 0; list-style: none; counter-reset: step; }
+.marketplace-pickup-steps li { padding: .25rem .7rem; border-radius: 99px; border: 1px solid var(--marketplace-line); color: var(--marketplace-muted); }
+.marketplace-pickup-steps li.is-done { border-color: var(--marketplace-ok); color: var(--marketplace-ok); }
+.marketplace-pickup-steps li.is-current { border-color: var(--marketplace-primary); background: var(--marketplace-primary); color: #fff; font-weight: 700; }
+.marketplace-pickup-total { font-weight: 800; }
+
 .marketplace-title { margin: 0 0 .75rem; font: bold 30px/1.1 "Display Heavy", "Trebuchet MS", Verdana, sans-serif; color: var(--marketplace-accent); letter-spacing: 1px; }
 .marketplace-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; margin: 0 0 1.25rem; font-size: 12.5px; color: var(--marketplace-muted); }
 .marketplace-bar > * { display: inline-flex; align-items: center; gap: .3rem; }

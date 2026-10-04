@@ -17,6 +17,7 @@
             {% if is_granted('ROLE_USER') %}
             <form method="post" action="{{ path('marketplace_cart_add', {id: product.id}) }}" class="marketplace-add">
                 <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
+                {% include '@Marketplace/client/_options.html.twig' with {product: product} only %}
                 {% if product.packSize > 1 or product.minimumQuantity > 1 %}<input type="hidden" name="quantity" value="{{ product.minimumQuantity }}">{% endif %}
                 <button class="marketplace-btn marketplace-btn-primary" type="submit"><i class="fa-solid fa-basket-shopping"></i> {{ '@marketplace.product.add'|trans }}</button>
             </form>

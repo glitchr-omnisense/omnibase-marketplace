@@ -190,6 +190,10 @@ A product can name its maker (`Brand`: a wine estate, a house - Shopify's vendor
 
 A professional asks for a quotation (`/cotation`); the seller prices lines - a product or a free line, by the lot - with the trade's terms (export or import, an Incoterm and its place, the country, the volumes, a date), sends it; the client accepts it and pays its order like any other. An order delivered outside the EU carries no VAT (`Pricing\ExportExemption`, art. 262 I CGI), and a cart that should go there is sent to the quotation form instead. omnibase/forge's quotes (hours) are the same `AbstractQuote`. See [docs/quotes.md](docs/quotes.md).
 
+## Hand-overs, options, starting prices, files
+
+An order collected at the shop on a slot, brought nearby (a list of postcodes) or shipped, followed through a link without an account (`Entity\Order\Pickup`, `Service\Pickups`); the options a buyer chooses on a product - a cooking, extras, a finish - with their surcharge on the line (`Product\OptionGroup`, `Option`, `Service\ProductOptions`); a starting price, "dès 130 € HT" (`Product::getPriceRange()`, `::getStartingPrice()`); files given with a quote request or for an order line, kept out of the public directory (`Entity\Attachment`, `Service\Attachments`); a shipping method without a carrier. See [docs/pickup-and-options.md](docs/pickup-and-options.md).
+
 ## A catalogue kept on a platform
 
 Stripe's Products, a Shopify shop, a WooCommerce site: any glitchr/omnitrade gateway that reads a catalogue (`FetchProducts`, `FetchProduct`, `FetchInventory`) can be the source of the shop's products - `marketplace.catalogue.source`, then `bin/console marketplace:catalogue:sync`, and the platform's product webhooks through `/marketplace/{gateway}/webhook`. It replaces the former `src/Shopify` module and its `marketplace.shopify` configuration. See [docs/platform-catalogue.md](docs/platform-catalogue.md).

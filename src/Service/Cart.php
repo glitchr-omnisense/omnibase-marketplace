@@ -27,6 +27,7 @@ class Cart
         private readonly Security $security,
         private readonly RegionResolver $regions,
         #[Autowire('%marketplace.cart_max_quantity%')] private readonly int $maxQuantity = 99,
+        private readonly ?ProductOptions $options = null,
     ) {
     }
 
@@ -82,8 +83,12 @@ class Cart
         return $n;
     }
 
-    /** @throws CartException */
-    public function add(Product $product, int $quantity = 1): Order
+    /**
+     * @param iterable<int|string> $options the options chosen (Product\OptionGroup), by id: a line per product and choice
+     *
+     * @throws CartException
+     */
+    public function add(Product $product, int $quantity = 1, iterable $options = []): Order
     {
         if (!$this->customer()) {
             throw new CartException('cart.error.anonymous');
@@ -99,8 +104,11 @@ class Cart
             throw new CartException('cart.error.store_closed', ['{store}' => (string) $store]);
         }
 
+        // Checked before a cart is made: a cooking missing, an extra too many.
+        $selection = ($this->options ?? new ProductOptions())->select($product, $options);
+
         $order = $this->of($store, true);
-        $line = $this->lineOf($order, $product);
+        $line = $this->lineOf($order, $product, $selection->key());
         // Adding one case of 6 adds 6: a quantity below a lot means one lot.
         $wanted = ($line ? (int) $line->getQuantity() : 0) + max($product->getPackSize(), $quantity);
         $wanted = $this->bounded($product, $wanted);
@@ -109,6 +117,9 @@ class Cart
             $line->setQuantity($wanted);
         } else {
             $line = new OrderItem($product, $wanted);
+            if (!$selection->isEmpty()) {
+                $line->applyOptions($selection);
+            }
             $order->addItem($line);
             $this->entityManager->persist($line);
         }
@@ -150,10 +161,10 @@ class Cart
         }
     }
 
-    private function lineOf(Order $order, Product $product): ?OrderItem
+    private function lineOf(Order $order, Product $product, string $optionsKey = ''): ?OrderItem
     {
         foreach ($order->getItems() as $item) {
-            if ($item->getProduct() === $product) {
+            if ($item->getProduct() === $product && $item->getOptionsKey() === $optionsKey) {
                 return $item;
             }
         }

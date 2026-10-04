@@ -32,6 +32,15 @@ class Quote extends AbstractQuote
     #[ORM\Column(length: 20, nullable: true)]
     protected ?string $vatNumber = null;
 
+    /** A number to call back on: a quote is often settled by phone. */
+    #[ORM\Column(length: 32, nullable: true)]
+    protected ?string $phone = null;
+
+    /** @var Collection<int, Attachment> what came with the request: a logo, a photo of the place, a plan */
+    #[ORM\OneToMany(targetEntity: Attachment::class, mappedBy: 'quote', cascade: ['persist'])]
+    #[ORM\OrderBy(['id' => 'ASC'])]
+    protected Collection $attachments;
+
     #[ORM\Column(length: 16, nullable: true, enumType: TradeDirection::class)]
     protected ?TradeDirection $direction = null;
 
@@ -78,10 +87,27 @@ class Quote extends AbstractQuote
     {
         parent::__construct($reference);
         $this->lines = new ArrayCollection();
+        $this->attachments = new ArrayCollection();
     }
 
     public function getCompanyName(): ?string { return $this->companyName ?? parent::getCompanyName(); }
     public function setCompanyName(?string $companyName): static { $this->companyName = $companyName ? trim($companyName) : null; return $this; }
+
+    public function getPhone(): ?string { return $this->phone; }
+    public function setPhone(?string $phone): static { $phone = trim((string) $phone); $this->phone = '' === $phone ? null : mb_substr($phone, 0, 32); return $this; }
+
+    /** @return Collection<int, Attachment> */
+    public function getAttachments(): Collection { return $this->attachments ??= new ArrayCollection(); }
+
+    public function addAttachment(Attachment $attachment): static
+    {
+        if (!$this->getAttachments()->contains($attachment)) {
+            $this->attachments->add($attachment);
+            $attachment->setQuote($this);
+        }
+
+        return $this;
+    }
 
     public function getVatNumber(): ?string { return $this->vatNumber; }
     public function setVatNumber(?string $vatNumber): static { $this->vatNumber = $vatNumber ? strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $vatNumber)) : null; return $this; }

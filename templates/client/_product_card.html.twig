@@ -8,7 +8,7 @@
         {% set excerpt = product.excerpt|default('')|striptags|trim %}
         {% if excerpt %}<p class="marketplace-card-excerpt">{{ excerpt|length > 90 ? excerpt|slice(0, 89) ~ '…' : excerpt }}</p>{% endif %}
         <div class="marketplace-card-foot">
-            {% include '@Marketplace/client/_price.html.twig' with {amount: product.unitPrice, currency: product.currency} %}
+            {% include '@Marketplace/client/_price.html.twig' with {amount: product.startingPrice, currency: product.currency, price_from: product.pricedFrom} %}
             {% if product.forSell and is_granted('ROLE_USER') %}
                 <form method="post" action="{{ path('marketplace_cart_add', {id: product.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">

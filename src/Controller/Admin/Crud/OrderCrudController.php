@@ -89,5 +89,8 @@ class OrderCrudController extends AbstractMarketplaceCrudController
         yield AssociationField::new('shippingMethod')->setColumns(3)->hideOnIndex();
         yield AssociationField::new('transactions')->renderAsCount()->hideOnIndex();
         yield AssociationField::new('shipments')->renderAsCount()->hideOnIndex();
+        // The buyers' files for its lines (the artwork of a printed item): downloads.
+        yield TextField::new('attachments', '@marketplace.attachment.line')->hideOnIndex()->hideOnForm()
+            ->setTemplatePath('@Marketplace/admin/field/attachments.html.twig');
     }
 }

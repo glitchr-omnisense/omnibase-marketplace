@@ -1,0 +1,10 @@
+{% extends '@Marketplace/client/layout.html.twig' %}
+
+{% block marketplace_title %}{{ '@marketplace.pickup.title'|trans }}{% endblock %}
+{% block marketplace_crumbs %}<span>›</span> <span>{{ '@marketplace.pickup.title'|trans }}</span>{% endblock %}
+
+{% block marketplace_body %}
+{% for pickup in pickups %}
+    {% include '@Marketplace/client/_pickup.html.twig' with {pickup: pickup} %}
+{% endfor %}
+{% endblock %}

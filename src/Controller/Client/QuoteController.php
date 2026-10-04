@@ -12,6 +12,7 @@ use Base\Marketplace\Form\QuoteRequestType;
 use Base\Marketplace\Model\QuoteRequest;
 use Base\Marketplace\Pricing\ExportExemption;
 use Base\Marketplace\Repository\QuoteRepository;
+use Base\Marketplace\Service\Attachments;
 use Base\Marketplace\Service\CompanyRegistry;
 use Base\Marketplace\Service\QuoteStatusGuard;
 use Base\Marketplace\Service\QuoteToOrder;
@@ -20,6 +21,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -35,7 +37,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * an order waiting in the client's carts (Service\QuoteToOrder) - or
  * declined, and the client's quotes in their account.
  *
- * "Cotation", not "devis": omnibase/forge keeps /devis for a studio's.
+ * Under /cotation by default ("cotation", not "devis": omnibase/forge keeps
+ * /devis for a studio's); marketplace.quotes.path moves it - "devis" on a
+ * site without the forge.
  */
 class QuoteController extends AbstractController
 {
@@ -45,11 +49,14 @@ class QuoteController extends AbstractController
         private readonly TranslatorInterface $translator,
         #[Autowire('%marketplace.quotes.enabled%')] private readonly bool $enabled = true,
         #[Autowire('%marketplace.quotes.recipient%')] private readonly ?string $recipient = null,
+        #[Autowire('%marketplace.quotes.phone%')] private readonly bool $phone = true,
+        #[Autowire('%marketplace.quotes.attachments%')] private readonly bool $attachments = true,
+        #[Autowire('%marketplace.quotes.consent%')] private readonly bool $consent = false,
     ) {
     }
 
-    #[Route('/cotation', name: 'marketplace_quote_request', methods: ['GET', 'POST'])]
-    public function Request(Request $request, MailerInterface $mailer, CompanyRegistry $registry, VatNumbers $vatNumbers): Response
+    #[Route('/%marketplace.quotes.path%', name: 'marketplace_quote_request', methods: ['GET', 'POST'])]
+    public function Request(Request $request, MailerInterface $mailer, CompanyRegistry $registry, VatNumbers $vatNumbers, Attachments $files): Response
     {
         if (!$this->enabled) {
             throw $this->createNotFoundException('Quotes are off.');
@@ -75,13 +82,26 @@ class QuoteController extends AbstractController
             $data->title = implode(', ', array_map('strval', $products));
         }
 
-        $form = $this->createForm(QuoteRequestType::class, $data);
+        $form = $this->createForm(QuoteRequestType::class, $data, [
+            'phone' => $this->phone,
+            'attachments' => $this->attachments,
+            'privacy_consent' => $this->consent,
+        ]);
         $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid() && $this->attachments && ($refusal = $files->refusal($data->files))) {
+            // Too many, too heavy, or not a kind the shop takes: said on the field, nothing kept.
+            $form->get('files')->addError(new FormError($this->translator->trans('@marketplace.'.$refusal[0], $refusal[1])));
+        }
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($data->isRobot()) {
+                // The trap was filled: thanked like anybody, nothing stored, nobody told.
+                return $this->render('@Marketplace/client/quote/requested.html.twig', ['quote' => (new Quote('—'))->setTitle($data->title)->setEmail($data->email)]);
+            }
             $quote = new Quote();
             $quote->setClient($user instanceof User ? $user : null)
                 ->setContactName($data->contactName)
                 ->setEmail($data->email)
+                ->setPhone($data->phone)
                 ->setCompanyName($data->companyName)
                 ->setTitle($data->title)
                 ->setRequest($data->request)
@@ -111,6 +131,10 @@ class QuoteController extends AbstractController
                 $quote->addLine(new QuoteLine($product, 1, (int) $product->getUnitPrice() * $product->getPackSize(), $product->getPackSize()));
             }
             $this->quotes->saveNumbered($quote);
+            if ($this->attachments && $data->files) {
+                $files->attachToQuote($quote, $data->files);
+                $this->entityManager->flush();
+            }
 
             if ($this->recipient) {
                 $mailer->send((new TemplatedEmail())
@@ -130,7 +154,7 @@ class QuoteController extends AbstractController
         ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
-    #[Route('/cotation/{token}', name: 'marketplace_quote', requirements: ['token' => '[A-Za-z0-9_\-]{43}'])]
+    #[Route('/%marketplace.quotes.path%/{token}', name: 'marketplace_quote', requirements: ['token' => '[A-Za-z0-9_\-]{43}'])]
     public function Show(string $token, QuoteToOrder $quoteToOrder): Response
     {
         $quote = $this->find($token);
@@ -143,7 +167,7 @@ class QuoteController extends AbstractController
         ]);
     }
 
-    #[Route('/cotation/{token}/accepter', name: 'marketplace_quote_accept', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['POST'])]
+    #[Route('/%marketplace.quotes.path%/{token}/accepter', name: 'marketplace_quote_accept', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function Accept(Request $request, string $token, QuoteToOrder $quoteToOrder): Response
     {
@@ -163,7 +187,7 @@ class QuoteController extends AbstractController
         return $this->redirectToRoute('marketplace_checkout', ['order' => $order->getId()]);
     }
 
-    #[Route('/cotation/{token}/refuser', name: 'marketplace_quote_decline', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['POST'])]
+    #[Route('/%marketplace.quotes.path%/{token}/refuser', name: 'marketplace_quote_decline', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function Decline(Request $request, string $token): Response
     {

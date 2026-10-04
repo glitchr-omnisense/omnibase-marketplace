@@ -36,6 +36,7 @@ class OrderItem
         $this->_currency = $product->getCurrency();
 
         $this->shipments = new ArrayCollection();
+        $this->attachments = new ArrayCollection();
     }
 
     #[ORM\Id]
@@ -137,6 +138,67 @@ class OrderItem
         $this->personalisation = $personalisation ?: null;
 
         return $this;
+    }
+
+    /**
+     * The options chosen for this line (Product\OptionGroup), copied when it
+     * was added: [{group, option, group_label, label, price}]. Their prices
+     * are in the line's unit price already.
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected $options = null;
+
+    /** @return list<array{group: ?int, option: ?int, group_label: string, label: string, price: int}> */
+    public function getOptions(): array
+    {
+        return $this->options ?? [];
+    }
+
+    /**
+     * The line takes these options: kept as a copy, their surcharge added to
+     * the product's unit price (before VAT, like it).
+     */
+    public function applyOptions(\Base\Marketplace\Model\OptionSelection $selection, ?string $locale = null): self
+    {
+        if ($this->getOrder()?->isPaid()) {
+            throw new \LogicException('Command paid. Order item cannot be updated anymore');
+        }
+        $this->options = $selection->toArray($locale) ?: null;
+        $this->_unitPrice = (int) $this->getProduct()?->getUnitPrice() + $selection->surcharge();
+
+        return $this;
+    }
+
+    /** What the options add to each unit, before VAT. */
+    public function getOptionsSurcharge(): int
+    {
+        return array_sum(array_map(fn (array $o) => (int) ($o['price'] ?? 0), $this->getOptions()));
+    }
+
+    /** "Bien cuit, Œuf mollet" - empty without options. */
+    public function getOptionsLabel(): string
+    {
+        return implode(', ', array_map(fn (array $o) => (string) ($o['label'] ?? ''), $this->getOptions()));
+    }
+
+    /** Which options, whatever their order: two lines of a product differ by it. */
+    public function getOptionsKey(): string
+    {
+        $ids = array_map(fn (array $o) => (int) ($o['option'] ?? 0), $this->getOptions());
+        sort($ids);
+
+        return implode('-', $ids);
+    }
+
+    /** @var Collection<int, \Base\Marketplace\Entity\Attachment> the files given for this line: the buyer's artwork for a printed item */
+    #[ORM\OneToMany(targetEntity: \Base\Marketplace\Entity\Attachment::class, mappedBy: 'orderItem', cascade: ['persist'])]
+    #[ORM\OrderBy(['id' => 'ASC'])]
+    protected $attachments;
+
+    /** @return Collection<int, \Base\Marketplace\Entity\Attachment> */
+    public function getAttachments(): Collection
+    {
+        return $this->attachments ??= new ArrayCollection();
     }
 
     #[ORM\Column(type: 'text', nullable: true)]

@@ -94,6 +94,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
             ->formatValue(fn ($value) => $value instanceof QuoteStatus ? $this->translator->trans('@marketplace.quote.state.'.$value->value) : $value);
         yield TextField::new('contactName', '@marketplace.quote.contact')->setColumns(3);
         yield EmailField::new('email')->setColumns(3);
+        yield TextField::new('phone', '@marketplace.quote.form.phone')->setColumns(3)->hideOnIndex()->setRequired(false);
         yield TextField::new('companyName', '@marketplace.quote.company')->setColumns(3);
         yield TextField::new('siret', 'SIRET')->setColumns(3)->hideOnIndex();
         yield TextField::new('vatNumber', '@marketplace.quote.vat')->setColumns(3)->hideOnIndex();
@@ -113,6 +114,9 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         yield DateField::new('validUntil', '@marketplace.quote.valid_until')->setColumns(3)->hideOnIndex();
         yield IntegerField::new('discountPercent', '@marketplace.quote.discount')->setColumns(2)->hideOnIndex();
         yield TextareaField::new('request', '@marketplace.quote.request')->hideOnIndex()->setHelp('@marketplace.quote.request_help');
+        // What came with the request: downloads, kept out of the public directory.
+        yield TextField::new('attachments', '@marketplace.quote.attachments')->hideOnForm()->hideOnIndex()
+            ->setTemplatePath('@Marketplace/admin/field/attachments.html.twig');
         yield TextareaField::new('message', '@marketplace.quote.message')->hideOnIndex()->setHelp('@marketplace.quote.message_help');
         yield CollectionField::new('lines', '@marketplace.quote.lines')->setEntryType(QuoteLineType::class)->allowAdd()->allowDelete()->hideOnIndex()
             ->setFormTypeOptions(['by_reference' => false, 'allow_object' => true]);

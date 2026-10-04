@@ -6,6 +6,10 @@ store:
   closed: "このショップは現在休業中です。商品はご覧いただけますが、ご購入はできません。"
   empty: "まだ商品がありません。"
 product:
+  price_from: "最低価格"
+  price_excl_vat: "税抜"
+  price_incl_vat: "税込"
+  price_from_field: "表示する開始価格（セント。空欄：バリエーションの最安値）"
   add: "カートに入れる"
   unavailable: "在庫なし"
   stock: "{count, plural, =0 {在庫切れ} other {在庫 # 点}}"
@@ -169,6 +173,8 @@ filters:
   reset: "条件をクリア"
   count: "{count, plural, =0 {該当なし} other {# 件}}"
 quote:
+  attachments: "添付ファイル"
+  phone_invalid: "電話番号が正しくないようです。"
   request_title: "お見積もりを依頼する"
   request_lead: "輸入業者、販売店、レストランの皆さま：お探しのもの、数量、仕向地をお知らせください。価格を添えたご提案をお送りします。"
   requested_title: "ご依頼を承りました"
@@ -220,6 +226,9 @@ quote:
     DAP: "仕向地持込渡し"
     DDP: "関税込持込渡し"
   form:
+    phone: "電話番号"
+    files: "添付ファイル"
+    files_help: "ロゴ、店舗の写真、図面など（PDF、画像、AI、SVG）。"
     name: "お名前"
     email: "メールアドレス"
     company: "会社名"
@@ -308,6 +317,61 @@ supply:
     save: "保存"
 catalogue:
   synced: "{gateway} から {count} 件の商品を読み込みました。"
+pickup:
+  title: "ご注文の状況"
+  ready_at: "{time} にご用意"
+  mode:
+    pickup: "店頭受け取り"
+    delivery: "近隣配達"
+    shipping: "発送"
+  status:
+    checkout: "お支払い待ち"
+    received: "受付済み"
+    accepted: "承りました"
+    preparing: "準備中"
+    ready: "ご用意できました"
+    out_for_delivery: "配達中"
+    done: "お渡し済み"
+    cancelled: "キャンセル"
+    refused: "お断り"
+    refunded: "返金済み"
+  error:
+    mode: "この受け取り方法はご利用いただけません。"
+    day: "この日は過ぎています。"
+    out_of_zone: "{postcode} には配達しておりません。"
+    address: "配達先住所が入力されていません。"
+    placed: "このご注文はすでに確定しています。"
+options:
+  required: "選択してください"
+  several: "{maximum, plural, =0 {自由選択} other {#つまで}}{minimum, plural, =0 {} other {、#つ以上}}"
+  error:
+    unknown: "{product} にこのオプションはありません。"
+    unavailable: "{option} は現在ご利用いただけません。"
+    single: "{group}：1つだけお選びください。"
+    minimum: "{group}：{minimum}つ以上お選びください。"
+    maximum: "{group}：{maximum}つまでです。"
+  admin:
+    product: "商品"
+    group: "グループ"
+    multiple: "複数選択"
+    minimum: "最小"
+    maximum: "最大"
+    position: "順序"
+    options: "オプション"
+    label: "オプション"
+    price: "追加料金（セント・税抜）"
+    default: "初期選択"
+    available: "利用可能"
+attachment:
+  yours: "入稿データ"
+  send: "ファイルを送信"
+  added: "{count}個のファイルを受け取りました。"
+  line: "お客様のファイル"
+  error:
+    count: "ファイルは{maximum}個までです。"
+    upload: "{name} を送信できませんでした。"
+    size: "{name} は {maximum} MB を超えています。"
+    type: "{name}：この種類のファイルは受け付けていません（{types}）。"
 company:
   siret: "SIRET（フランスの会社の場合、任意）"
   siret_help: "フランスの会社の場合：国の登記簿で社名と所在地を確認します。"
