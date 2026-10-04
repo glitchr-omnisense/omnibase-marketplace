@@ -1,10 +1,14 @@
 /*
  * The shop's look, in the same family as base-bundle-forum: a pale blue page
- * panel, a pink accent, rounded cards. Everything is namespaced .marketplace-* and
- * driven by the custom properties below, so a host restyles a store by
- * overriding them on .marketplace or on .marketplace-store-<slug>.
+ * panel, a pink accent, rounded cards. Everything is namespaced .marketplace-*
+ * and driven by the custom properties below.
+ *
+ * They are defaults, set with no specificity (:where): a host's own
+ * `:root { --marketplace-accent: … }` wins whatever the order of the
+ * stylesheets, and so does a value set on .marketplace or on
+ * .marketplace-store-<slug> for one store.
  */
-.marketplace {
+:where(:root) {
     --marketplace-accent: #FF3399;
     --marketplace-primary: #006699;
     --marketplace-primary-soft: #6090BE;
@@ -17,6 +21,8 @@
     --marketplace-warn: #DD6900;
     --marketplace-danger: #c0392b;
     --marketplace-radius: 12px;
+}
+.marketplace {
     color: var(--marketplace-text);
     font-size: 14px;
     line-height: 1.45;

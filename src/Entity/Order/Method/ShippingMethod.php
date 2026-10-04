@@ -97,9 +97,11 @@ class ShippingMethod implements IconizeInterface
      * omnibus.gateways (Service\Shipping::carrierFor()). Its parameters
      * (omnibus.<slug> in the parameter bag: service, pickup_point, the
      * carrier's options) go with every shipment booked through it.
+     * Null for a way without a carrier: collected at the shop, brought by
+     * the shop itself.
      */
-    #[ORM\Column(type: 'string', length: 255)]
-    protected $gatewayName;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    protected $gatewayName = null;
 
     public function getGatewayParameters(): array
     {
@@ -108,14 +110,20 @@ class ShippingMethod implements IconizeInterface
         return is_array($parameters) ? $parameters : [];
     }
 
+    /** Whether a carrier takes it: false for a pickup at the shop, the shop's own round. */
+    public function hasCarrier(): bool
+    {
+        return null !== $this->gatewayName && '' !== $this->gatewayName;
+    }
+
     public function getGatewayName(): ?string
     {
         return $this->gatewayName;
     }
 
-    public function setGatewayName(string $gatewayName): self
+    public function setGatewayName(?string $gatewayName): self
     {
-        $this->gatewayName = $gatewayName;
+        $this->gatewayName = '' === trim((string) $gatewayName) ? null : trim($gatewayName);
 
         return $this;
     }
