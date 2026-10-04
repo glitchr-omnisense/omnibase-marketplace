@@ -14,6 +14,7 @@ use Omnitrade\Exception\OmnitradeException;
 use Omnitrade\Model\Status;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Base\Marketplace\Event\CatalogueNotificationEvent;
+use Base\Marketplace\Event\PaymentNotificationEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -105,6 +106,13 @@ class PaymentController extends AbstractController
         $transaction = $notification->reference ? $this->entityManager->getRepository(Transaction::class)->findOneBy(['webhook' => $notification->reference]) : null;
         $order = $transaction?->getOrder();
         if (!$transaction || !$order || !$order->getPaymentMethod() instanceof PaymentMethod) {
+            // Not an order's payment: a connected account, a subscription's
+            // life, a contribution to a list, something of the application's.
+            $event = $this->dispatcher?->dispatch(new PaymentNotificationEvent($gateway, $notification));
+            if (null !== $event?->getOutcome()) {
+                return new JsonResponse(['received' => $notification->event, 'outcome' => $event->getOutcome()]);
+            }
+
             return new JsonResponse(['ignored' => true, 'event' => $notification->event]);
         }
 

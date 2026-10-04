@@ -14,3 +14,4 @@ glitchr/omnitrade - and what any trade adds to it:
 - [Business quotes and exports](quotes.md)
 - [A catalogue kept on a platform](platform-catalogue.md)
 - [The "dev" gateway and the shop's keys](dev-gateway-and-keys.md)
+- [Plans, subscriptions, rights and credits](plans.md)

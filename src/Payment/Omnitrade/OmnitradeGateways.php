@@ -32,6 +32,7 @@ final class OmnitradeGateways
         private readonly Registry $registry,
         private readonly UrlGeneratorInterface $urls,
         private readonly ?SettingBagInterface $settings = null,
+        private readonly ?\Psr\EventDispatcher\EventDispatcherInterface $dispatcher = null,
     ) {
     }
 
@@ -57,7 +58,7 @@ final class OmnitradeGateways
             return $this->bridges[$key] = null;
         }
 
-        return $this->bridges[$key] = new OmnitradeGateway($name, $gateway, $this->urls, array_replace($this->registry->options($name), $typed));
+        return $this->bridges[$key] = new OmnitradeGateway($name, $gateway, $this->urls, array_replace($this->registry->options($name), $typed), $this->dispatcher);
     }
 
     /** @return list<string> */

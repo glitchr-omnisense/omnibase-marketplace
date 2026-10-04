@@ -5,6 +5,7 @@ namespace Base\Marketplace\Payment\Omnitrade;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Entity\Order\Transaction;
+use Base\Marketplace\Event\PaymentPreparingEvent;
 use Base\Marketplace\Payment\PaymentGatewayInterface;
 use Base\Marketplace\Payment\PaymentResult;
 use Omnitrade\Exception\OmnitradeException;
@@ -17,6 +18,8 @@ use Omnitrade\Model\Payment;
 use Omnitrade\Model\Status;
 use Omnitrade\Model\Transaction as OmnitradeTransaction;
 use Omnitrade\Request\Purchase;
+use Omnitrade\Request\Subscribe;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
@@ -45,6 +48,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
         private readonly GatewayInterface $gateway,
         private readonly UrlGeneratorInterface $urls,
         private readonly array $options = [],
+        private readonly ?EventDispatcherInterface $dispatcher = null,
     ) {
     }
 
@@ -87,7 +91,11 @@ final class OmnitradeGateway implements PaymentGatewayInterface
     public function pay(Order $order, Transaction $transaction, PaymentMethod $method): PaymentResult
     {
         try {
-            $paid = $this->gateway->purchase($this->payment($order, $transaction, $method));
+            $event = $this->prepare($order, $transaction, $method);
+            $payment = $this->payment($order, $transaction, $method, $event);
+            $paid = $event->isSubscription()
+                ? $this->gateway->execute(new Subscribe($payment, $event->interval, $event->intervalCount, $event->price, $event->trialDays, $event->customer))->getTransaction()
+                : $this->gateway->purchase($payment);
         } catch (OmnitradeException $e) {
             return PaymentResult::refused('payment.unavailable', ['{reason}' => $e->getMessage()]);
         }
@@ -141,9 +149,36 @@ final class OmnitradeGateway implements PaymentGatewayInterface
         return (string) ($transaction->getWebhook() ?: ($details['reference'] ?? $details['stripe_session'] ?? ''));
     }
 
-    /** What the provider is asked for: the order, as omnitrade describes a payment. */
-    public function payment(Order $order, Transaction $transaction, PaymentMethod $method): Payment
+    /**
+     * How the order goes to the provider, as the application's listeners
+     * have it (Event\PaymentPreparingEvent): an order of one recurring plan
+     * is a subscription of that plan's interval unless they say otherwise.
+     */
+    public function prepare(Order $order, Transaction $transaction, PaymentMethod $method): PaymentPreparingEvent
     {
+        $event = new PaymentPreparingEvent($order, $transaction, $method, $this->gatewayName, ['order' => (string) ($order->getReference() ?? $order->getId()), 'method' => (string) $method->getSlug()]);
+        $items = $order->getItems();
+        if (1 === \count($items) && class_exists(Subscribe::class) && $this->gateway->supports(Subscribe::class)) {
+            $item = $items->first();
+            $product = $item->getProduct();
+            if ($product && $product->isPlan() && 1 === (int) $item->getQuantity() && $product->getPlanTerms()->isRecurring()) {
+                $event->interval = $product->getPlanTerms()->interval;
+                $event->description = (string) $product;
+            }
+        }
+        $this->dispatcher?->dispatch($event);
+
+        return $event;
+    }
+
+    /** What the provider is asked for: the order, as omnitrade describes a payment. */
+    public function payment(Order $order, Transaction $transaction, PaymentMethod $method, ?PaymentPreparingEvent $event = null): Payment
+    {
+        $event ??= $this->prepare($order, $transaction, $method);
+        // A destination and its fee only where glitchr/omnitrade knows them (1.x with Connect).
+        $connect = null !== $event->destination && property_exists(Payment::class, 'destination')
+            ? ['destination' => $event->destination, 'applicationFee' => null !== $event->applicationFee && $event->applicationFee > 0 ? Money::of($event->applicationFee, strtoupper((string) $order->getCurrency())) : null]
+            : [];
         $currency = strtoupper((string) $order->getCurrency());
         $return = fn (array $query) => $this->urls->generate('marketplace_payment_return', ['order' => $order->getId(), 'gateway' => $this->gatewayName] + $query, UrlGeneratorInterface::ABSOLUTE_URL);
         $customer = $order->getCustomer();
@@ -152,7 +187,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
         return new Payment(
             Money::of((int) $order->getNetPrice(), $currency),
             (string) ($order->getReference() ?? '#'.$order->getId()),
-            (string) ($order->getStore() ?? $order->getReference()),
+            $event->description ?? (string) ($order->getStore() ?? $order->getReference()),
             new Customer(
                 $customer?->getEmail(),
                 $address?->getName() ?: ($customer ? (string) $customer : null),
@@ -164,12 +199,15 @@ final class OmnitradeGateway implements PaymentGatewayInterface
                 $address?->getCountry(),
             ),
             $this->lines($order, $currency),
-            returnUrl: $return([]),
-            cancelUrl: $return(['cancel' => 1]),
-            idempotencyKey: sprintf('%s-%s', $order->getReference() ?? $order->getId(), $transaction->getId() ?? spl_object_id($transaction)),
-            method: $method->getGatewayParameters()['method'] ?? null,
-            notice: $order->getVatExemption(),
-            metadata: ['order' => (string) ($order->getReference() ?? $order->getId()), 'method' => (string) $method->getSlug()],
+            ...[
+                'returnUrl' => $return([]),
+                'cancelUrl' => $return(['cancel' => 1]),
+                'idempotencyKey' => sprintf('%s-%s', $order->getReference() ?? $order->getId(), $transaction->getId() ?? spl_object_id($transaction)),
+                'method' => $method->getGatewayParameters()['method'] ?? null,
+                'notice' => $order->getVatExemption(),
+                'metadata' => $event->metadata,
+                'locale' => $event->locale,
+            ] + $connect,
         );
     }
 
@@ -214,6 +252,9 @@ final class OmnitradeGateway implements PaymentGatewayInterface
             'status' => $paid->status->value,
             'method' => $paid->method,
             'message' => $paid->message,
+            // A subscription's session: the provider's subscription and customer, for Service\Subscriptions.
+            'subscription' => \is_string($paid->raw['subscription'] ?? null) ? $paid->raw['subscription'] : null,
+            'customer' => \is_string($paid->raw['customer'] ?? null) ? $paid->raw['customer'] : null,
         ] + $transaction->getDetails(), static fn ($v) => null !== $v && '' !== $v));
     }
 }

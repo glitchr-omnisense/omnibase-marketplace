@@ -951,6 +951,75 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     /**
+     * What it is once paid (Enum\ProductKind): goods, a plan - a right of
+     * access, bought once or by subscription -, or a pack of credits. Kept as
+     * its value; a variant without one is as its principal.
+     */
+    #[ORM\Column(type: 'string', length: 16, options: ['default' => 'goods'])]
+    protected $kind = 'goods';
+
+    public function getKind(): \Base\Marketplace\Enum\ProductKind
+    {
+        $kind = \Base\Marketplace\Enum\ProductKind::tryFrom((string) $this->kind) ?? \Base\Marketplace\Enum\ProductKind::GOODS;
+        if (\Base\Marketplace\Enum\ProductKind::GOODS === $kind && $this->isVariant() && method_exists($this, 'getPrincipal') && $this->getPrincipal()) {
+            return $this->getPrincipal()->getKind();
+        }
+
+        return $kind;
+    }
+
+    public function setKind(\Base\Marketplace\Enum\ProductKind|string $kind): self
+    {
+        $this->kind = $kind instanceof \Base\Marketplace\Enum\ProductKind ? $kind->value : (\Base\Marketplace\Enum\ProductKind::from($kind))->value;
+
+        return $this;
+    }
+
+    public function isPlan(): bool
+    {
+        return \Base\Marketplace\Enum\ProductKind::PLAN === $this->getKind();
+    }
+
+    public function isCreditPack(): bool
+    {
+        return \Base\Marketplace\Enum\ProductKind::CREDIT_PACK === $this->getKind();
+    }
+
+    /**
+     * A plan's or a credit pack's terms (Model\PlanTerms, as an array): how it
+     * is billed, what it grants, the credits it gives. A variant's own terms
+     * are laid over its principal's (the pass for 150 guests changes "guests").
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected $plan = null;
+
+    public function getPlan(): ?array
+    {
+        return $this->plan;
+    }
+
+    public function setPlan(\Base\Marketplace\Model\PlanTerms|array|null $plan): self
+    {
+        $this->plan = $plan instanceof \Base\Marketplace\Model\PlanTerms ? $plan->toArray() : $plan;
+
+        return $this;
+    }
+
+    public function getPlanTerms(): \Base\Marketplace\Model\PlanTerms
+    {
+        $own = $this->plan ?? [];
+        if ($this->isVariant() && method_exists($this, 'getPrincipal') && $this->getPrincipal()) {
+            $base = $this->getPrincipal()->getPlan() ?? [];
+            $own = array_replace($base, $own, [
+                'grants' => array_replace((array) ($base['grants'] ?? []), (array) ($own['grants'] ?? [])),
+                'credits' => array_replace((array) ($base['credits'] ?? []), (array) ($own['credits'] ?? [])),
+            ]);
+        }
+
+        return \Base\Marketplace\Model\PlanTerms::fromArray($own);
+    }
+
+    /**
      * Sold to adults only (wine, spirits, sake): the age gate stands before
      * its page (Service\AgeGate). Its taxa may say so for it.
      */

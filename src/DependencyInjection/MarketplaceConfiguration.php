@@ -107,6 +107,13 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                         ->booleanNode('inventory')->defaultTrue()->info('Read the stock from the platform when it counts it (FetchInventory).')->end()
                     ->end()
                 ->end()
+                // Plans and subscriptions (Enum\ProductKind::PLAN, Service\Entitlements, Service\Subscriptions).
+                ->arrayNode('plans')->addDefaultsIfNotSet()
+                    ->children()
+                        ->integerNode('reminder_days')->min(0)->defaultValue(7)
+                            ->info('Days before a right ends when its holder is told (Event\EntitlementEndingEvent).')->end()
+                    ->end()
+                ->end()
             ->end()
         ->end();
 
