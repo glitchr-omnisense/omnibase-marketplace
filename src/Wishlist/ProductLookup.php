@@ -4,7 +4,7 @@ namespace Base\Marketplace\Wishlist;
 
 use Omnitrade\Exception\OmnitradeException;
 use Omnitrade\Model\Product;
-use Omnitrade\Registry;
+use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
 use Omnitrade\Request\AffiliateLink;
 use Omnitrade\Request\FetchProduct;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -20,7 +20,7 @@ class ProductLookup
 {
     /** @param list<string> $gateways */
     public function __construct(
-        private readonly Registry $registry,
+        private readonly OmnitradeGateways $bridges,
         #[Autowire('%marketplace.wishlist.lookup%')] private readonly array $gateways = ['amazon', 'web'],
     ) {
     }
@@ -30,7 +30,9 @@ class ProductLookup
     {
         foreach ($this->gateways as $name) {
             try {
-                if (!$this->registry->has($name) || !($gateway = $this->registry->get($name))->supports(FetchProduct::class)) {
+                // Through the bridges: the keys typed in the back office (Clés API) are applied.
+                $gateway = $this->bridges->get($name)?->gateway();
+                if (null === $gateway || !$gateway->supports(FetchProduct::class)) {
                     continue;
                 }
                 $product = $gateway->fetchProduct($url);
@@ -53,7 +55,8 @@ class ProductLookup
         }
         foreach ($this->gateways as $name) {
             try {
-                if (!$this->registry->has($name) || !($gateway = $this->registry->get($name))->supports(AffiliateLink::class)) {
+                $gateway = $this->bridges->get($name)?->gateway();
+                if (null === $gateway || !$gateway->supports(AffiliateLink::class)) {
                     continue;
                 }
                 $link = $gateway->execute(new AffiliateLink($url))->getUrl();

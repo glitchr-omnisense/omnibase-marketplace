@@ -8,6 +8,7 @@ use Base\Marketplace\Supply\Model\SupplyOrder;
 use Base\Marketplace\Supply\Model\SupplyProduct;
 use Base\Marketplace\Supply\Model\SupplyQuote;
 use Base\Marketplace\Supply\Model\SupplyResult;
+use Base\Service\SettingBagInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -34,13 +35,27 @@ class GelatoSupplier implements SupplierInterface
 {
     public const ORDER_API = 'https://order.gelatoapis.com';
     public const PRODUCT_API = 'https://product.gelatoapis.com';
+    public const SETTING = 'api.supply.gelato.api_key';
 
     public function __construct(
         private readonly HttpClientInterface $http,
         #[Autowire('%marketplace.supply.gelato.api_key%')] private readonly ?string $apiKey = null,
         #[Autowire('%marketplace.supply.gelato.webhook_secret%')] private readonly ?string $webhookSecret = null,
         #[Autowire('%marketplace.supply.gelato.catalog%')] private readonly string $catalog = 'cards',
+        private readonly ?SettingBagInterface $settings = null,
     ) {
+    }
+
+    /** The key typed in the back office (the setting api.supply.gelato.api_key) wins over the configured one. */
+    private function apiKey(): ?string
+    {
+        try {
+            $typed = $this->settings?->getScalar(self::SETTING);
+        } catch (\Throwable) {
+            $typed = null; // no database yet: the configuration serves
+        }
+
+        return \is_string($typed) && '' !== trim($typed) ? trim($typed) : $this->apiKey;
     }
 
     public static function name(): string
@@ -50,7 +65,7 @@ class GelatoSupplier implements SupplierInterface
 
     public function isConfigured(): bool
     {
-        return null !== $this->apiKey && '' !== $this->apiKey;
+        return null !== $this->apiKey() && '' !== $this->apiKey();
     }
 
     public function products(?string $query = null): array
@@ -220,7 +235,7 @@ class GelatoSupplier implements SupplierInterface
             throw new SupplyException('gelato', 'No Gelato API key (marketplace.supply.gelato.api_key).');
         }
         try {
-            $response = $this->http->request($method, $url, ['headers' => ['X-API-KEY' => $this->apiKey, 'Accept' => 'application/json'], 'timeout' => 30] + (null !== $body ? ['json' => $body] : []));
+            $response = $this->http->request($method, $url, ['headers' => ['X-API-KEY' => $this->apiKey(), 'Accept' => 'application/json'], 'timeout' => 30] + (null !== $body ? ['json' => $body] : []));
             $status = $response->getStatusCode();
             $data = json_decode($response->getContent(false), true);
         } catch (HttpExceptionInterface $e) {

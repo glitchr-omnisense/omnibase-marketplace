@@ -52,7 +52,7 @@ final class WishlistTest extends MarketplaceKernelTestCase
 
     private function wishlists(): Wishlists
     {
-        return new Wishlists($this->entityManager, new ProductLookup($this->registry, ['amazon', 'web']));
+        return new Wishlists($this->entityManager, new ProductLookup($this->gateways(), ['amazon', 'web']));
     }
 
     public function testAWishIsReadFromItsAddress(): void

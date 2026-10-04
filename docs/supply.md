@@ -33,6 +33,10 @@ marketplace:
             link_ttl: 7776000                                # seconds its signed links stay valid (90 days)
 ```
 
+Gelato's key may also be typed in the back office: the setting
+`api.supply.gelato.api_key` (declare it in a `SettingsSectionInterface` of the
+API keys page) wins over the configured one.
+
 The application imports the bundle's client routes (it already does for the
 cart): they include the workshop's page (`marketplace_supply_offline`) and
 the suppliers' webhook (`/marketplace/supply/{supplier}/webhook`: give it to

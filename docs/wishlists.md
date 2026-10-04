@@ -42,6 +42,10 @@ marketplace:
 30 3 * * *  php bin/console marketplace:wishlist:refresh-prices
 ```
 
+The gateways are reached through the payment bridges, so keys typed in the
+back office for a gateway (`api.payment_method.<gateway>.<option>`) apply to
+the lookups too.
+
 The bundle brings no page: a list's look is the application's. It brings the
 model, the services and the webhook's handling.
 
