@@ -1046,7 +1046,8 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $value = $attribute?->resolve($locale);
         // Not written in this language: the default one's (a grape's name is the same in Japanese).
         if (null !== $attribute && null !== $locale && (null === $value || '' === $value || [] === $value)) {
-            $value = $attribute->resolve(null);
+            // By its name: resolve(null) is the page's language again, just made empty.
+            $value = $attribute->resolve(Localizer::getDefaultLocale());
         }
 
         return $value;
