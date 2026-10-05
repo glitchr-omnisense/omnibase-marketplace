@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\DependencyInjection;
 
+use Base\Marketplace\Payment\DevGateway;
 use Base\Bundle\AbstractBaseExtension;
 use Base\Marketplace\Enum\Barcode;
 use Base\Marketplace\Enum\OrderState;
@@ -62,9 +63,12 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
 
-        // The "dev" gateway - paid by nobody, at once - exists in debug only.
-        if ($container->hasParameter('kernel.debug') && $container->getParameter('kernel.debug')) {
-            $container->register(\Base\Marketplace\Payment\DevGateway::class)
+        // The "dev" gateway - paid by nobody, at once - exists in debug, and in the
+        // demonstration (glitchr/omnibase's `demo` environment, which never runs in debug): nowhere else.
+        $debug = $container->hasParameter('kernel.debug') && $container->getParameter('kernel.debug');
+        $demo = $container->hasParameter('kernel.environment') && DevGateway::DEMO_ENVIRONMENT === $container->getParameter('kernel.environment');
+        if ($debug || $demo) {
+            $container->register(DevGateway::class)
                 ->setAutowired(true)
                 ->setAutoconfigured(true)
                 ->addTag('marketplace.payment_gateway');

@@ -5,6 +5,7 @@ namespace Base\Marketplace\Payment;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
@@ -12,18 +13,30 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
  * whatever it wrote), then - when glitchr/omnitrade is installed - a bridge
  * to each gateway configured under omnitrade.gateways, by that name. A
  * PaymentMethod's gatewayFactory is one of these names.
+ *
+ * In a demonstration (glitchr/omnibase's `demo` environment) no money moves:
+ * the gateways of glitchr/omnitrade - Stripe, PayPal, a real provider behind
+ * each - are not there at all, neither offered at the checkout nor reached
+ * by a return page or a webhook. The application's own stay (manual, and the
+ * "dev" gateway, registered there for that purpose).
  */
 class PaymentGatewayRegistry
 {
     /** @var array<string, PaymentGatewayInterface> */
     private array $gateways = [];
 
+    private readonly ?OmnitradeGateways $omnitrade;
+
     /** @param iterable<PaymentGatewayInterface> $gateways */
-    public function __construct(#[AutowireIterator('marketplace.payment_gateway')] iterable $gateways, private readonly ?OmnitradeGateways $omnitrade = null)
-    {
+    public function __construct(
+        #[AutowireIterator('marketplace.payment_gateway')] iterable $gateways,
+        ?OmnitradeGateways $omnitrade = null,
+        #[Autowire('%kernel.environment%')] string $environment = 'prod',
+    ) {
         foreach ($gateways as $gateway) {
             $this->gateways[$gateway::name()] = $gateway;
         }
+        $this->omnitrade = DevGateway::DEMO_ENVIRONMENT === $environment ? null : $omnitrade;
     }
 
     public function get(?string $name): ?PaymentGatewayInterface
