@@ -505,14 +505,19 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     }
 
     /**
-     * @return $this
-     */
-    /**
+     * An availability is never nothing (the column refuses null): given
+     * none, the product keeps the one it had - in stock for a new one. The
+     * back office's select is filled by a script; a form sent without it
+     * carries no value, and the insertion stopped on "Column 'availability'
+     * cannot be null".
+     *
      * @return $this
      */
     public function setAvailability($availability): self
     {
-        $this->availability = $availability;
+        if (null !== $availability && '' !== $availability) {
+            $this->availability = $availability;
+        }
 
         return $this;
     }
@@ -1253,7 +1258,8 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $value = $attribute?->resolve($locale);
         // Not written in this language: the default one's (a grape's name is the same in Japanese).
         if (null !== $attribute && null !== $locale && (null === $value || '' === $value || [] === $value)) {
-            // By its name: resolve(null) is the page's language again, just made empty.
+            // By its name: glitchr/omnibase's translate($locale) answers that language alone - its own
+            // fallback is for the page's language, asked without a locale.
             $value = $attribute->resolve(Localizer::getDefaultLocale());
         }
 
