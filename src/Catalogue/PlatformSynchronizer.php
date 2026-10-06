@@ -65,6 +65,7 @@ class PlatformSynchronizer
         #[Autowire('%marketplace.catalogue.store%')] private readonly ?string $storeSlug = null,
         #[Autowire('%marketplace.catalogue.owned_fields%')] private readonly array $ownedFields = [],
         #[Autowire('%marketplace.default_currency%')] private readonly string $defaultCurrency = 'EUR',
+        #[Autowire('%kernel.environment%')] private readonly string $environment = 'prod',
     ) {
     }
 
@@ -79,10 +80,17 @@ class PlatformSynchronizer
         $this->stats = array_map(static fn () => 0, $this->stats);
     }
 
+    /**
+     * @throws \LogicException without glitchr/omnitrade, and in a demonstration (glitchr/omnibase's `demo`
+     *                         environment): its catalogue is its fixtures', no platform is read there
+     */
     public function gateway(string $name): GatewayInterface
     {
         if (!$this->registry) {
             throw new \LogicException('glitchr/omnitrade is not installed: no platform to read a catalogue from.');
+        }
+        if ('demo' === $this->environment) {
+            throw new \LogicException(sprintf('The demonstration reads no platform: its catalogue is its fixtures\', and the "%s" gateway is not reached there.', $name));
         }
 
         return $this->registry->get($name);
