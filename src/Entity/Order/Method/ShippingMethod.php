@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ShippingMethodRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
@@ -166,7 +167,14 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
+    /**
+     * Its numbers - the days before it leaves, the days it travels, its price -
+     * are never "none": a form sent with one of them left empty gives null,
+     * taken as it is for the validation to say so on its field (NotNull), in
+     * place of an insertion stopped on "cannot be null". Zero is a number.
+     */
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull]
     protected $shippingDelay;
 
     public function getShippingDelay(): ?int
@@ -174,7 +182,7 @@ class ShippingMethod implements IconizeInterface
         return $this->shippingDelay;
     }
 
-    public function setShippingDelay(int $shippingDelay): self
+    public function setShippingDelay(?int $shippingDelay): self
     {
         $this->shippingDelay = $shippingDelay;
 
@@ -182,6 +190,7 @@ class ShippingMethod implements IconizeInterface
     }
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull]
     protected $deliveryTime;
 
     public function getDeliveryTime(): ?int
@@ -189,7 +198,7 @@ class ShippingMethod implements IconizeInterface
         return $this->deliveryTime;
     }
 
-    public function setDeliveryTime(int $deliveryTime): self
+    public function setDeliveryTime(?int $deliveryTime): self
     {
         $this->deliveryTime = $deliveryTime;
 
@@ -254,7 +263,9 @@ class ShippingMethod implements IconizeInterface
         return $this;
     }
 
+    /** Smallest unit. Zero is a price (a free delivery); none at all is not: said on the form's field. */
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull]
     protected $unitPrice;
 
     public function getUnitPrice(): ?int
@@ -262,7 +273,7 @@ class ShippingMethod implements IconizeInterface
         return $this->unitPrice;
     }
 
-    public function setUnitPrice(int $unitPrice): self
+    public function setUnitPrice(?int $unitPrice): self
     {
         $this->unitPrice = $unitPrice;
 
