@@ -43,6 +43,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]
@@ -317,7 +318,9 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         return $this;
     }
 
+    /** Smallest unit, before VAT. Zero is a price (given, or on request); none at all is not: said on the form's field. */
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull]
     protected $unitPrice;
 
     /**
@@ -386,7 +389,12 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         return $this->unitPrice;
     }
 
-    public function setUnitPrice(int $unitPrice): self
+    /**
+     * A form sent with its price left empty gives null: taken as it is, for
+     * the validation to say so (NotNull) rather than a type error to stop
+     * the page.
+     */
+    public function setUnitPrice(?int $unitPrice): self
     {
         $this->unitPrice = $unitPrice;
 

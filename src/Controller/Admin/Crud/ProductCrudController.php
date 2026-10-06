@@ -14,6 +14,7 @@ use Base\Field\TextField;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Product\Feature;
 use Base\Marketplace\Entity\Sales\Channel;
+use Base\Marketplace\Entity\Store;
 
 /**
  * Admin CRUD for the products. Prices are integers in the currency's
@@ -49,7 +50,9 @@ class ProductCrudController extends AbstractMarketplaceCrudController
         yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
         // The store it is sold in, chosen from the list: AssociationField would embed the store's own
         // fields in the product's form, down to properties nothing can read (Thread::$ownerPositions).
-        yield SelectField::new('parent', 'Store')->setColumns(6);
+        // Its stores are given as its choices: they are printed as the <select>'s options, so the store is
+        // chosen without a script too (left to itself the field asks them of an autocomplete, by script only).
+        yield SelectField::new('parent', 'Store')->setClass(Store::class)->setChoices($this->stores())->setColumns(6);
         yield IntegerField::new('unitPrice')->setColumns(3);
         // A starting price shown as "from" (what is priced on request); empty: the lowest of the variants.
         yield IntegerField::new('priceFrom', '@marketplace.product.price_from_field')->setColumns(3)->setRequired(false)->hideOnIndex();
@@ -62,5 +65,19 @@ class ProductCrudController extends AbstractMarketplaceCrudController
         yield TextField::new('headline')->hideOnIndex();
         yield TextareaField::new('excerpt')->hideOnIndex();
         yield TextareaField::new('content')->hideOnIndex();
+    }
+
+    /** @return array<string, Store> title => store, in the titles' order */
+    private function stores(): array
+    {
+        $stores = [];
+        foreach ($this->entityManager->getRepository(Store::class)->findAll() as $store) {
+            $title = (string) ($store->getTitle() ?? $store->getSlug());
+            // Two stores of one name: told apart by their address.
+            $stores[isset($stores[$title]) ? $title.' ('.$store->getSlug().')' : $title] = $store;
+        }
+        ksort($stores, \SORT_NATURAL | \SORT_FLAG_CASE);
+
+        return $stores;
     }
 }
