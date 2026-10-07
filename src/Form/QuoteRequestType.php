@@ -5,6 +5,7 @@ namespace Base\Marketplace\Form;
 use Base\Marketplace\Enum\Incoterm;
 use Base\Marketplace\Enum\TradeDirection;
 use Base\Form\Type\PrivacyType;
+use Base\Service\FormGuard;
 use Base\Marketplace\Model\QuoteRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
@@ -27,7 +28,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * privacy / privacy_consent / privacy_parameters (glitchr/omnibase's
  * PrivacyType). Guarded as glitchr/omnibase guards a form (its option
  * `guard`, action "quote"): a trap, the time it takes, the lists, the captcha
- * when the site has glitchr/omniguard - in place of the form's own trap.
+ * when the site has glitchr/omniguard - in place of the form's own trap, which
+ * stays only where the host's core is from before the guard.
  */
 class QuoteRequestType extends AbstractType
 {
@@ -82,6 +84,13 @@ class QuoteRequestType extends AbstractType
                 'multiple' => true,
             ]);
         }
+        if (!class_exists(FormGuard::class)) {
+            // A glitchr/omnibase from before the forms' guard: the form's own trap, off-screen for people
+            // (and for screen readers), filled by robots - read by the controller.
+            $builder->add('website', TextType::class, ['mapped' => false, 'required' => false, 'label' => false,
+                'row_attr' => ['class' => 'base-trap', 'aria-hidden' => 'true', 'style' => 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden'],
+                'attr' => ['tabindex' => '-1', 'autocomplete' => 'off']]);
+        }
         if (false !== $options['privacy'] || $options['privacy_consent']) {
             // glitchr/omnibase's notice, and the box to tick when the shop asks for it.
             $builder->add('privacy', PrivacyType::class, [
@@ -101,8 +110,6 @@ class QuoteRequestType extends AbstractType
             'preferred_countries' => ['FR', 'JP'],
             'phone' => true,
             'attachments' => true,
-            // glitchr/omnibase's forms' guard (Base\Service\FormGuard): the sender's name is contactName.
-            'guard' => ['action' => 'quote', 'name' => 'contactName'],
             // true: omnibase's notice; a translation key: the shop's own; false: none.
             'privacy' => true,
             'privacy_consent' => false,
@@ -114,5 +121,9 @@ class QuoteRequestType extends AbstractType
         }
         $resolver->setAllowedTypes('privacy', ['bool', 'string']);
         $resolver->setAllowedTypes('privacy_parameters', 'array');
+        if (class_exists(FormGuard::class)) {
+            // glitchr/omnibase's forms' guard: the sender's name is contactName.
+            $resolver->setDefault('guard', ['action' => 'quote', 'name' => 'contactName']);
+        }
     }
 }
