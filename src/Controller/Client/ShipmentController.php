@@ -2,6 +2,9 @@
 
 namespace Base\Marketplace\Controller\Client;
 
+use Base\Admin\Context\AdminContext;
+use Base\Admin\EventSubscriber\NestHeaderSubscriber;
+use Base\Admin\Menu\MenuBuilder;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Service\Shipping;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +19,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * The staff side of posting goods: the orders waiting to leave, each with
  * its address, and the two steps - shipped (with the tracking number) and
  * delivered. The member follows both on their order page.
+ *
+ * A screen of the back office: under /admin, in its layout with its menus,
+ * and nestable (X-Transparent-Nest) like every admin page - not a page of
+ * the shop. Its first address, /commandes/a-expedier, leads there.
  */
 #[IsGranted('ROLE_ADMIN')]
 class ShipmentController extends AbstractController
@@ -24,13 +31,39 @@ class ShipmentController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly Shipping $shipping,
         private readonly TranslatorInterface $translator,
+        private readonly AdminContext $adminContext,
+        private readonly MenuBuilder $menuBuilder,
     ) {
     }
 
-    #[Route('/commandes/a-expedier', name: 'marketplace_shipping_queue', priority: 1)]
+    #[Route('/admin/commandes/a-expedier', name: 'marketplace_shipping_queue', methods: ['GET'])]
     public function Queue(): Response
     {
-        return $this->render('@Marketplace/client/shipping_queue.html.twig', ['orders' => $this->shipping->queue()]);
+        // Same seeding as omnibase/admin's own non-CRUD pages (TrashController):
+        // without it the layout renders an empty sidebar and no account menu.
+        if ([] === $this->adminContext->getMainMenu()) {
+            $this->adminContext->setMainMenu($this->menuBuilder->buildDefault());
+        }
+        if ([] === $this->adminContext->getUserMenu()) {
+            $this->adminContext->setUserMenu($this->menuBuilder->buildUserMenuDefault($this->getUser()));
+        }
+
+        $response = $this->render('@Marketplace/admin/shipping_queue.html.twig', [
+            'admin_context' => $this->adminContext,
+            'orders' => $this->shipping->queue(),
+        ]);
+        // Set here rather than left to the subscriber, which knows the
+        // admin's own routes (admin_*) and not this one.
+        $response->headers->set(NestHeaderSubscriber::HEADER, 'overlay');
+
+        return $response;
+    }
+
+    /** The queue's address before it moved into the back office: bookmarks and old links still land. */
+    #[Route('/commandes/a-expedier', name: 'marketplace_shipping_queue_legacy', methods: ['GET'], priority: 1)]
+    public function LegacyQueue(): Response
+    {
+        return $this->redirectToRoute('marketplace_shipping_queue', [], Response::HTTP_MOVED_PERMANENTLY);
     }
 
     #[Route('/commandes/{reference}/expedier', name: 'marketplace_order_ship', methods: ['POST'], requirements: ['reference' => '[A-Za-z0-9\-]+'])]

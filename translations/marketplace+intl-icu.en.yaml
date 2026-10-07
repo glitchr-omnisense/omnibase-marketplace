@@ -109,6 +109,7 @@ shipping:
   tracking: "Tracking"
   queue: "Orders to ship"
   queue_empty: "Nothing to ship right now."
+  queue_help: "The paid orders waiting for their parcel: once its tracking number is typed, an order is shipped and its buyer follows it on the order page."
   mark_shipped: "Mark as shipped"
   shipped: "Order {reference} is shipped."
   delivered: "Order {reference} is delivered."
@@ -385,3 +386,22 @@ company:
 vat_number:
   invalid: "This is not an intra-EU VAT number."
   unknown: "VIES does not know this VAT number: check it."
+quick:
+  buy: "Buy"
+  email: "Your e-mail address"
+  email_placeholder: "you@example.org"
+  note: "No account to open: the order goes to this address."
+  error:
+    email: "This e-mail address does not look valid."
+    unavailable: "This item is no longer for sale."
+    one_store: "These items do not come from the same shop."
+    payment: "Payment is unavailable for the moment. Try again a little later."
+    refused: "The payment was refused."
+    cancelled: "Payment cancelled: nothing was charged."
+    disabled: "Quick orders are closed."
+  done:
+    title: "Thank you, it is paid!"
+    waiting: "Payment in progress…"
+    cancelled: "This order was cancelled."
+    reference: "Order {reference}"
+    waiting_note: "The page updates as soon as the payment is confirmed."

@@ -108,6 +108,7 @@ shipping:
   tracking: "追跡"
   queue: "発送待ちのご注文"
   queue_empty: "発送待ちはありません。"
+  queue_help: "お支払い済みで発送待ちのご注文です。追跡番号を入力すると発送済みになります。"
   mark_shipped: "発送済みにする"
   shipped: "ご注文 {reference} を発送しました。"
   delivered: "ご注文 {reference} をお届けしました。"

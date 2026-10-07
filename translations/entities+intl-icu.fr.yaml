@@ -5,6 +5,20 @@ marketplace:
   product:
     _singular: "produit"
     _plural: "produits"
+    feature:
+      _singular: "caractéristique"
+      _plural: "caractéristiques"
+    identifier:
+      _singular: "identifiant produit"
+      _plural: "identifiants produit"
+    taxon:
+      _singular: "catégorie de produits"
+      _plural: "catégories de produits"
+    attribute:
+      adapter:
+        barcode_adapter:
+          _singular: "standard de code-barres"
+          _plural: "standards de codes-barres"
     attribute_set:
       _singular: "fiche type"
       _plural: "fiches types"
@@ -17,6 +31,12 @@ marketplace:
   order:
     _singular: "commande"
     _plural: "commandes"
+    shipment:
+      _singular: "expédition"
+      _plural: "expéditions"
+    transaction:
+      _singular: "transaction"
+      _plural: "transactions"
     method:
       paymentMethod:
         _singular: "moyen de paiement"
@@ -24,3 +44,38 @@ marketplace:
       payment_method:
         _singular: "moyen de paiement"
         _plural: "moyens de paiement"
+      shipping_method:
+        _singular: "mode de livraison"
+        _plural: "modes de livraison"
+  review:
+    _singular: "avis"
+    _plural: "avis"
+    taxon:
+      _singular: "catégorie d'avis"
+      _plural: "catégories d'avis"
+  sales:
+    channel:
+      _singular: "canal de vente"
+      _plural: "canaux de vente"
+    forex:
+      _singular: "taux de change"
+      _plural: "taux de change"
+    fee:
+      _singular: "frais"
+      _plural: "frais"
+    region:
+      _singular: "région de vente"
+      _plural: "régions de vente"
+    tax:
+      _singular: "taxe"
+      _plural: "taxes"
+      vat:
+        _singular: "taux de TVA"
+        _plural: "taux de TVA"
+    discount:
+      promotion:
+        _singular: "promotion"
+        _plural: "promotions"
+      coupon:
+        _singular: "coupon"
+        _plural: "coupons"

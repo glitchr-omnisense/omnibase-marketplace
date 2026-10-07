@@ -1,0 +1,27 @@
+{#
+ # A product bought in one step (Service\QuickOrder): an e-mail address, the
+ # payment - no account, no basket. Include it wherever the product shows:
+ #
+ #   {% include '@Marketplace/client/_quick_order.html.twig' with {product: product} %}
+ #
+ #   product  the Product to buy
+ #   label    the button's words (default: "Acheter")
+ #   back     where a refusal brings the buyer back (default: this page)
+ #
+ # The form is Form\QuickOrderType, guarded as glitchr/omnibase guards a form
+ # (a trap, the time it takes, the captcha when the site has one): what the
+ # guard adds is printed by form_rest(), before the button. A signed-in buyer
+ # is not asked for an address: the order is theirs.
+ #}
+{% set quick = marketplace_quick_order_form(product, back ?? null) %}
+{{ form_start(quick, {attr: {class: 'marketplace-quick', 'data-transparent-ignore': ''}}) }}
+    {% if quick.email is defined %}
+    <label class="marketplace-quick-email">
+        <span class="visually-hidden">{{ '@marketplace.quick.email'|trans }}</span>
+        {{ form_widget(quick.email) }}
+    </label>
+    {% endif %}
+    {{ form_rest(quick) }}
+    <button type="submit" class="marketplace-quick-button">{{ label ?? '@marketplace.quick.buy'|trans }} · {% include '@Marketplace/client/_price.html.twig' with {amount: product.unitPrice, currency: product.currency} %}</button>
+    {% if quick.email is defined %}<p class="marketplace-quick-note">{{ '@marketplace.quick.note'|trans }}</p>{% endif %}
+{{ form_end(quick, {render_rest: false}) }}

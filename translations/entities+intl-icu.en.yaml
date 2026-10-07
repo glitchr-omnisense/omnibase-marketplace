@@ -5,6 +5,20 @@ marketplace:
   product:
     _singular: "product"
     _plural: "products"
+    feature:
+      _singular: "feature"
+      _plural: "features"
+    identifier:
+      _singular: "product identifier"
+      _plural: "product identifiers"
+    taxon:
+      _singular: "product category"
+      _plural: "product categories"
+    attribute:
+      adapter:
+        barcode_adapter:
+          _singular: "barcode standard"
+          _plural: "barcode standards"
     attribute_set:
       _singular: "attribute set"
       _plural: "attribute sets"
@@ -17,6 +31,12 @@ marketplace:
   order:
     _singular: "order"
     _plural: "orders"
+    shipment:
+      _singular: "shipment"
+      _plural: "shipments"
+    transaction:
+      _singular: "transaction"
+      _plural: "transactions"
     method:
       paymentMethod:
         _singular: "payment method"
@@ -24,3 +44,38 @@ marketplace:
       payment_method:
         _singular: "payment method"
         _plural: "payment methods"
+      shipping_method:
+        _singular: "shipping method"
+        _plural: "shipping methods"
+  review:
+    _singular: "review"
+    _plural: "reviews"
+    taxon:
+      _singular: "review category"
+      _plural: "review categories"
+  sales:
+    channel:
+      _singular: "sales channel"
+      _plural: "sales channels"
+    forex:
+      _singular: "exchange rate"
+      _plural: "exchange rates"
+    fee:
+      _singular: "fee"
+      _plural: "fees"
+    region:
+      _singular: "sales region"
+      _plural: "sales regions"
+    tax:
+      _singular: "tax"
+      _plural: "taxes"
+      vat:
+        _singular: "VAT rate"
+        _plural: "VAT rates"
+    discount:
+      promotion:
+        _singular: "promotion"
+        _plural: "promotions"
+      coupon:
+        _singular: "coupon"
+        _plural: "coupons"

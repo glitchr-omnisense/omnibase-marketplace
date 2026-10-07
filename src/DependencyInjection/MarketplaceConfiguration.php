@@ -33,6 +33,13 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                 ->scalarNode('default_gateway')->defaultValue('stripe')->info('The gateway checkout offers first.')->end()
                 ->booleanNode('guest_cart')->defaultFalse()
                     ->info('Whether a visitor who is not signed in may fill a cart.')->end()
+                // A product bought in one step, with an e-mail address and no account (Service\QuickOrder).
+                ->arrayNode('quick_order')->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('enabled')->defaultTrue()->info('The form of @Marketplace/client/_quick_order.html.twig takes orders.')->end()
+                        ->integerNode('link_ttl')->min(60)->defaultValue(2592000)->info('Seconds the signed link of a quick order\'s page stays valid (30 days).')->end()
+                    ->end()
+                ->end()
                 ->scalarNode('admin_role')->defaultValue('ROLE_SUPERADMIN')
                     ->info('The role (or permission) every marketplace screen of the back office requires: the creators by default.')->end()
                 // Currencies whose rate from default_currency is always kept,

@@ -1,0 +1,21 @@
+{#
+ # The page of a quick order, for the holder of its signed link: paid or
+ # still waiting for the provider's word (it then asks again by itself).
+ # An application that delivers something here answers QuickOrderDoneEvent
+ # with its own page.
+ #}
+{% extends 'layout1.html.twig' %}
+{% block title %}{{ '@marketplace.quick.done.title'|trans }}{% endblock %}
+{% block stylesheets %}{{ parent() }}<link rel="stylesheet" href="{{ asset('bundles/marketplace/css/marketplace.css') }}">{% if not order.paid and not order.cancelled %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+
+{% block content %}
+<div class="marketplace marketplace-quick-done">
+    <h1>{{ (order.paid ? '@marketplace.quick.done.title' : (order.cancelled ? '@marketplace.quick.done.cancelled' : '@marketplace.quick.done.waiting'))|trans }}</h1>
+    <p>{{ '@marketplace.quick.done.reference'|trans({reference: order.reference}) }}{% if order.customer %} · {{ order.customer.email }}{% endif %}</p>
+    <ul class="marketplace-quick-lines">
+        {% for item in order.items %}<li>{{ item.quantity }} × {{ item.product }}</li>{% endfor %}
+    </ul>
+    <p class="marketplace-quick-total">{% include '@Marketplace/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</p>
+    {% if not order.paid and not order.cancelled %}<p class="marketplace-quick-note">{{ '@marketplace.quick.done.waiting_note'|trans }}</p>{% endif %}
+</div>
+{% endblock %}

@@ -91,6 +91,7 @@ marketplace:
     orders_per_page: 20
     cart_max_quantity: 99     # per line; Product::getMaxQuantity() can lower it
     guest_cart: false
+    quick_order: { enabled: true, link_ttl: 2592000 }   # a product bought with an e-mail address, no account
     gateways:                 # settings per payment method, keyed by its slug
         virement:
             currencies: [EUR] # keeps the method off orders in other currencies
@@ -122,7 +123,7 @@ A product travels by post unless its class says otherwise: `Product::isShippable
 
 A shipping method in the order's currency is offered with its charge. `RATE_FLAT` costs its unit price once. `RATE_PRIORITY` costs it per shipping unit, where a unit comes from the product's weight, or one per item.
 
-Staff see the paid orders waiting at `/commandes/a-expedier` (`marketplace_shipping_queue`, `ROLE_ADMIN`). They mark one shipped with its tracking number, which creates a Shipment, and later delivered. The member follows the parcel on their order page, and a tracking URL may hold `{number}`.
+Staff see the paid orders waiting at `/admin/commandes/a-expedier` (`marketplace_shipping_queue`, `ROLE_ADMIN`), a screen of the back office; its first address, `/commandes/a-expedier`, redirects there. They mark one shipped with its tracking number, which creates a Shipment, and later delivered. The member follows the parcel on their order page, and a tracking URL may hold `{number}`.
 
 The carrier itself is [glitchr/omnibus](https://github.com/glitchr-studio/omnibus)'s: a shipping
 method names a gateway configured under `omnibus.gateways` (`gatewayName`), and when that package
@@ -251,3 +252,29 @@ PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, glitchr/omnibase 3.x and omnibase/ad
 ## Licence
 
 See the repository.
+
+## Quick order
+
+A product bought in one step, with no account and no basket: an e-mail
+address, the payment.
+
+```twig
+{% include '@Marketplace/client/_quick_order.html.twig' with {product: product} %}
+```
+
+`Service\QuickOrder::buy()` makes the order for that address (the member it
+belongs to, or a new one whose password nobody knows), `Checkout::settle()`
+takes the payment with the shop's first able method, and the buyer ends on
+the order's own page - a signed link (`QuickOrder::doneUrl()`, valid
+`marketplace.quick_order.link_ttl` seconds) that is also good to mail.
+`OrderPaidEvent` delivers as for any order. To put something on that page -
+files to download, a pickup time - listen to `Event\QuickOrderDoneEvent` and
+set a response.
+
+The form is `Form\QuickOrderType` (`marketplace_quick_order_form(product, back)`
+gives it to a template of yours), guarded as glitchr/omnibase guards a form -
+its option `guard`, action `quick_order`: a trap, the time it takes, the lists,
+the captcha when the site has glitchr/omniguard; a signed-in member is asked
+no address. A buyer back from the payment provider in the same browser lands
+on that page too (`EventListener\QuickOrderReturnListener`). Tested in
+`tests/Http/QuickOrderTest.php`.

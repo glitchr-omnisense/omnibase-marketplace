@@ -123,6 +123,7 @@ shipping:
   tracking: "Suivi"
   queue: "Commandes à expédier"
   queue_empty: "Rien à expédier pour le moment."
+  queue_help: "Les commandes payées qui attendent leur colis : le numéro de suivi saisi, la commande est expédiée et son acheteur prévenu sur sa page de commande."
   mark_shipped: "Marquer expédiée"
   shipped: "La commande {reference} est expédiée."
   delivered: "La commande {reference} est livrée."
@@ -400,3 +401,22 @@ company:
 vat_number:
   invalid: "Ce n'est pas un numéro de TVA intracommunautaire."
   unknown: "VIES ne connaît pas ce numéro de TVA : vérifiez-le."
+quick:
+  buy: "Acheter"
+  email: "Votre adresse e-mail"
+  email_placeholder: "votre@adresse.fr"
+  note: "Pas de compte à créer : la commande part à cette adresse."
+  error:
+    email: "Cette adresse e-mail ne semble pas valide."
+    unavailable: "Cet article n'est plus en vente."
+    one_store: "Ces articles ne viennent pas de la même boutique."
+    payment: "Le paiement est indisponible pour le moment. Réessayez un peu plus tard."
+    refused: "Le paiement a été refusé."
+    cancelled: "Paiement annulé : rien n'a été débité."
+    disabled: "La commande express est fermée."
+  done:
+    title: "Merci, c'est payé !"
+    waiting: "Paiement en cours…"
+    cancelled: "Cette commande a été annulée."
+    reference: "Commande {reference}"
+    waiting_note: "La page se met à jour dès que le paiement est confirmé."

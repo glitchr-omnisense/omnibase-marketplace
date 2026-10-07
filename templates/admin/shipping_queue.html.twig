@@ -1,0 +1,73 @@
+{#
+    /admin/commandes/a-expedier - see Base\Marketplace\Controller\Client\ShipmentController.
+    A staff screen: in the back office's layout, like its own non-CRUD pages
+    (the trash, the forum's display order) - never the shop's. A host with
+    another admin layout passes marketplace_admin_layout.
+#}
+{% extends marketplace_admin_layout|default('@Admin/layout.html.twig') %}
+
+{% block page_title %}{{ '@marketplace.shipping.queue'|trans }}{% endblock %}
+
+{% block content_header %}
+<div class="admin-header">
+    <span class="admin-header-icon"><i class="fa-solid fa-truck"></i></span>
+    <div class="admin-header-titles">
+        <h1>{{ '@marketplace.shipping.queue'|trans }}</h1>
+        <div class="admin-header-subtitle">{{ '@marketplace.shipping.queue_help'|trans }}</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .shipping-queue td { vertical-align: top; }
+    .shipping-queue ul { margin: 0; padding-left: 1.1em; }
+    .shipping-queue .datagrid-hint { display: block; font-size: 11px; opacity: 0.65; }
+    .shipping-queue form { display: flex; gap: .4rem; align-items: center; justify-content: flex-end; }
+    .shipping-queue input[type="text"] { font: inherit; color: var(--admin-text); background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 6px; padding: .4rem .6rem; min-width: 0; width: 12rem; }
+</style>
+<div class="card shipping-queue">
+    {% if orders is empty %}
+        <div class="empty-state">{{ '@marketplace.shipping.queue_empty'|trans }}</div>
+    {% else %}
+    <div class="table-responsive">
+    <table class="datagrid">
+        <thead>
+            <tr>
+                <th>{{ '@marketplace.checkout.title'|trans }}</th>
+                <th>{{ '@marketplace.shipping.address'|trans }}</th>
+                <th>{{ '@marketplace.cart.product'|trans }}</th>
+                <th class="actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+            {% set address = order.shippingAddress %}
+            <tr>
+                {#- data-label on every cell: the grid restacks as cards under 720px, like the CRUD datagrid. -#}
+                <td data-label="{{ '@marketplace.checkout.title'|trans }}">
+                    <strong>{{ order.reference }}</strong>
+                    <span class="badge">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span>
+                    <span class="datagrid-hint">{{ order.customer ? order.customer }}{% if order.paidAt %} · {{ order.paidAt|date('d/m/Y H:i') }}{% endif %}{% if order.shippingMethod %} · {{ order.shippingMethod.label }}{% endif %}</span>
+                </td>
+                <td data-label="{{ '@marketplace.shipping.address'|trans }}">
+                    {{ address.name }}<br>{{ address.streetAddress }}{% if address.affix %}<br>{{ address.affix }}{% endif %}<br>{{ address.zipCode }} {{ address.city }} · {{ address.country }}{% if address.phone %}<br>{{ address.phone }}{% endif %}
+                </td>
+                <td data-label="{{ '@marketplace.cart.product'|trans }}">
+                    <ul>{% for line in order.items %}<li>{{ line.quantity }} × {{ line.product ? line.product.title : line }}</li>{% endfor %}</ul>
+                </td>
+                <td class="actions" data-label="{{ '@marketplace.shipping.tracking'|trans }}">
+                    <form method="post" action="{{ path('marketplace_order_ship', {reference: order.reference}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('marketplace_ship') }}">
+                        <input type="text" name="tracking" required placeholder="{{ '@marketplace.shipping.tracking'|trans }}" maxlength="64">
+                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-truck"></i> {{ '@marketplace.shipping.mark_shipped'|trans }}</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

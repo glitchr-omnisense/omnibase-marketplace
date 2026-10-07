@@ -154,3 +154,15 @@
 .marketplace-shipping { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 1rem 0; padding: .9rem 1rem; border-radius: var(--marketplace-radius); background: #fff; border: 1px solid var(--marketplace-line); }
 .marketplace-plain { margin: 0; padding-left: 1rem; }
 .marketplace-ship { padding: 1rem; margin-bottom: 1rem; border-radius: var(--marketplace-radius); background: var(--marketplace-pale); }
+
+/* A product bought in one step (_quick_order.html.twig): an address, a button. */
+.marketplace-quick { display: grid; gap: .5rem; margin: 0; }
+.marketplace-quick-email input { width: 100%; min-height: 2.6rem; padding: 0 .8rem; border: 1px solid var(--marketplace-line, rgba(127, 127, 127, .4)); border-radius: .5rem; background: var(--marketplace-surface, #fff); color: inherit; font: inherit; box-sizing: border-box; }
+.marketplace-quick-trap { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.marketplace-quick-button { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 2.6rem; padding: 0 1.1rem; border: 1px solid var(--marketplace-accent, #b5411f); border-radius: .5rem; background: var(--marketplace-accent, #b5411f); color: var(--marketplace-on-accent, #fff); font: inherit; font-weight: 700; cursor: pointer; }
+.marketplace-quick-button .marketplace-price { color: inherit; font-weight: inherit; }
+.marketplace-quick-note { margin: 0; font-size: .8rem; color: var(--marketplace-soft, #6b6b6b); }
+.marketplace-quick .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.marketplace-quick-done { max-width: 40rem; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 1rem; }
+.marketplace-quick-lines { padding-left: 1.2rem; }
+.marketplace-quick-total { font-size: 1.4rem; font-weight: 800; }
