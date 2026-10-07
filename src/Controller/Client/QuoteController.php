@@ -93,10 +93,6 @@ class QuoteController extends AbstractController
             $form->get('files')->addError(new FormError($this->translator->trans('@marketplace.'.$refusal[0], $refusal[1])));
         }
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($data->isRobot()) {
-                // The trap was filled: thanked like anybody, nothing stored, nobody told.
-                return $this->render('@Marketplace/client/quote/requested.html.twig', ['quote' => (new Quote('—'))->setTitle($data->title)->setEmail($data->email)]);
-            }
             $quote = new Quote();
             $quote->setClient($user instanceof User ? $user : null)
                 ->setContactName($data->contactName)

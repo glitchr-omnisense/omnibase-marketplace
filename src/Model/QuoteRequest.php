@@ -66,12 +66,4 @@ final class QuoteRequest
 
     /** @var list<\Symfony\Component\HttpFoundation\File\UploadedFile> a logo, a photo of the place, a plan: checked by Service\Attachments */
     public array $files = [];
-
-    /** The trap: a field people do not see, and robots fill. */
-    public ?string $website = null;
-
-    public function isRobot(): bool
-    {
-        return '' !== trim((string) $this->website);
-    }
 }

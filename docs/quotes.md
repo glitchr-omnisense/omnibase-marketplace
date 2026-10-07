@@ -58,13 +58,17 @@ of the public directory and downloaded from the back office
 `marketplace.attachments.*`. A file refused is said on its field and nothing
 is kept.
 
-Robots: the form has a **trap** (a `website` field people do not see): filled,
-the sender is thanked and nothing is stored nor mailed. Under the form,
-glitchr/omnibase's data-protection notice (`Base\Form\Type\PrivacyType`),
-with its box to tick when `consent` is on. `Form\QuoteRequestType` takes the
-same as options: `phone`, `attachments`, `trap`, `privacy` (true, a
-translation key of the site's own notice, or false), `privacy_consent`,
-`privacy_parameters`.
+Robots: the form is guarded as glitchr/omnibase guards a form - its option
+`guard` (`action: quote`; glitchr/omnibase's `docs/20-architecture/guard.md`):
+a trap, the time it takes (a signed stamp), the lists of
+`base.guard.reputation`, the captcha when the site has glitchr/omniguard
+(without it, the trap and the time alone). A robot is refused on the form;
+nothing is stored nor mailed. Under the form, glitchr/omnibase's
+data-protection notice (`Base\Form\Type\PrivacyType`), with its box to tick
+when `consent` is on. `Form\QuoteRequestType` takes the same as options:
+`phone`, `attachments`, `privacy` (true, a translation key of the site's own
+notice, or false), `privacy_consent`, `privacy_parameters`, and the core's
+`guard`.
 
 The pipeline is a page of the back office outside the CRUDs: import it in
 the application's routes (as omnibase/agenda's calendar page):

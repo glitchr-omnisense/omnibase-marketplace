@@ -23,9 +23,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * (checked: a SIRET at the State's register, an EU VAT number at VIES),
  * what, which way, on which terms, where, how much, for when. The trade
  * fields are left out with `trade: false` (a studio's quote needs none).
- * Options: phone, attachments (files, checked by Service\Attachments), trap
- * (the `website` field robots fill), privacy / privacy_consent /
- * privacy_parameters (glitchr/omnibase's PrivacyType).
+ * Options: phone, attachments (files, checked by Service\Attachments),
+ * privacy / privacy_consent / privacy_parameters (glitchr/omnibase's
+ * PrivacyType). Guarded as glitchr/omnibase guards a form (its option
+ * `guard`, action "quote"): a trap, the time it takes, the lists, the captcha
+ * when the site has glitchr/omniguard - in place of the form's own trap.
  */
 class QuoteRequestType extends AbstractType
 {
@@ -80,12 +82,6 @@ class QuoteRequestType extends AbstractType
                 'multiple' => true,
             ]);
         }
-        if ($options['trap']) {
-            // Off-screen for people (and for screen readers), filled by robots.
-            $builder->add('website', TextType::class, ['required' => false, 'label' => false,
-                'row_attr' => ['class' => 'base-trap', 'aria-hidden' => 'true', 'style' => 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden'],
-                'attr' => ['tabindex' => '-1', 'autocomplete' => 'off']]);
-        }
         if (false !== $options['privacy'] || $options['privacy_consent']) {
             // glitchr/omnibase's notice, and the box to tick when the shop asks for it.
             $builder->add('privacy', PrivacyType::class, [
@@ -105,14 +101,15 @@ class QuoteRequestType extends AbstractType
             'preferred_countries' => ['FR', 'JP'],
             'phone' => true,
             'attachments' => true,
-            'trap' => true,
+            // glitchr/omnibase's forms' guard (Base\Service\FormGuard): the sender's name is contactName.
+            'guard' => ['action' => 'quote', 'name' => 'contactName'],
             // true: omnibase's notice; a translation key: the shop's own; false: none.
             'privacy' => true,
             'privacy_consent' => false,
             'privacy_parameters' => [],
         ]);
         $resolver->setAllowedTypes('trade', 'bool');
-        foreach (['phone', 'attachments', 'trap', 'privacy_consent'] as $option) {
+        foreach (['phone', 'attachments', 'privacy_consent'] as $option) {
             $resolver->setAllowedTypes($option, 'bool');
         }
         $resolver->setAllowedTypes('privacy', ['bool', 'string']);
