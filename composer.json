@@ -79,7 +79,8 @@
         "glitchr/omnibus": "Ship through its carriers (omnibus/mondial-relay, omnibus/ups...): a ShippingMethod names one",
         "glitchr/omnibill": "Send the invoices through its gateways, their lifecycle statuses kept (marketplace.invoice.gateway); not on Packagist yet - a vcs repository, https://github.com/glitchr-studio/omnibill",
         "omnibill/email": "The default invoicing gateway: the invoice e-mailed from the seller's address, its statuses kept by hand (https://github.com/glitchr-studio/omnibill-email)",
-        "omnibill/afnor": "An approved platform (XP Z12-013), the day the shop must issue through one (https://github.com/glitchr-studio/omnibill-afnor)"
+        "omnibill/afnor": "An approved platform (XP Z12-013), the day the shop must issue through one (https://github.com/glitchr-studio/omnibill-afnor)",
+        "glitchr/omnisign": "Accept a priced quote by signing it in the page (marketplace.quotes.signature), with glitchr/omnibase's Base\\Service\\Signatures; not on Packagist yet - https://github.com/glitchr-studio/omnisign"
     },
     "repositories": [
         {

@@ -174,6 +174,18 @@ filters:
   reset: "条件をクリア"
   count: "{count, plural, =0 {該当なし} other {# 件}}"
 quote:
+  signature:
+    accept: "署名して承諾する"
+    unavailable: "現在署名できません。しばらくしてから再度お試しください。"
+    signed: "お見積り {reference} に署名し、承諾しました。"
+    completed: "お見積り {reference} に署名しました。"
+    sent: "お見積り {reference} の署名はまだ完了していません。"
+    declined: "お見積り {reference} の署名は拒否されました。お見積りは引き続き有効です。"
+    expired: "お見積り {reference} の署名は期限切れになりました。お見積りは引き続き有効で、再度署名できます。"
+    canceled: "お見積り {reference} の署名は取り消されました。お見積りは引き続き有効です。"
+    done: "{date} に署名済み。"
+    download: "署名済みお見積り（PDF）"
+    evidence: "署名の証跡"
   attachments: "添付ファイル"
   phone_invalid: "電話番号が正しくないようです。"
   request_title: "お見積もりを依頼する"

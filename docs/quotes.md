@@ -31,6 +31,44 @@ order: 22
 Statuses (`Enum\QuoteStatus`): requested, draft, sent, accepted, paid,
 declined.
 
+## Accepting by signing it (glitchr/omnisign)
+
+With [glitchr/omnisign](https://github.com/glitchr-studio/omnisign) installed, glitchr/omnibase's
+`Base\Service\Signatures` there, and a gateway named, accepting a priced quote is **signing it in
+the page**:
+
+```yaml
+marketplace:
+    quotes:
+        signature: contracts          # a gateway of omnisign.gateways; absent (the default): accepting is a click
+        signature_template: ~         # DocuSeal's open-source edition signs its own templates only: one's id
+```
+
+1. "Signer et accepter" sends the quote's PDF (`@Marketplace/quote/quote.pdf.twig`, laid out as the
+   invoice, a box "Bon pour accord" on its last page where the signature goes) to the provider, as an
+   envelope about the quote, and takes the client to the provider's signing page. Nothing is
+   accepted yet. Asked again while it waits, the same envelope is signed.
+2. Signed, the client comes back to `/cotation/<token>/signee` (`marketplace_quote_signed`): the
+   provider is asked where it stands and, completed, the quote is accepted as a click accepts it -
+   its order, its payment (`Service\QuoteToOrder`). The provider's webhook
+   (`/signatures/{gateway}/webhook`, glitchr/omnibase) accepts it too, for its client, if they never
+   come back.
+3. Declined, expired or cancelled: the quote stays open, its page says so, and the client may sign
+   again (a new envelope).
+4. The signed quote and its evidence (the provider's audit trail) are kept with the envelope in the
+   private storage; the quote's page links them for its client, the back office's quote screen for
+   the shop (`/cotation/<token>/signature/document|preuve`, `marketplace_quote_signature_file`).
+
+A site dresses the PDF in `templates/bundles/MarketplaceBundle/quote/quote.pdf.twig`, keeping the
+signature's box where `Quote\Signature\QuoteSignatures::BOX` says (points from the top left corner of
+the last page). With DocuSeal's open-source edition, which signs only its own templates,
+`signature_template` names one: the quote is then what the site's page shows, not the signed
+document.
+
+Without the family, without the core's `Signatures`, or without `signature`, accepting is a click
+as it always was: nothing in `src/Quote/Signature/` is registered, and nothing of the bundle
+implements an omnisign interface.
+
 ```yaml
 marketplace:
     quotes:

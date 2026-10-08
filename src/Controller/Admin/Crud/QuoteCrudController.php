@@ -46,6 +46,15 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
     private TranslatorInterface $translator;
     private int $validity = 30;
 
+    private ?\Base\Marketplace\Quote\Signature\QuoteSignatures $signatures = null;
+
+    /** The quotes signed in the page: with glitchr/omnisign only (the service does not exist without it). */
+    #[Required]
+    public function setQuoteSignatures(?\Base\Marketplace\Quote\Signature\QuoteSignatures $signatures = null): void
+    {
+        $this->signatures = $signatures;
+    }
+
     #[Required]
     public function setQuoteServices(MailerInterface $mailer, TranslatorInterface $translator, #[Autowire('%marketplace.quotes.validity%')] int $validity = 30): void
     {
@@ -81,7 +90,17 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
             ->linkToCrudAction('send')
             ->displayIf(fn (Quote $quote) => $quote->getStatus()->isEditable());
 
-        return parent::configureActions($actions)->add(Actions::PAGE_INDEX, $send)->add(Actions::PAGE_DETAIL, $send)->add(Actions::PAGE_EDIT, $send);
+        $actions = parent::configureActions($actions)->add(Actions::PAGE_INDEX, $send)->add(Actions::PAGE_DETAIL, $send)->add(Actions::PAGE_EDIT, $send);
+        // Signed in the page (glitchr/omnisign, marketplace.quotes.signature): the signed quote and its evidence.
+        if (null !== $this->signatures) {
+            foreach (['document' => 'fa-solid fa-file-signature', 'preuve' => 'fa-solid fa-stamp'] as $kind => $icon) {
+                $actions->add(Actions::PAGE_DETAIL, Action::new('signature_'.$kind, '@marketplace.quote.signature.'.('preuve' === $kind ? 'evidence' : 'download'), $icon)
+                    ->linkToUrl(fn (Quote $quote) => $this->generateUrl('marketplace_quote_signature_file', ['token' => $quote->getToken(), 'kind' => $kind]))
+                    ->displayIf(fn (Quote $quote) => (bool) $this->signatures->latest($quote)?->isCompleted()));
+            }
+        }
+
+        return $actions;
     }
 
     public function configureFields(string $pageName): iterable

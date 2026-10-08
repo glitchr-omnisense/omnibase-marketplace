@@ -1,0 +1,118 @@
+{#
+ # A priced quote as the PDF its client signs (Quote\Signature\QuoteSignatures,
+ # glitchr/omnisign): laid out as the invoice is (@Marketplace/invoice/invoice.pdf.twig),
+ # from the quote itself and the shop's seller (marketplace.invoice.seller). The box
+ # "Bon pour accord" is where the provider puts the signature: on the last page, at
+ # `box` (points from the top left corner); `export`: a sale out of the EU, without VAT - a site that dresses this template by its own
+ # templates/bundles/MarketplaceBundle/quote/quote.pdf.twig keeps it there.
+ #}
+{% set money = quote.currency %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>{{ quote.reference }}</title>
+    <style>
+        {% block style %}
+        @page { margin: 18mm 15mm 20mm; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color: #222; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { vertical-align: top; }
+        small { display: block; color: #777; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2pt; }
+        .quote-company td { padding-bottom: 12pt; }
+        .quote-company-name { font-size: 13pt; font-weight: bold; }
+        .quote-title { font-size: 16pt; font-weight: bold; text-align: right; }
+        .quote-header td { padding: 8pt 6pt 12pt 0; }
+        .table-quote th { background: #f2f2f2; font-size: 7.5pt; text-transform: uppercase; padding: 5pt; border-bottom: 1pt solid #ccc; }
+        .table-quote td { padding: 5pt; border-bottom: .5pt solid #e3e3e3; }
+        .text-right { text-align: right; } .text-center { text-align: center; }
+        .text-inverse { font-weight: bold; }
+        .quote-price { margin-top: 12pt; }
+        .quote-price td { padding: 4pt 6pt; }
+        .quote-price-total { background: #222; color: #fff; font-size: 11pt; font-weight: bold; }
+        .quote-note { margin-top: 14pt; font-size: 8pt; color: #444; }
+        .quote-sign { position: absolute; left: {{ (box.x / 72 * 25.4 - 15)|round(1) }}mm; top: {{ ((box.y - 14) / 72 * 25.4 - 18)|round(1) }}mm; width: {{ (box.width / 72 * 25.4)|round(1) }}mm; height: {{ ((box.height + 14) / 72 * 25.4)|round(1) }}mm; border: .5pt solid #999; font-size: 7.5pt; color: #555; padding: 2pt 4pt; }
+        .quote-footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: center; font-size: 7pt; color: #777; }
+        {% endblock %}
+    </style>
+</head>
+<body>
+
+<table class="quote-company">
+    <tr>
+        <td width="55%">
+            {% block logo %}{% endblock %}
+            {% block seller %}
+            <div class="quote-company-name">{{ seller.name ?? '' }}</div>
+            {% for line in seller.street ?? [] %}<div>{{ line }}</div>{% endfor %}
+            <div>{{ seller.postcode ?? '' }} {{ seller.city ?? '' }}</div>
+            {% if seller.siret ?? null %}<div>SIRET {{ seller.siret }}</div>{% endif %}
+            {% if seller.vat_number ?? null %}<div>{{ 'invoice.vat_number'|trans({}, 'marketplace', 'fr') }} {{ seller.vat_number }}</div>{% endif %}
+            {% if seller.email ?? null %}<div>{{ seller.email }}</div>{% endif %}
+            {% endblock %}
+        </td>
+        <td width="45%">
+            <div class="quote-title">{{ 'quote.pdf.title'|trans({}, 'marketplace', 'fr') }}</div>
+            <div class="text-right text-inverse">{{ quote.reference }}</div>
+            <div class="text-right">{{ 'quote.pdf.date'|trans({'{date}': (quote.createdAt ?? 'now')|date('d/m/Y')}, 'marketplace', 'fr') }}</div>
+            {% if quote.validUntil %}<div class="text-right">{{ 'quote.pdf.valid_until'|trans({'{date}': quote.validUntil|date('d/m/Y')}, 'marketplace', 'fr') }}</div>{% endif %}
+        </td>
+    </tr>
+</table>
+
+<table class="quote-header">
+    <tr>
+        <td width="50%">
+            <small>{{ 'quote.pdf.client'|trans({}, 'marketplace', 'fr') }}</small>
+            {% if quote.companyName %}<div class="text-inverse">{{ quote.companyName }}</div>{% endif %}
+            <div>{{ quote.contactName }}</div>
+            <div>{{ quote.email }}</div>
+            {% if quote.siret %}<div>SIRET {{ quote.siret }}</div>{% endif %}
+            {% if quote.vatNumber %}<div>{{ 'invoice.vat_number'|trans({}, 'marketplace', 'fr') }} {{ quote.vatNumber }}</div>{% endif %}
+        </td>
+        <td width="50%">
+            <small>{{ 'quote.pdf.object'|trans({}, 'marketplace', 'fr') }}</small>
+            <div class="text-inverse">{{ quote.title }}</div>
+            {% if quote.terms %}<div>Incoterm {{ quote.terms }}</div>{% endif %}
+        </td>
+    </tr>
+</table>
+
+<table class="table-quote">
+    <thead>
+    <tr>
+        <th style="text-align: left">{{ 'invoice.item'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-center" width="14%">{{ 'invoice.quantity'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-right" width="18%">{{ 'quote.pdf.lot_price'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-right" width="18%">{{ 'invoice.total_without_vat'|trans({}, 'marketplace', 'fr') }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for line in quote.lines %}
+        <tr>
+            <td><span class="text-inverse">{{ line.label ?: line.product }}</span></td>
+            <td class="text-center">{{ line.quantity }}{% if line.lotSize > 1 %} × {{ line.lotSize }}{% endif %}</td>
+            <td class="text-right">{{ line.lotPrice|invoice_money(money) }}</td>
+            <td class="text-right">{{ line.amount|invoice_money(money) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<table class="quote-price">
+    {% if quote.discountPercent %}
+    <tr><td class="text-right" width="70%">{{ 'quote.pdf.discount'|trans({'{percent}': quote.discountPercent}, 'marketplace', 'fr') }}</td><td class="text-right">− {{ quote.discountAmount|invoice_money(money) }}</td></tr>
+    {% endif %}
+    <tr class="quote-price-total"><td class="text-right" width="70%">{{ 'invoice.total_without_vat'|trans({}, 'marketplace', 'fr') }}</td><td class="text-right">{{ quote.total|invoice_money(money) }}</td></tr>
+</table>
+<p class="quote-note">{{ (export ? 'quote.pdf.vat_export' : 'quote.pdf.vat_added')|trans({}, 'marketplace', 'fr') }}</p>
+{% if quote.message %}<p class="quote-note">{{ quote.message|nl2br }}</p>{% endif %}
+
+<div class="quote-sign">{{ 'quote.pdf.sign'|trans({}, 'marketplace', 'fr') }}</div>
+
+<div class="quote-footer">
+    {% block footer %}{{ seller.name ?? '' }}{% if seller.siren ?? null %} — SIREN {{ seller.siren }}{% endif %} — {{ quote.reference }}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -43,12 +43,23 @@
     </table>
     <p class="marketplace-quote-vat">{{ (export ? '@marketplace.quote.vat_export' : '@marketplace.quote.vat_added')|trans }}</p>
 
+    {# Accepting it is signing it in the page (glitchr/omnisign): where its latest signature stands. #}
+    {% if signature ?? null %}
+        {% if signature.completed %}
+        <p class="marketplace-quote-signature is-signed">{{ '@marketplace.quote.signature.done'|trans({'{date}': (signature.completedAt ?? signature.updatedAt)|format_date('long', locale: app.request.locale)}) }}
+            <a href="{{ path('marketplace_quote_signature_file', {token: quote.token, kind: 'document'}) }}">{{ '@marketplace.quote.signature.download'|trans }}</a>
+            · <a href="{{ path('marketplace_quote_signature_file', {token: quote.token, kind: 'preuve'}) }}">{{ '@marketplace.quote.signature.evidence'|trans }}</a></p>
+        {% elseif signature.status in ['declined', 'expired', 'canceled'] and quote.acceptable %}
+        <p class="marketplace-quote-signature is-{{ signature.status }}">{{ ('@marketplace.quote.signature.' ~ signature.status)|trans({'{reference}': quote.reference}) }}</p>
+        {% endif %}
+    {% endif %}
+
     {% if quote.acceptable or awaiting_payment %}
         {% if is_granted('ROLE_USER') %}
         <div class="marketplace-quote-actions">
             <form method="post" action="{{ path('marketplace_quote_accept', {token: quote.token}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('marketplace_quote_' ~ quote.id) }}">
-                <button class="marketplace-btn marketplace-btn-primary" type="submit">{{ (awaiting_payment ? '@marketplace.quote.pay' : '@marketplace.quote.accept')|trans }}</button>
+                <button class="marketplace-btn marketplace-btn-primary" type="submit">{{ (awaiting_payment ? '@marketplace.quote.pay' : (signing ?? false ? '@marketplace.quote.signature.accept' : '@marketplace.quote.accept'))|trans }}</button>
             </form>
             {% if quote.acceptable %}
             <form method="post" action="{{ path('marketplace_quote_decline', {token: quote.token}) }}">

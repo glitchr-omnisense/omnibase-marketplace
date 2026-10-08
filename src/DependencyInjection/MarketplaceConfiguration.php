@@ -137,6 +137,8 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                         ->booleanNode('phone')->defaultTrue()->info('The form asks a phone number (optional).')->end()
                         ->booleanNode('attachments')->defaultTrue()->info('The form takes files (a logo, a photo of the shopfront): kept out of the public directory, downloaded from the back office.')->end()
                         ->booleanNode('consent')->defaultFalse()->info('The data-protection box must be ticked (the notice is shown either way).')->end()
+                        ->scalarNode('signature')->defaultNull()->info('With glitchr/omnisign: the gateway (omnisign.gateways.<name>) a priced quote is signed through, in the site\'s page, to be accepted. Null: accepting is a click, as without omnisign.')->end()
+                        ->scalarNode('signature_template')->defaultNull()->info('A template of the provider\'s to sign instead of the quote\'s PDF: DocuSeal\'s open-source edition signs its own templates only.')->end()
                     ->end()
                 ->end()
                 // Files given with a quote request or an order line (Entity\Attachment, Service\Attachments).

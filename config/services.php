@@ -119,6 +119,12 @@ return function (ContainerConfigurator $configurator) {
             ->public();
     }
 
+    // A priced quote accepted by signing it in the page (marketplace.quotes.signature): only with glitchr/omnisign
+    // and glitchr/omnibase's Signatures. Nothing in Quote/Signature/ implements an omnisign interface.
+    if (class_exists('Omnisign\\Registry') && class_exists('Base\\Service\\Signatures')) {
+        $services->load('Base\\Marketplace\\Quote\\Signature\\', $src . '/Quote/Signature/');
+    }
+
     if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {
         $services->load('Base\\Marketplace\\Controller\\Admin\\', $src . '/Controller/Admin/')
             ->tag('controller.service_arguments');

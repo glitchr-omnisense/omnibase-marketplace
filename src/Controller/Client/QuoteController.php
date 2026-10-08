@@ -11,6 +11,8 @@ use Base\Marketplace\Enum\TradeDirection;
 use Base\Marketplace\Form\QuoteRequestType;
 use Base\Marketplace\Model\QuoteRequest;
 use Base\Marketplace\Pricing\ExportExemption;
+use Base\Marketplace\Quote\Signature\QuoteSignatures;
+use Base\Marketplace\Security\MarketplaceVoter;
 use Base\Marketplace\Repository\QuoteRepository;
 use Base\Marketplace\Service\Attachments;
 use Base\Marketplace\Service\CompanyRegistry;
@@ -24,6 +26,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Attribute\Route;
@@ -36,6 +40,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * quote read through its own link (/cotation/<token>), accepted - it becomes
  * an order waiting in the client's carts (Service\QuoteToOrder) - or
  * declined, and the client's quotes in their account.
+ *
+ * With glitchr/omnisign and marketplace.quotes.signature, accepting a priced
+ * quote is signing it in the page (Quote\Signature\QuoteSignatures): the
+ * client goes to the provider's signing page and comes back to
+ * /cotation/<token>/signee, the quote accepted once the signature is
+ * completed; the signed quote and its evidence are downloaded from its page.
  *
  * Under /cotation by default ("cotation", not "devis": omnibase/forge keeps
  * /devis for a studio's); marketplace.quotes.path moves it - "devis" on a
@@ -52,6 +62,7 @@ class QuoteController extends AbstractController
         #[Autowire('%marketplace.quotes.phone%')] private readonly bool $phone = true,
         #[Autowire('%marketplace.quotes.attachments%')] private readonly bool $attachments = true,
         #[Autowire('%marketplace.quotes.consent%')] private readonly bool $consent = false,
+        private readonly ?QuoteSignatures $signatures = null,
     ) {
     }
 
@@ -165,6 +176,9 @@ class QuoteController extends AbstractController
             'items' => $quoteToOrder->itemsOf($quote),
             'awaiting_payment' => QuoteStatusGuard::isAwaitingPayment($quote),
             'export' => $quote->getCountry() && !ExportExemption::inEu($quote->getCountry()),
+            // Accepting it is signing it (glitchr/omnisign), and where its latest signature stands.
+            'signing' => $this->signing(),
+            'signature' => $this->signatures?->latest($quote),
         ]);
     }
 
@@ -174,6 +188,20 @@ class QuoteController extends AbstractController
     {
         $quote = $this->find($token);
         $this->assertMine($request, $quote);
+
+        // Signed in the page first: accepted once the provider says the signature is completed (Signed()).
+        if ($this->signing() && $quote->isAcceptable()) {
+            try {
+                return $this->redirect($this->signatures->start($quote, $this->generateUrl('marketplace_quote_signed', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL)));
+            } catch (\DomainException $e) {
+                $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage()));
+            } catch (\Throwable $e) {
+                // The provider refused or did not answer: said, nothing accepted.
+                $this->addFlash('error', $this->translator->trans('@marketplace.quote.signature.unavailable'));
+            }
+
+            return $this->redirectToRoute('marketplace_quote', ['token' => $token]);
+        }
 
         try {
             $order = $quoteToOrder->accept($quote, $this->getUser());
@@ -186,6 +214,53 @@ class QuoteController extends AbstractController
         $this->addFlash('success', $this->translator->trans('@marketplace.quote.accepted', ['{reference}' => $quote->getReference()]));
 
         return $this->redirectToRoute('marketplace_checkout', ['order' => $order->getId()]);
+    }
+
+    /** Back from the provider's signing page: the quote accepted once signed, open again when declined or expired. */
+    #[Route('/%marketplace.quotes.path%/{token}/signee', name: 'marketplace_quote_signed', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function Signed(string $token): Response
+    {
+        $quote = $this->find($token);
+        if (null === $this->signatures || !$this->isMine($quote)) {
+            throw $this->createNotFoundException('No signature for this quote.');
+        }
+        try {
+            $back = $this->signatures->back($quote, $this->getUser());
+        } catch (\DomainException $e) {
+            $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage()));
+
+            return $this->redirectToRoute('marketplace_quote', ['token' => $token]);
+        }
+        if (null !== $back['order']) {
+            $this->addFlash('success', $this->translator->trans('@marketplace.quote.signature.signed', ['{reference}' => $quote->getReference()]));
+
+            return $this->redirectToRoute('marketplace_checkout', ['order' => $back['order']->getId()]);
+        }
+        $this->addFlash('completed' === $back['status'] ? 'success' : 'info', $this->translator->trans('@marketplace.quote.signature.'.$back['status'], ['{reference}' => $quote->getReference()]));
+
+        return $this->redirectToRoute('marketplace_quote', ['token' => $token]);
+    }
+
+    /** The signed quote ("document") or its evidence ("preuve"): for its client and the shop's staff. */
+    #[Route('/%marketplace.quotes.path%/{token}/signature/{kind}', name: 'marketplace_quote_signature_file', requirements: ['token' => '[A-Za-z0-9_\-]{43}', 'kind' => 'document|preuve'], methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function SignatureFile(string $token, string $kind): Response
+    {
+        $quote = $this->find($token);
+        if (!$this->isMine($quote) && !$this->isGranted(MarketplaceVoter::VIEW)) {
+            throw $this->createAccessDeniedException('This quote was made for someone else.');
+        }
+        $content = $this->signatures?->file($quote, 'preuve' === $kind ? 'evidence' : 'document');
+        if (null === $content) {
+            throw $this->createNotFoundException('Not signed yet.');
+        }
+        $name = sprintf('%s-%s.pdf', 'preuve' === $kind ? 'preuve-signature' : 'cotation-signee', $quote->getReference());
+        $response = new Response($content, 200, ['Content-Type' => 'application/pdf', 'X-Content-Type-Options' => 'nosniff']);
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $name, preg_replace('/[^A-Za-z0-9._-]+/', '_', $name)));
+        $response->setPrivate();
+
+        return $response;
     }
 
     #[Route('/%marketplace.quotes.path%/{token}/refuser', name: 'marketplace_quote_decline', requirements: ['token' => '[A-Za-z0-9_\-]{43}'], methods: ['POST'])]
@@ -230,10 +305,21 @@ class QuoteController extends AbstractController
         if (!$this->isCsrfTokenValid('marketplace_quote_'.$quote->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid token.');
         }
-        $user = $this->getUser();
-        $mine = $quote->getClient() ? $quote->getClient()->getId() === $user?->getId() : 0 === strcasecmp($quote->getEmail(), (string) $user?->getEmail());
-        if (!$mine) {
+        if (!$this->isMine($quote)) {
             throw $this->createAccessDeniedException('This quote was made for someone else.');
         }
+    }
+
+    private function isMine(Quote $quote): bool
+    {
+        $user = $this->getUser();
+
+        return $quote->getClient() ? $quote->getClient()->getId() === $user?->getId() : 0 === strcasecmp($quote->getEmail(), (string) $user?->getEmail());
+    }
+
+    /** Whether accepting a quote is signing it: glitchr/omnisign, and marketplace.quotes.signature. */
+    private function signing(): bool
+    {
+        return null !== $this->signatures && $this->signatures->isEnabled();
     }
 }
