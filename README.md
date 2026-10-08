@@ -25,6 +25,7 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 | `marketplace_order` | `/commandes/{reference}` |
 | `marketplace_payment_return` | `/panier/{order}/paiement/{gateway}` |
 | `marketplace_payment_webhook` | `/marketplace/{gateway}/webhook` (POST) |
+| `marketplace_invoice` | `/factures/{number}` |
 
 The promotions, fees, taxes, shipping and review entities come from a shop site and are mapped. The shop pages do not use them yet.
 
@@ -186,6 +187,10 @@ event's signature (`stripe listen`'s secret goes there too, locally).
 ## Brands, typed sheets, lots, the age gate
 
 A product can name its maker (`Brand`: a wine estate, a house - Shopify's vendor, WooCommerce's brand), carry a typed sheet set per taxon without code (`AttributeSet`: which of omnibase's attributes, required, filterable, with a unit), sell by the lot (`packSize`, `minimumQuantity`: a case of 6, a minimum of 12) and to adults only (`ageRestricted` on the product or its taxon: the age gate asks once, 18 by default, 20 in Japan). Pairings, cross-sells and upsells link products (`Product\Association`), and a blog post features products through its connexes. See [docs/catalogue.md](docs/catalogue.md) and [docs/selling-rules.md](docs/selling-rules.md).
+
+## Invoices
+
+An order paid gets its invoice (`Entity\Invoice`, `Service\Invoices::issue()`, by itself with `marketplace.invoice.auto_issue`): a number from a sequence without a gap per series and year (F-2026-000041), the seller and the buyer as they are that day, the order's lines and VAT, the French mentions; a PDF carrying its Factur-X XML (EN 16931, `horstoeko/zugferd`); never changed once issued - a credit note cancels it. The buyer downloads it at `/factures/{number}`, the back office sends it, marks it paid, credits it. Sites create its table by a migration. See [docs/invoices.md](docs/invoices.md).
 
 ## Business quotes and exports
 

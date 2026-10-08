@@ -4,6 +4,11 @@
      this bundle's autoload-dev, so the bootstrap registers the test namespace
      itself - the same dual-runner pattern as base-bundle and base-bundle-forum. -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" beStrictAboutOutputDuringTests="true" bootstrap="tests/bootstrap.php">
+  <!-- Each kernel test boots the host application whole (a hundred and more),
+       and the invoices' tests render PDFs: past 512 MB by the end. -->
+  <php>
+    <ini name="memory_limit" value="1G"/>
+  </php>
   <testsuites>
     <testsuite name="unit">
       <directory>tests</directory>

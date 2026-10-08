@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Controller\Admin\Crud;
 
+use Base\Admin\Attribute\AdminAction;
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
 use Base\Marketplace\Controller\Admin\AbstractMarketplaceCrudController;
@@ -11,6 +12,9 @@ use Base\Field\DateTimeField;
 use Base\Field\IdField;
 use Base\Field\TextField;
 use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Service\Invoices;
+use Symfony\Contracts\Service\Attribute\Required;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Base\Admin\Filter\Filter;
@@ -23,6 +27,16 @@ use Doctrine\ORM\QueryBuilder;
  */
 class OrderCrudController extends AbstractMarketplaceCrudController
 {
+    private Invoices $invoices;
+    private TranslatorInterface $translator;
+
+    #[Required]
+    public function setInvoiceServices(Invoices $invoices, TranslatorInterface $translator): void
+    {
+        $this->invoices = $invoices;
+        $this->translator = $translator;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Order::class;
@@ -40,7 +54,28 @@ class OrderCrudController extends AbstractMarketplaceCrudController
      */
     public function configureActions(Actions $actions): Actions
     {
-        return parent::configureActions($actions)->disable(Action::NEW, Action::EDIT);
+        // An order paid (or waiting for its transfer) has its invoice issued here, once.
+        $issue = Action::new('issueInvoice', '@marketplace.invoice.admin.issue', 'fa-solid fa-file-invoice')
+            ->linkToCrudAction('issueInvoice')
+            ->displayIf(fn (Order $order) => $order->isPaid() && null === $this->invoices->of($order));
+
+        return parent::configureActions($actions)->disable(Action::NEW, Action::EDIT)
+            ->add(Actions::PAGE_DETAIL, $issue)->add(Actions::PAGE_INDEX, $issue);
+    }
+
+    #[AdminAction('/{entityId}/invoice')]
+    public function issueInvoice(string $entityId): Response
+    {
+        /** @var Order $order */
+        $order = $this->findEntity($entityId);
+        try {
+            $invoice = $this->invoices->issue($order);
+            $this->addFlash('success', $this->translator->trans('@marketplace.invoice.admin.issued', ['{number}' => $invoice->getNumber()]));
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $this->translator->trans('@marketplace.invoice.admin.refused', ['{message}' => $e->getMessage()]));
+        }
+
+        return $this->redirectToIndex();
     }
 
     /**

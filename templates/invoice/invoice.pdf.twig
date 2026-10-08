@@ -1,0 +1,186 @@
+{#
+ # An invoice or a credit note, as its PDF prints it (Service\Invoices::pdf(),
+ # rendered by Dompdf through glitchr/omnibase's PdfResponse, its Factur-X XML
+ # attached afterwards). Everything comes from the invoice itself - its seller,
+ # its buyer, its lines and totals as they were when it was issued - never from
+ # the order or the shop's settings of today.
+ #
+ # Laid out after another site's invoice. A site dresses it by its own
+ # templates/bundles/MarketplaceBundle/invoice/invoice.pdf.twig, extending
+ # this one ({% extends '@!Marketplace/invoice/invoice.pdf.twig' %}) and
+ # filling its blocks: `style`, `logo`, `seller`, `footer`.
+ #
+ # Nothing is fetched from elsewhere (PdfResponse turns remote resources off):
+ # a logo is given as a data: URI (the `logo` block, |embed_base64).
+ #}
+{% set money = invoice.currency %}
+{% set seller = invoice.seller %}
+{% set buyer = invoice.buyer %}
+{% set totals = invoice.totals %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>{{ invoice.number }}</title>
+    <style>
+        {% block style %}
+        @page { margin: 18mm 15mm 20mm; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color: #222; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { vertical-align: top; }
+        small { display: block; color: #777; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2pt; }
+        .invoice-company td { padding-bottom: 12pt; }
+        .invoice-company-name { font-size: 13pt; font-weight: bold; }
+        .invoice-title { font-size: 16pt; font-weight: bold; text-align: right; }
+        .invoice-header td { padding: 8pt 6pt 12pt 0; }
+        .table-invoice th { background: #f2f2f2; font-size: 7.5pt; text-transform: uppercase; padding: 5pt; border-bottom: 1pt solid #ccc; }
+        .table-invoice td { padding: 5pt; border-bottom: .5pt solid #e3e3e3; }
+        .text-right { text-align: right; } .text-center { text-align: center; }
+        .text-inverse { font-weight: bold; }
+        .invoice-price { margin-top: 12pt; }
+        .invoice-price td { padding: 4pt 6pt; }
+        .invoice-price-total { background: #222; color: #fff; font-size: 11pt; font-weight: bold; }
+        .vat-breakdown { margin-top: 10pt; width: 60%; }
+        .vat-breakdown td, .vat-breakdown th { padding: 3pt 5pt; border-bottom: .5pt solid #e3e3e3; font-size: 8pt; }
+        .invoice-note { margin-top: 14pt; padding-left: 12pt; font-size: 8pt; color: #444; }
+        .invoice-footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: center; font-size: 7pt; color: #777; }
+        .credit-note { color: #a40000; }
+        {% endblock %}
+    </style>
+</head>
+<body>
+
+<table class="invoice-company">
+    <tr>
+        <td width="55%">
+            {% block logo %}{% endblock %}
+            {% block seller %}
+            <div class="invoice-company-name">{{ seller.name }}</div>
+            {% if seller.legal_form or seller.share_capital %}<div>{{ seller.legal_form }}{% if seller.share_capital %} {{ 'invoice.capital'|trans({'{capital}': seller.share_capital}, 'marketplace', 'fr') }}{% endif %}</div>{% endif %}
+            {% for line in seller.street %}<div>{{ line }}</div>{% endfor %}
+            <div>{{ seller.postcode }} {{ seller.city }}{% if seller.country and seller.country != 'FR' %}, {{ seller.country }}{% endif %}</div>
+            {% if seller.siren %}<div>SIREN {{ seller.siren }}{% if seller.rcs %} — {{ seller.rcs }}{% endif %}</div>{% endif %}
+            {% if seller.siret %}<div>SIRET {{ seller.siret }}</div>{% endif %}
+            {% if seller.vat_number %}<div>{{ 'invoice.vat_number'|trans({}, 'marketplace', 'fr') }} {{ seller.vat_number }}</div>{% endif %}
+            {% if seller.email or seller.phone %}<div>{{ seller.email }}{% if seller.email and seller.phone %} · {% endif %}{{ seller.phone }}</div>{% endif %}
+            {% endblock %}
+        </td>
+        <td width="45%">
+            <div class="invoice-title{{ invoice.creditNote ? ' credit-note' : '' }}">{{ (invoice.creditNote ? 'invoice.credit_note' : 'invoice.invoice')|trans({}, 'marketplace', 'fr') }}</div>
+            <div class="text-right text-inverse">{{ invoice.number }}</div>
+            <div class="text-right">{{ 'invoice.issued_at'|trans({'{date}': invoice.issuedAt|date('d/m/Y')}, 'marketplace', 'fr') }}</div>
+            {% if invoice.soldAt %}<div class="text-right">{{ 'invoice.sold_at'|trans({'{date}': invoice.soldAt|date('d/m/Y')}, 'marketplace', 'fr') }}</div>{% endif %}
+            {% if invoice.orderReference %}<div class="text-right">{{ 'invoice.order'|trans({'{reference}': invoice.orderReference}, 'marketplace', 'fr') }}</div>{% endif %}
+            {% if invoice.credited %}<div class="text-right">{{ 'invoice.credits'|trans({'{number}': invoice.credited.number, '{date}': invoice.credited.issuedAt|date('d/m/Y')}, 'marketplace', 'fr') }}</div>{% endif %}
+        </td>
+    </tr>
+</table>
+
+<table class="invoice-header">
+    <tr>
+        <td width="50%">
+            <small>{{ 'invoice.buyer'|trans({}, 'marketplace', 'fr') }}</small>
+            <div class="text-inverse">{{ buyer.name }}</div>
+            {% for line in buyer.address.street ?? [] %}<div>{{ line }}</div>{% endfor %}
+            {% if buyer.address.postcode ?? null or buyer.address.city ?? null %}<div>{{ buyer.address.postcode }} {{ buyer.address.city }}{% if buyer.address.country and buyer.address.country != 'FR' %}, {{ buyer.address.country }}{% endif %}</div>{% endif %}
+            {% if buyer.siren %}<div>SIREN {{ buyer.siren }}</div>{% endif %}
+            {% if buyer.siret %}<div>SIRET {{ buyer.siret }}</div>{% endif %}
+            {% if buyer.vat_number %}<div>{{ 'invoice.vat_number'|trans({}, 'marketplace', 'fr') }} {{ buyer.vat_number }}</div>{% endif %}
+            {% if buyer.email %}<div>{{ buyer.email }}</div>{% endif %}
+        </td>
+        <td width="50%">
+            {% if buyer.delivery %}
+            <small>{{ 'invoice.delivery'|trans({}, 'marketplace', 'fr') }}</small>
+            {% if buyer.delivery.name %}<div class="text-inverse">{{ buyer.delivery.name }}</div>{% endif %}
+            {% for line in buyer.delivery.street ?? [] %}<div>{{ line }}</div>{% endfor %}
+            <div>{{ buyer.delivery.postcode }} {{ buyer.delivery.city }}{% if buyer.delivery.country and buyer.delivery.country != 'FR' %}, {{ buyer.delivery.country }}{% endif %}</div>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+<table class="table table-invoice">
+    <thead>
+    <tr>
+        <th class="text-left">{{ 'invoice.item'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-right" width="14%">{{ 'invoice.unit_price'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-center" width="8%">{{ 'invoice.quantity'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-center" width="9%">{{ 'invoice.rate'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-right" width="15%">{{ 'invoice.total_without_vat'|trans({}, 'marketplace', 'fr') }}</th>
+        <th class="text-right" width="15%">{{ 'invoice.total_with_vat'|trans({}, 'marketplace', 'fr') }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for line in invoice.lines %}
+        <tr>
+            <td><span class="text-inverse">{{ line.label }}</span>{% if line.reference %}<br><small>#{{ line.reference }}</small>{% endif %}</td>
+            <td class="text-right">{{ line.unit_price|round|invoice_money(money) }}</td>
+            <td class="text-center">{{ line.quantity }}</td>
+            <td class="text-center">{{ line.rate|invoice_rate }}</td>
+            <td class="text-right">{{ line.total|invoice_money(money) }}</td>
+            <td class="text-right">{{ line.total_with_vat|invoice_money(money) }}</td>
+        </tr>
+    {% endfor %}
+    {% for charge in totals.charges ?? [] %}
+        <tr>
+            <td>{{ ('invoice.charge.' ~ charge.kind)|trans({}, 'marketplace', 'fr') }}</td>
+            <td></td><td></td>
+            <td class="text-center">{{ charge.rate|invoice_rate }}</td>
+            <td class="text-right">{{ charge.total|invoice_money(money) }}</td>
+            <td class="text-right">{{ charge.total_with_vat|invoice_money(money) }}</td>
+        </tr>
+    {% endfor %}
+    {% for allowance in totals.allowances ?? [] %}
+        <tr>
+            <td>{{ 'invoice.charge.discount'|trans({}, 'marketplace', 'fr') }}</td>
+            <td></td><td></td>
+            <td class="text-center">{{ allowance.rate|invoice_rate }}</td>
+            <td class="text-right">− {{ allowance.total|invoice_money(money) }}</td>
+            <td class="text-right">− {{ allowance.total_with_vat|invoice_money(money) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<table class="vat-breakdown">
+    <tr><th class="text-left">{{ 'invoice.rate'|trans({}, 'marketplace', 'fr') }}</th><th class="text-right">{{ 'invoice.base'|trans({}, 'marketplace', 'fr') }}</th><th class="text-right">{{ 'invoice.vat'|trans({}, 'marketplace', 'fr') }}</th></tr>
+    {% for vat in totals.vat_breakdown ?? [] %}
+        <tr><td>{{ vat.rate|invoice_rate }}</td><td class="text-right">{{ vat.base|invoice_money(money) }}</td><td class="text-right">{{ vat.vat|invoice_money(money) }}</td></tr>
+    {% endfor %}
+</table>
+
+<table class="invoice-price">
+    <tr>
+        <td class="text-right" width="70%">{{ 'invoice.total_without_vat'|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right">{{ totals.total_without_vat|invoice_money(money) }}</td>
+    </tr>
+    <tr>
+        <td class="text-right">{{ 'invoice.vat'|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right">{{ totals.vat|invoice_money(money) }}</td>
+    </tr>
+    <tr class="invoice-price-total">
+        <td class="text-right">{{ (invoice.creditNote ? 'invoice.credited_total' : 'invoice.total')|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right">{{ totals.total|invoice_money(money) }}</td>
+    </tr>
+    {% if not invoice.creditNote %}
+    <tr>
+        <td class="text-right">{{ 'invoice.paid'|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right">{{ totals.paid|invoice_money(money) }}</td>
+    </tr>
+    <tr>
+        <td class="text-right text-inverse">{{ 'invoice.due'|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right text-inverse">{{ totals.due|invoice_money(money) }}</td>
+    </tr>
+    {% endif %}
+</table>
+
+<ul class="invoice-note">
+    {% for mention in invoice.mentions %}<li>{{ mention }}</li>{% endfor %}
+</ul>
+
+<div class="invoice-footer">
+    {% block footer %}{{ seller.name }}{% if seller.siren %} — SIREN {{ seller.siren }}{% endif %}{% if seller.vat_number %} — {{ seller.vat_number }}{% endif %} — {{ invoice.number }}{% endblock %}
+</div>
+
+</body>
+</html>
