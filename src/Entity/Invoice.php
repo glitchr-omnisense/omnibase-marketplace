@@ -98,8 +98,8 @@ class Invoice
     #[ORM\Column(type: 'json')]
     protected array $buyer;
 
-    /** @var list<array<string, mixed>> */
-    #[ORM\Column(type: 'json')]
+    /** @var list<array<string, mixed>> - its column quoted: LINES is a word MySQL keeps for itself */
+    #[ORM\Column(name: '`lines`', type: 'json')]
     protected array $lines;
 
     /** @var array<string, mixed> totals, charges, VAT by rate */
