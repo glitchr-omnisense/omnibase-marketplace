@@ -24,6 +24,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * marking it paid, cancelling it by a credit note. An order's invoice is
  * issued from the order (OrderCrudController's "Issue the invoice"), or by
  * itself when the order is paid (marketplace.invoice.auto_issue).
+ *
+ * With glitchr/omnibill, sending goes through its gateway: the screen shows
+ * where the invoice stands there (its lifecycle status), and asks again.
  */
 class InvoiceCrudController extends AbstractMarketplaceCrudController
 {
@@ -67,6 +70,9 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         $paid = Action::new('markPaid', '@marketplace.invoice.admin.paid', 'fa-solid fa-check')
             ->linkToCrudAction('markPaid')
             ->displayIf(fn (Invoice $invoice) => !$invoice->isCreditNote() && !$invoice->isPaid() && !$invoice->isCancelled());
+        $refresh = Action::new('refresh', '@marketplace.invoice.admin.refresh', 'fa-solid fa-arrows-rotate')
+            ->linkToCrudAction('refresh')
+            ->displayIf(fn (Invoice $invoice) => null !== $this->invoices->gateway() && null !== $this->invoices->lifecycle($invoice));
         $credit = Action::new('credit', '@marketplace.invoice.admin.credit', 'fa-solid fa-rotate-left')
             ->linkToCrudAction('credit')
             ->askConfirmation('@marketplace.invoice.admin.credit_confirm')
@@ -74,7 +80,7 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
 
         $actions = parent::configureActions($actions)->disable(Action::NEW, Action::EDIT);
         foreach ([Actions::PAGE_INDEX, Actions::PAGE_DETAIL] as $page) {
-            $actions->add($page, $pdf)->add($page, $send)->add($page, $paid)->add($page, $credit);
+            $actions->add($page, $pdf)->add($page, $send)->add($page, $refresh)->add($page, $paid)->add($page, $credit);
         }
 
         return $actions;
@@ -100,7 +106,9 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('number')->setColumns(3);
         yield TextField::new('type')->setColumns(2);
-        yield TextField::new('state')->setColumns(2);
+        // With glitchr/omnibill, where it stands on the gateway it went through: "sent · Encaissée (email)".
+        yield TextField::new('state')->setColumns(2)
+            ->formatValue(fn (?string $state, Invoice $invoice) => null !== $this->invoices->gateway() && null !== ($lifecycle = $this->invoices->lifecycle($invoice)) ? $state.' · '.$lifecycle : $state);
         yield TextField::new('orderReference')->setColumns(3);
         yield DateTimeField::new('issuedAt')->setColumns(2);
         yield DateTimeField::new('sentAt')->hideOnIndex();
@@ -118,6 +126,19 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
             $this->invoices->send($invoice);
 
             return $this->translator->trans('@marketplace.invoice.admin.sent', ['{number}' => $invoice->getNumber(), '{email}' => $invoice->getBuyer()['email'] ?? '']);
+        });
+    }
+
+    #[AdminAction('/{entityId}/refresh')]
+    public function refresh(string $entityId): Response
+    {
+        /** @var Invoice $invoice */
+        $invoice = $this->findEntity($entityId);
+
+        return $this->attempt(function () use ($invoice) {
+            $this->invoices->refresh($invoice);
+
+            return $this->translator->trans('@marketplace.invoice.admin.refreshed', ['{number}' => $invoice->getNumber(), '{status}' => $this->invoices->lifecycle($invoice) ?? '-']);
         });
     }
 

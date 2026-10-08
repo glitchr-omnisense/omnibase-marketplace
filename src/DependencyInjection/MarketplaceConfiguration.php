@@ -65,6 +65,7 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                 ->arrayNode('invoice')->addDefaultsIfNotSet()
                     ->children()
                         ->booleanNode('auto_issue')->defaultFalse()->info('Issue the invoice of an order as soon as it is paid (OrderPaidEvent). Off: from the back office.')->end()
+                        ->scalarNode('gateway')->defaultValue('email')->info('With glitchr/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle\'s own e-mail.')->end()
                         ->scalarNode('prefix')->defaultValue('F')->info('The invoices\' series: F-2026-000001. One sequence per series and year, without a gap.')->end()
                         ->scalarNode('credit_prefix')->defaultValue('A')->info('The credit notes\' series: A-2026-000001.')->end()
                         ->integerNode('digits')->min(1)->max(12)->defaultValue(6)->end()

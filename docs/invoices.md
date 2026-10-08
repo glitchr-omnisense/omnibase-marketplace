@@ -105,8 +105,46 @@ The XML is checked against the profile's schema (`FacturX::validate()`, the libr
 validator). The Schematron rules of EN 16931 (KoSIT's validator, which needs Java) are not run here.
 
 Today's French reform requires the reception of electronic invoices from 2026-09-01, and their
-emission from 2027-09-01 for small and medium companies. Sending through an approved platform is a
-later step, `glitchr/omnibill`. Until then the invoice goes by e-mail, its PDF attached.
+emission from 2027-09-01 for small and medium companies. Sending goes through `glitchr/omnibill`
+when it is installed (below); until the shop must use an approved platform, its `omnibill/email`
+gateway sends the invoice by e-mail, its PDF attached.
+
+## Sending through glitchr/omnibill
+
+With `glitchr/omnibill` installed, `Invoices::send()` (the invoices' screen, "Send") hands the
+invoice to an omnibill gateway, and keeps where it stands there beside it
+(`Invoice\Transmission\Entity\InvoiceFlow`: the gateway, its reference, the lifecycle statuses of
+the reform - sent, deposited, refused, paid... - with their codes 200 to 213).
+
+```yaml
+# config/packages/marketplace.yaml
+marketplace:
+    invoice:
+        gateway: email           # the default; null: this bundle's own e-mail, as without omnibill
+```
+
+- **`email`, by default, with nothing to configure**: with `omnibill/email` installed and no omnibill
+  gateway of that name, the invoice is e-mailed from the seller's address
+  (`marketplace.invoice.seller.email`) to the buyer, with this bundle's subject and text (the
+  signed link included) and the PDF attached. Its statuses are kept by hand, beside the invoice:
+  "Mark paid" declares it "Encaissée" (212), the status the reform makes mandatory.
+- **A site's own gateway**: `marketplace.invoice.gateway` names one of `omnibill.gateways` (the
+  `OmnibillBundle` registered). An `email` one keeps its own `from`, `subject`, `body`, `bcc`; this
+  bundle's words fill in what it leaves out. An approved platform (`omnibill/afnor`) is a change
+  of configuration, not of code - the day the shop must issue through one.
+- **Where it stands**: the invoices' screen shows the latest status beside the state ("sent ·
+  Encaissée (email)") and asks the gateway again ("Refresh its status");
+  `bin/console marketplace:invoice:status [<number>...]` does it for every invoice transmitted whose
+  status is not final (a cron, for a platform without webhooks); a platform's webhook goes to
+  `POST /marketplace/omnibill/{gateway}/webhook` (`marketplace_invoice_webhook`), its signature
+  checked by the gateway.
+- **Without the family**, nothing of it exists: the folder `src/Invoice/Transmission/` is not
+  registered and its entity not mapped (a site has no `marketplace_invoice_flow` table, and needs
+  none); `send()` mails the invoice itself. A site that installs the family creates the table:
+  `make:migration`, then `doctrine:migrations:migrate`.
+- **Not done here**: receiving the suppliers' invoices (`omnibase/ledger`), writing a lifecycle
+  message (CDAR) for a platform that wants one to declare a payment - the status is then kept on
+  the shop's side only.
 
 ## Configuration
 

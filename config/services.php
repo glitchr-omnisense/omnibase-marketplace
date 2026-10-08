@@ -77,6 +77,13 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Supply/SupplyException.php',
             // The partner workshop is written to: needs symfony/mailer and the Twig bridge.
             ...(interface_exists('Symfony\\Component\\Mailer\\MailerInterface') && class_exists('Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail') ? [] : [$src . '/Supply/OfflineSupplier.php']),
+            // Invoices sent through glitchr/omnibill's gateways, where they stand kept beside them: only with that
+            // family (its entity mapped by MarketplaceExtension, with the family too; never a service).
+            $src . '/Invoice/Transmission/Entity/',
+            $src . '/Invoice/Transmission/TransmissionException.php',
+            ...(class_exists('Omnibill\\Registry') ? [] : [$src . '/Invoice/Transmission/']),
+            // Not a service itself: it makes omnibill/email's store (below).
+            $src . '/Invoice/Transmission/InvoiceStatusStore.php',
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),
@@ -93,6 +100,23 @@ return function (ContainerConfigurator $configurator) {
     if (class_exists('Omnibus\\Registry')) {
         $services->get('Base\\Marketplace\\Service\\Shipping')
             ->arg('$carriers', service('Omnibus\\Registry')->nullOnInvalid());
+    }
+
+    // The invoices' gateways (glitchr/omnibill): its registry when its bundle is registered; omnibill/email's
+    // statuses kept beside the invoices (Invoice\Transmission\InvoiceStatusStore), for a site's own "email" gateway too.
+    if (class_exists('Omnibill\\Registry')) {
+        $email = interface_exists('Omnibill\\Email\\StatusStoreInterface');
+        if ($email) {
+            $services->set('marketplace.invoice.status_store', 'Omnibill\\Email\\StatusStoreInterface')
+                ->factory(['Base\\Marketplace\\Invoice\\Transmission\\InvoiceStatusStore', 'create'])
+                ->args([service('doctrine.orm.entity_manager')]);
+            $services->alias('Omnibill\\Email\\StatusStoreInterface', 'marketplace.invoice.status_store')->public();
+        }
+        $services->get('Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission')
+            ->arg('$registry', service('Omnibill\\Registry')->nullOnInvalid())
+            ->arg('$mailer', service('mailer.mailer')->nullOnInvalid())
+            ->arg('$store', $email ? service('marketplace.invoice.status_store') : null)
+            ->public();
     }
 
     if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {

@@ -44,6 +44,18 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         }
         $container->prependExtensionConfig('doctrine', ['dbal' => ['types' => $types]]);
         $container->prependExtensionConfig('base', ['attributes' => ['paths' => [\dirname(__DIR__) . '/Attribute']]]);
+
+        // Where an invoice stands on a glitchr/omnibill gateway (Invoice\Transmission\Entity\InvoiceFlow):
+        // mapped only with the family - a site without it has no such table, and needs none.
+        if (class_exists('Omnibill\\Registry')) {
+            $container->prependExtensionConfig('doctrine', ['orm' => ['mappings' => ['MarketplaceInvoiceTransmission' => [
+                'is_bundle' => false,
+                'type' => 'attribute',
+                'dir' => \dirname(__DIR__) . '/Invoice/Transmission/Entity',
+                'prefix' => 'Base\\Marketplace\\Invoice\\Transmission\\Entity',
+                'alias' => 'MarketplaceInvoiceTransmission',
+            ]]]]);
+        }
     }
 
     public function load(array $configs, ContainerBuilder $container): void

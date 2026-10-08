@@ -7,6 +7,7 @@ use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Invoice\FacturX;
 use Base\Marketplace\Invoice\InvoiceComposer;
 use Base\Marketplace\Invoice\InvoiceNumbering;
+use Base\Marketplace\Invoice\Transmission\InvoiceTransmission;
 use Base\Marketplace\Repository\InvoiceRepository;
 use Base\Response\PdfResponse;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,6 +33,12 @@ use Twig\Environment;
  *
  * With marketplace.invoice.auto_issue, an order's invoice is issued when it
  * is paid (EventListener\InvoiceOnPaymentListener).
+ *
+ * With glitchr/omnibill, send() goes through its gateway
+ * (marketplace.invoice.gateway: omnibill/email by default, an approved
+ * platform later) and the invoice keeps where it stands there
+ * (Invoice\Transmission\InvoiceTransmission); without it, send() mails the
+ * invoice itself.
  */
 class Invoices
 {
@@ -48,6 +55,7 @@ class Invoices
         #[Autowire('%marketplace.invoice.prefix%')] private readonly string $prefix = 'F',
         #[Autowire('%marketplace.invoice.credit_prefix%')] private readonly string $creditPrefix = 'A',
         #[Autowire('%marketplace.invoice.payment_days%')] private readonly int $paymentDays = 30,
+        private readonly ?InvoiceTransmission $transmission = null,
     ) {
     }
 
@@ -132,8 +140,29 @@ class Invoices
 
     public function markPaid(Invoice $invoice, ?\DateTimeImmutable $at = null): void
     {
-        $invoice->markPaid($at ?? new \DateTimeImmutable());
+        $at ??= new \DateTimeImmutable();
+        $invoice->markPaid($at);
         $this->entityManager->flush();
+        // Told to the gateway it went through: "Encaissée" (212), a status the reform makes mandatory.
+        $this->transmission?->paid($invoice, $at);
+    }
+
+    /** The gateway invoices go through (glitchr/omnibill), null when they are mailed by this bundle. */
+    public function gateway(): ?string
+    {
+        return $this->transmission?->name();
+    }
+
+    /** Where the invoice stands on that gateway, in words ("Encaissée (email)"); null when it went through none. */
+    public function lifecycle(Invoice $invoice): ?string
+    {
+        return $this->transmission?->describe($invoice);
+    }
+
+    /** Asks the gateway where the invoice stands; false when it went through none. */
+    public function refresh(Invoice $invoice): bool
+    {
+        return null !== $this->transmission?->refresh($invoice);
     }
 
     /** The invoice's page as the PDF prints it (HTML). */
@@ -168,9 +197,18 @@ class Invoices
         return $this->signer->sign($url, new \DateTimeImmutable(sprintf('+%d seconds', $ttl)));
     }
 
-    /** Sent to its buyer by e-mail, the PDF attached: marked sent. */
+    /**
+     * Sent to its buyer, the PDF attached: through the omnibill gateway when
+     * there is one (its statuses then kept on the invoice), by this bundle's
+     * own e-mail otherwise. Marked sent.
+     */
     public function send(Invoice $invoice, ?string $to = null): void
     {
+        if (null !== $this->transmission && $this->transmission->isEnabled()) {
+            $this->transmission->submit($invoice, $this->pdf($invoice), $this->filename($invoice), $this->signedUrl($invoice), $to);
+
+            return;
+        }
         $to ??= $invoice->getBuyer()['email'] ?? null;
         if (null === $this->mailer || null === $to) {
             throw new \LogicException(null === $to ? sprintf('The invoice %s has no address to go to.', $invoice->getNumber()) : 'Sending an invoice needs symfony/mailer.');
