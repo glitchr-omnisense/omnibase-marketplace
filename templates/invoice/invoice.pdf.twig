@@ -66,7 +66,7 @@
             {% endblock %}
         </td>
         <td width="45%">
-            <div class="invoice-title{{ invoice.creditNote ? ' credit-note' : '' }}">{{ (invoice.creditNote ? 'invoice.credit_note' : 'invoice.invoice')|trans({}, 'marketplace', 'fr') }}</div>
+            <div class="invoice-title{{ invoice.isCreditNote() ? ' credit-note' : '' }}">{{ (invoice.isCreditNote() ? 'invoice.credit_note' : 'invoice.invoice')|trans({}, 'marketplace', 'fr') }}</div>
             <div class="text-right text-inverse">{{ invoice.number }}</div>
             <div class="text-right">{{ 'invoice.issued_at'|trans({'{date}': invoice.issuedAt|date('d/m/Y')}, 'marketplace', 'fr') }}</div>
             {% if invoice.soldAt %}<div class="text-right">{{ 'invoice.sold_at'|trans({'{date}': invoice.soldAt|date('d/m/Y')}, 'marketplace', 'fr') }}</div>{% endif %}
@@ -159,10 +159,10 @@
         <td class="text-right">{{ totals.vat|invoice_money(money) }}</td>
     </tr>
     <tr class="invoice-price-total">
-        <td class="text-right">{{ (invoice.creditNote ? 'invoice.credited_total' : 'invoice.total')|trans({}, 'marketplace', 'fr') }}</td>
+        <td class="text-right">{{ (invoice.isCreditNote() ? 'invoice.credited_total' : 'invoice.total')|trans({}, 'marketplace', 'fr') }}</td>
         <td class="text-right">{{ totals.total|invoice_money(money) }}</td>
     </tr>
-    {% if not invoice.creditNote %}
+    {% if not invoice.isCreditNote() %}
     <tr>
         <td class="text-right">{{ 'invoice.paid'|trans({}, 'marketplace', 'fr') }}</td>
         <td class="text-right">{{ totals.paid|invoice_money(money) }}</td>

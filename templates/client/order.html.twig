@@ -8,6 +8,9 @@
 <section class="marketplace-order">
     <h2>{{ '@marketplace.orders.one'|trans({reference: order.reference}) }} <span class="marketplace-state marketplace-state-{{ order.state|lower }}">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span></h2>
     <p class="marketplace-order-meta">{{ order.store ? order.store.title }} · {{ order.createdAt|date('d/m/Y H:i') }}{% if order.paidAt %} · {{ '@marketplace.orders.paid_at'|trans({date: order.paidAt|date('d/m/Y H:i')}) }}{% endif %}{% if order.paymentMethod %} · {{ order.paymentMethod.label ?? order.paymentMethod.slug }}{% endif %}</p>
+    {#- Its invoices and credit notes, as PDFs (Entity\Invoice): the buyer's to download. -#}
+    {% set invoices = marketplace_order_invoices(order) %}
+    {% if invoices %}<p class="marketplace-order-invoices">{% for invoice in invoices %}<a href="{{ path('marketplace_invoice', {number: invoice.number, download: 1}) }}"><i class="fa-solid fa-file-pdf"></i> {{ (invoice.isCreditNote() ? '@marketplace.invoice.credit_note' : '@marketplace.invoice.invoice')|trans }} {{ invoice.number }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
     {% include '@Marketplace/client/_totals.html.twig' with {order: order} %}
 
     {% if order.shippingAddress %}

@@ -224,6 +224,35 @@ final class InvoicesTest extends MarketplaceKernelTestCase
         self::assertContains(self::$kernel->handle(Request::create(str_replace('_hash=', '_hash=x', $this->invoices->signedUrl($invoice))))->getStatusCode(), [302, 401, 403], 'a link tampered with: the sign-in, not the invoice');
     }
 
+    public function testACancelledInvoiceStillReadsAsAnInvoice(): void
+    {
+        $invoice = $this->invoices->issue($this->order(0));
+        $creditNote = $this->invoices->credit($invoice);
+
+        self::assertStringContainsString('>Facture<', $this->invoices->html($invoice), 'cancelled, it is still an invoice: its credit note is another document');
+        self::assertStringContainsString('>Avoir<', $this->invoices->html($creditNote));
+    }
+
+    public function testTheBuyersOrderPageLinksItsInvoices(): void
+    {
+        $order = $this->order(0);
+        $invoice = $this->invoices->issue($order);
+        $creditNote = $this->invoices->credit($invoice);
+        $_SERVER['REMOTE_ADDR'] ??= '127.0.0.1';
+        $_SERVER['HTTP_USER_AGENT'] ??= 'phpunit';
+        $buyer = $order->getCustomer();
+        $session = self::getContainer()->get('session.factory')->createSession();
+        $session->set('_security_main', serialize(new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken($buyer, 'main', $buyer->getRoles())));
+        $session->save();
+
+        $page = self::$kernel->handle(Request::create('/commandes/'.$order->getReference(), 'GET', [], [$session->getName() => $session->getId()]));
+        self::assertSame(200, $page->getStatusCode());
+        $translator = self::getContainer()->get('translator');
+        foreach (['@marketplace.invoice.invoice' => $invoice, '@marketplace.invoice.credit_note' => $creditNote] as $label => $document) {
+            self::assertMatchesRegularExpression('#<a href="/factures/'.preg_quote($document->getNumber(), '#').'/?\?download=1"><i class="fa-solid fa-file-pdf"></i> '.preg_quote($translator->trans($label), '#').' '.preg_quote($document->getNumber(), '#').'</a>#', (string) $page->getContent());
+        }
+    }
+
     public function testAnOrderPaidIsInvoicedByItselfWhenTheShopSaysSo(): void
     {
         $order = $this->order();

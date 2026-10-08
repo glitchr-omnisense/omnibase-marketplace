@@ -1,10 +1,10 @@
 {% extends 'email.html.twig' %}
 
-{% block subject %}{{ (invoice.creditNote ? '@marketplace.invoice.mail.credit_subject' : '@marketplace.invoice.mail.subject')|trans({'{number}': invoice.number}) }}{% endblock %}
+{% block subject %}{{ (invoice.isCreditNote() ? '@marketplace.invoice.mail.credit_subject' : '@marketplace.invoice.mail.subject')|trans({'{number}': invoice.number}) }}{% endblock %}
 {% block action_url %}{{ link }}{% endblock %}
 {% block action_text %}{{ '@marketplace.invoice.mail.action'|trans }}{% endblock %}
 
 {% block content %}
 <p>{{ '@marketplace.invoice.mail.hello'|trans({'{name}': invoice.buyer.name ?? ''}) }}</p>
-<p>{{ (invoice.creditNote ? '@marketplace.invoice.mail.credit_text' : '@marketplace.invoice.mail.text')|trans({'{number}': invoice.number, '{total}': invoice.total|invoice_money(invoice.currency), '{seller}': invoice.seller.name}) }}</p>
+<p>{{ (invoice.isCreditNote() ? '@marketplace.invoice.mail.credit_text' : '@marketplace.invoice.mail.text')|trans({'{number}': invoice.number, '{total}': invoice.total|invoice_money(invoice.currency), '{seller}': invoice.seller.name}) }}</p>
 {% endblock %}
