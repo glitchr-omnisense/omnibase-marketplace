@@ -28,6 +28,10 @@ marketplace:
   quote:
     _singular: "quotation"
     _plural: "quotations"
+  # Base\Marketplace\Entity\Invoice: the invoices and credit notes (Service\Invoices, /admin/invoices).
+  invoice:
+    _singular: "invoice"
+    _plural: "invoices"
   order:
     _singular: "order"
     _plural: "orders"
