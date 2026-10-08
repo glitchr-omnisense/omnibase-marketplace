@@ -283,3 +283,7 @@ the captcha when the site has glitchr/omniguard; a signed-in member is asked
 no address. A buyer back from the payment provider in the same browser lands
 on that page too (`EventListener\QuickOrderReturnListener`). Tested in
 `tests/Http/QuickOrderTest.php`.
+
+## License
+
+MIT since 2026-10-09; earlier versions remain published under LGPL-3.0-or-later.
