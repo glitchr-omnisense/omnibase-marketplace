@@ -31,7 +31,9 @@
         .quote-price td { padding: 4pt 6pt; }
         .quote-price-total { background: #222; color: #fff; font-size: 11pt; font-weight: bold; }
         .quote-note { margin-top: 14pt; font-size: 8pt; color: #444; }
-        .quote-sign { position: absolute; left: {{ (box.x / 72 * 25.4 - 15)|round(1) }}mm; top: {{ ((box.y - 14) / 72 * 25.4 - 18)|round(1) }}mm; width: {{ (box.width / 72 * 25.4)|round(1) }}mm; height: {{ ((box.height + 14) / 72 * 25.4)|round(1) }}mm; border: .5pt solid #999; font-size: 7.5pt; color: #555; padding: 2pt 4pt; }
+        /* Dompdf lays an absolute box 15.5 mm lower than its top says (measured on the rendered page): taken off,
+           the box drawn is where the signature goes. */
+        .quote-sign { position: absolute; left: {{ (box.x / 72 * 25.4 - 15)|round(1) }}mm; top: {{ ((box.y - 14) / 72 * 25.4 - 18 - 15.5)|round(1) }}mm; width: {{ (box.width / 72 * 25.4)|round(1) }}mm; height: {{ ((box.height + 14) / 72 * 25.4)|round(1) }}mm; border: .5pt solid #999; font-size: 7.5pt; color: #555; padding: 2pt 4pt; }
         .quote-footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: center; font-size: 7pt; color: #777; }
         {% endblock %}
     </style>
