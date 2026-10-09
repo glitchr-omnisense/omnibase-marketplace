@@ -106,8 +106,8 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
         $this->cookies = $cookies;
         $post = [
             'quick_order' => $fields + $form,
-            // glitchr/omniguard's "fixed" test gateway, where the host has it: its token, outside the form.
-            'omniguard-token' => 'omniguard-fixed-token',
+            // glitchr/omnishield's "fixed" test gateway, where the host has it: its token, outside the form.
+            (class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::FIELD : 'omniguard-token') => (class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::TOKEN : 'omniguard-fixed-token'),
         ];
 
         return self::$kernel->handle(Request::create('/commande-express/'.$product->getId(), 'POST', $post, $cookies, [], ['HTTP_ORIGIN' => 'http://localhost']));

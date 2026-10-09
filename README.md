@@ -279,7 +279,7 @@ set a response.
 The form is `Form\QuickOrderType` (`marketplace_quick_order_form(product, back)`
 gives it to a template of yours), guarded as glitchr/omnibase guards a form -
 its option `guard`, action `quick_order`: a trap, the time it takes, the lists,
-the captcha when the site has glitchr/omniguard; a signed-in member is asked
+the captcha when the site has glitchr/omnishield; a signed-in member is asked
 no address. A buyer back from the payment provider in the same browser lands
 on that page too (`EventListener\QuickOrderReturnListener`). Tested in
 `tests/Http/QuickOrderTest.php`.

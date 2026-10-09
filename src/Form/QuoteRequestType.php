@@ -28,7 +28,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * privacy / privacy_consent / privacy_parameters (glitchr/omnibase's
  * PrivacyType). Guarded as glitchr/omnibase guards a form (its option
  * `guard`, action "quote"): a trap, the time it takes, the lists, the captcha
- * when the site has glitchr/omniguard - in place of the form's own trap, which
+ * when the site has glitchr/omnishield - in place of the form's own trap, which
  * stays only where the host's core is from before the guard.
  */
 class QuoteRequestType extends AbstractType

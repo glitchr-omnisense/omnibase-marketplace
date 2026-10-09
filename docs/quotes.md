@@ -99,7 +99,7 @@ is kept.
 Robots: the form is guarded as glitchr/omnibase guards a form - its option
 `guard` (`action: quote`; glitchr/omnibase's `docs/20-architecture/guard.md`):
 a trap, the time it takes (a signed stamp), the lists of
-`base.guard.reputation`, the captcha when the site has glitchr/omniguard
+`base.guard.reputation`, the captcha when the site has glitchr/omnishield
 (without it, the trap and the time alone). A robot is refused on the form;
 nothing is stored nor mailed. Under the form, glitchr/omnibase's
 data-protection notice (`Base\Form\Type\PrivacyType`), with its box to tick

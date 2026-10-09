@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * address - none for a member signed in, the order is theirs - and where to
  * come back to. Public, with no account: guarded as glitchr/omnibase guards
  * a form (its option `guard`, action "quick_order": a trap, the time it
- * takes, the lists, the captcha when the site has glitchr/omniguard); a
+ * takes, the lists, the captcha when the site has glitchr/omnishield); a
  * form's own trap only where the host's core is from before the guard.
  *
  * Printed by @Marketplace/client/_quick_order.html.twig, which asks
