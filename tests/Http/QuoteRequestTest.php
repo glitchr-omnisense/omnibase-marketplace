@@ -49,7 +49,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
                 return [$html, $token ? [$token[1] => $token[2]] : [], $cookies];
     }
 
-    private function send(array $fields, array $files = [], ?string $captcha = 'fixed'): Response
+    private function send(array $fields, array $files = [], ?string $captcha = 'omnishield-fixed-token'): Response
     {
         [$html, $token, $cookies] = $this->form();
         $fields += ['contactName' => 'Félix Morvan', 'email' => 'felix@example.org', 'title' => 'Enseigne drapeau', 'request' => 'Une enseigne drapeau lumineuse pour la boutique, pose comprise.'];
@@ -57,11 +57,9 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
         // The guard's stamp, signed by the application, as if the page had been open ten seconds.
         $fields += ['guard_website' => '', 'guard_opened' => self::getContainer()->get(FormGuard::class)->stamp(time() - 10)];
         $post = ['quote_request' => $fields];
-        // 'fixed': omnishield's "fixed" test gateway's token, or omniguard's on a host not moved to omnishield yet; null: none.
-        $captcha = 'fixed' === $captcha ? (class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::TOKEN : 'omniguard-fixed-token') : $captcha;
-        if (null !== $captcha && str_contains($html, (class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::FIELD : 'omniguard-token'))) {
+        if (null !== $captcha && str_contains($html, 'omnishield-token')) {
             // glitchr/omnishield's "fixed" test gateway: its token, outside the form.
-            $post[(class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::FIELD : 'omniguard-token')] = $captcha;
+            $post['omnishield-token'] = $captcha;
         }
         if (str_contains($html, 'quote_request[_captcha]')) {
             // The host protects its forms with reCAPTCHA (the harness does, on Google's public test keys, which accept any answer).
@@ -153,7 +151,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
     public function testARequestWithoutTheCaptchasTokenIsRefused(): void
     {
         [$html] = $this->form();
-        if (!str_contains($html, (class_exists(\Omnishield\Testing\FixedGateway::class) ? \Omnishield\Testing\FixedGateway::FIELD : 'omniguard-token'))) {
+        if (!str_contains($html, 'omnishield-token')) {
             self::markTestSkipped('The host application has no captcha (glitchr/omnishield and its "fixed" test gateway).');
         }
         $before = $this->entityManager->getRepository(Quote::class)->count([]);
