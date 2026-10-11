@@ -113,6 +113,14 @@ $product->isPricedFrom();       // typed, or the lowest of several
 
 The product card shows the starting price when there is one.
 
+A shop that quotes to businesses says "HT" after every price without
+passing `price_tax` each time: `marketplace.price_tax: excl` (or `incl`;
+null, the default, for no mention). The HT / VAT / TTC rows of a summary
+(`_vat.html.twig`) carry no mention after their amounts, their labels
+saying it, and a total paid with VAT in it (a quick order's page, the
+orders' list, a pickup, the carts on the stores' page) says "TTC" whatever
+the rule; a template says `price_tax: false` for no mention on one amount.
+
 ## Files: with a quote request, for an order line
 
 `Entity\Attachment` (table `marketplace_attachment`) is a file somebody gave

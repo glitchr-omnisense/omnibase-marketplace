@@ -5,6 +5,9 @@ namespace Tests\Base\Marketplace\Http;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Entity\Sales\Attribute\Scope\StoreAdapter;
+use Base\Marketplace\Entity\Sales\Attribute\TaxScope;
+use Base\Marketplace\Entity\Sales\Tax\Vat;
 use Base\Marketplace\Event\OrderPaidEvent;
 use Base\Marketplace\Event\QuickOrderDoneEvent;
 use Base\Marketplace\Service\QuickOrder;
@@ -146,9 +149,25 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
         self::assertStringContainsString('action="/commande-express/', $html);
     }
 
+    /** VAT at 20 % on everything the test's store sells. */
+    private function vat(): void
+    {
+        $scope = new StoreAdapter('Shop', 'scope-store-'.bin2hex(random_bytes(3)));
+        $this->entityManager->persist($scope);
+        $vat = new Vat();
+        $vat->setLabel('TVA 20');
+        $vat->setRate(0.20);
+        $taxScope = new TaxScope($scope);
+        $taxScope->setValue($this->store());
+        $vat->addScope($taxScope);
+        $this->entityManager->persist($vat);
+        $this->entityManager->flush();
+    }
+
     public function testAnAddressBuysAndTheTrialPaymentPaysAtOnce(): void
     {
         $this->method('dev');
+        $this->vat();
         $product = $this->goods('pot', 2400);
         $paid = [];
         self::getContainer()->get('event_dispatcher')->addListener(OrderPaidEvent::class, function (OrderPaidEvent $event) use (&$paid): void {
@@ -172,10 +191,21 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
         self::assertGreaterThan(0, (int) $order->getNetPrice());
         self::assertSame([$order->getReference()], $paid, 'delivered once, as any order');
 
-        // The order's page, for whoever holds the link.
+        // The order's page, for whoever holds the link: what was paid, before VAT, the VAT, and the
+        // total TTC - never the total with "HT" after it, whatever the site's rule for its prices.
+        self::assertSame(480, $order->getVatCharge(), '20 % of 24,00');
+        self::assertSame(2880, $order->getNetPrice());
         $page = self::$kernel->handle(Request::create($done));
         self::assertSame(200, $page->getStatusCode());
-        self::assertStringContainsString((string) $order->getReference(), (string) $page->getContent());
+        $html = (string) $page->getContent();
+        self::assertStringContainsString((string) $order->getReference(), $html);
+        $translator = self::getContainer()->get('translator');
+        $text = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+        foreach (['cart.total_ht' => '24[,.]00', 'cart.vat_rate' => '4[,.]80', 'cart.total_ttc' => '28[,.]80'] as $label => $amount) {
+            $label = preg_quote($translator->trans($label, ['rate' => 20], 'marketplace'), '/');
+            self::assertMatchesRegularExpression('/'.$label.'\s?\D{0,3}'.$amount.'/u', $text, $label);
+        }
+        self::assertStringNotContainsString('marketplace-price-tax', $html, 'the rows\' labels say HT and TTC: no mention after the amounts');
 
         // An application's own page there (files to download, a pickup time).
         self::getContainer()->get('event_dispatcher')->addListener(QuickOrderDoneEvent::class, function (QuickOrderDoneEvent $event): void {

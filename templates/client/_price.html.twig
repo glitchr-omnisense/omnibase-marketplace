@@ -7,7 +7,10 @@
  # Override to spell a currency of your own - Chapaland does for its pepettes.
  #
  # Two more, both optional: price_from (true: "dès 130 €" - a starting
- # price, Product::getStartingPrice()) and price_tax ('excl' or 'incl':
- # "HT" / "TTC" after it, for a shop that sells to businesses).
+ # price, Product::getStartingPrice()) and price_tax: 'excl' or 'incl' -
+ # "HT" / "TTC" after it -, false for no mention at all; left out, the
+ # site's rule (marketplace.price_tax: "HT" everywhere for a shop that
+ # quotes to businesses). A total paid, VAT in it, is given 'incl'.
  #}
-<span class="marketplace-price">{% if price_from|default(false) %}<span class="marketplace-price-from">{{ '@marketplace.product.price_from'|trans }}</span> {% endif %}{{ amount|default(0)|format_currency(currency|default('EUR'), {use_rate: false}) }}{% if price_tax|default(null) in ['excl', 'incl'] %} <span class="marketplace-price-tax">{{ ('@marketplace.product.price_' ~ price_tax ~ '_vat')|trans }}</span>{% endif %}</span>
+{% set _tax = price_tax is defined ? price_tax : marketplace_price_tax() %}
+<span class="marketplace-price">{% if price_from|default(false) %}<span class="marketplace-price-from">{{ '@marketplace.product.price_from'|trans }}</span> {% endif %}{{ amount|default(0)|format_currency(currency|default('EUR'), {use_rate: false}) }}{% if _tax in ['excl', 'incl'] %} <span class="marketplace-price-tax">{{ ('@marketplace.product.price_' ~ _tax ~ '_vat')|trans }}</span>{% endif %}</span>
