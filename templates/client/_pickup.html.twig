@@ -25,5 +25,5 @@
         <li>{{ line.quantity }} × {{ line.product ? line.product.title : line }}{% if line.optionsLabel %} <small>({{ line.optionsLabel }})</small>{% endif %}</li>
         {% endfor %}
     </ul>
-    <p class="marketplace-pickup-total">{% include '@Marketplace/client/_price.html.twig' with {amount: pickup.order.netPrice, currency: pickup.order.currency} %}</p>
+    <p class="marketplace-pickup-total">{% include '@Marketplace/client/_price.html.twig' with {amount: pickup.order.netPrice, currency: pickup.order.currency, price_tax: pickup.order.vatCharge > 0 ? 'incl' : marketplace_price_tax()} %}</p>
 </section>

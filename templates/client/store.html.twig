@@ -22,7 +22,7 @@
     <div class="marketplace-box">
         <div class="marketplace-box-title"><i class="fa-solid fa-basket-shopping"></i> {{ '@marketplace.cart.title'|trans }}</div>
         <div class="marketplace-box-body">
-            <p>{{ '@marketplace.cart.lines'|trans({count: cart.items|length}) }} · {% include '@Marketplace/client/_price.html.twig' with {amount: cart.netPrice, currency: cart.currency} %}</p>
+            <p>{{ '@marketplace.cart.lines'|trans({count: cart.items|length}) }} · {% include '@Marketplace/client/_price.html.twig' with {amount: cart.netPrice, currency: cart.currency, price_tax: cart.vatCharge > 0 ? 'incl' : marketplace_price_tax()} %}</p>
             <a class="marketplace-btn marketplace-btn-primary" href="{{ path('marketplace_checkout', {order: cart.id}) }}">{{ '@marketplace.cart.checkout'|trans }}</a>
         </div>
     </div>

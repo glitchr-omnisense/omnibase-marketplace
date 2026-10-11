@@ -16,7 +16,7 @@
             <td>{{ order.store ? order.store.title : '—' }}</td>
             <td>{{ order.createdAt|date('d/m/Y H:i') }}</td>
             <td><span class="marketplace-state marketplace-state-{{ order.state|lower }}">{{ ('@marketplace.state.' ~ order.state|lower)|trans }}</span></td>
-            <td class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</td>
+            <td class="num">{% include '@Marketplace/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency, price_tax: order.vatCharge > 0 ? 'incl' : marketplace_price_tax()} %}</td>
         </tr>
     {% endfor %}
     </tbody>

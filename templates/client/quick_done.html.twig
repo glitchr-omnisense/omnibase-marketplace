@@ -15,7 +15,10 @@
     <ul class="marketplace-quick-lines">
         {% for item in order.items %}<li>{{ item.quantity }} × {{ item.product }}</li>{% endfor %}
     </ul>
-    <p class="marketplace-quick-total">{% include '@Marketplace/client/_price.html.twig' with {amount: order.netPrice, currency: order.currency} %}</p>
+    {# What was paid: the total before VAT, the VAT, the total TTC (_vat) - the last in large. #}
+    <ul class="marketplace-summary marketplace-quick-totals">
+        {% include '@Marketplace/client/_vat.html.twig' with {order: order, layout: 'list'} only %}
+    </ul>
     {% if not order.paid and not order.cancelled %}<p class="marketplace-quick-note">{{ '@marketplace.quick.done.waiting_note'|trans }}</p>{% endif %}
 </div>
 {% endblock %}

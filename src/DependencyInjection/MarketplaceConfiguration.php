@@ -33,6 +33,8 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                 ->scalarNode('default_gateway')->defaultValue('stripe')->info('The gateway checkout offers first.')->end()
                 ->booleanNode('guest_cart')->defaultFalse()
                     ->info('Whether a visitor who is not signed in may fill a cart.')->end()
+                ->enumNode('price_tax')->values([null, 'excl', 'incl'])->defaultNull()
+                    ->info('The mention after every price: "excl" ("HT") for a shop that quotes to businesses, "incl" ("TTC"), null for none. A total paid, VAT in it, says "TTC" whatever this is; a template may say otherwise for one amount (@Marketplace/client/_price.html.twig, price_tax).')->end()
                 // A product bought in one step, with an e-mail address and no account (Service\QuickOrder).
                 ->arrayNode('quick_order')->addDefaultsIfNotSet()
                     ->children()
