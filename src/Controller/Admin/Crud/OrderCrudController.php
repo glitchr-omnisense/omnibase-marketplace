@@ -113,17 +113,17 @@ class OrderCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('reference')->setColumns(4)->setDisabled();
-        yield AssociationField::new('store')->setColumns(4)->setDisabled();
-        yield AssociationField::new('customer')->setColumns(4)->setDisabled();
-        yield TextField::new('state')->setColumns(3)->hideOnForm();
-        yield AssociationField::new('paymentMethod')->setColumns(3)->setDisabled();
-        yield DateTimeField::new('createdAt')->setColumns(3)->setDisabled();
-        yield DateTimeField::new('paidAt')->setColumns(3)->setDisabled();
-        yield AssociationField::new('region')->setColumns(3)->hideOnIndex();
-        yield AssociationField::new('shippingMethod')->setColumns(3)->hideOnIndex();
-        yield AssociationField::new('transactions')->renderAsCount()->hideOnIndex();
-        yield AssociationField::new('shipments')->renderAsCount()->hideOnIndex();
+        yield TextField::new('reference', '@marketplace.admin.field.reference')->setColumns(4)->setDisabled();
+        yield AssociationField::new('store', '@marketplace.admin.field.store')->setColumns(4)->setDisabled();
+        yield AssociationField::new('customer', '@marketplace.admin.field.customer')->setColumns(4)->setDisabled();
+        yield TextField::new('state', '@marketplace.admin.field.state')->setColumns(3)->hideOnForm();
+        yield AssociationField::new('paymentMethod', '@marketplace.admin.field.payment_method')->setColumns(3)->setDisabled();
+        yield DateTimeField::new('createdAt', '@marketplace.admin.field.created_at')->setColumns(3)->setDisabled();
+        yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->setColumns(3)->setDisabled();
+        yield AssociationField::new('region', '@marketplace.admin.field.region')->setColumns(3)->hideOnIndex();
+        yield AssociationField::new('shippingMethod', '@marketplace.admin.field.shipping_method')->setColumns(3)->hideOnIndex();
+        yield AssociationField::new('transactions', '@marketplace.admin.field.transactions')->renderAsCount()->hideOnIndex();
+        yield AssociationField::new('shipments', '@marketplace.admin.field.shipments')->renderAsCount()->hideOnIndex();
         // The buyers' files for its lines (the artwork of a printed item): downloads.
         yield TextField::new('attachments', '@marketplace.attachment.line')->hideOnIndex()->hideOnForm()
             ->setTemplatePath('@Marketplace/admin/field/attachments.html.twig');

@@ -46,12 +46,12 @@ class RegionCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TranslationField::new()->showOnIndex('label')->setFields(['label' => ['required' => true]])->setColumns(6);
-        yield SlugField::new('slug')->setColumns(3)->hideOnIndex();
-        yield BooleanField::new('enabled')->withConfirmation()->setColumns(3);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(3)->hideOnIndex();
+        yield BooleanField::new('enabled', '@marketplace.admin.field.enabled')->withConfirmation()->setColumns(3);
         // Region::$stores aliases the tag's threads
-        yield SelectField::new('threads', 'Stores')->setClass(Store::class)->allowMultipleChoices()->setColumns(6);
-        yield CountryField::new('countries')->setColumns(6)->setRequired(false);
-        yield CurrencyField::new('currency')->setColumns(3);
-        yield IntegerField::new('priority')->setColumns(3);
+        yield SelectField::new('threads', '@marketplace.admin.field.stores')->setClass(Store::class)->allowMultipleChoices()->setColumns(6);
+        yield CountryField::new('countries', '@marketplace.admin.field.countries')->setColumns(6)->setRequired(false);
+        yield CurrencyField::new('currency', '@marketplace.admin.field.currency')->setColumns(3);
+        yield IntegerField::new('priority', '@marketplace.admin.field.priority')->setColumns(3);
     }
 }

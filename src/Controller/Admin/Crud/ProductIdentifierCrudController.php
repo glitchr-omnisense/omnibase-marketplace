@@ -35,7 +35,7 @@ class ProductIdentifierCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield SelectField::new('product')->setClass(Product::class)->setColumns(6);
-        yield AttributeField::new('barcodes')->setFilter(BarcodeAdapter::class)->allowMultiValues();
+        yield SelectField::new('product', '@marketplace.admin.field.product')->setClass(Product::class)->setColumns(6);
+        yield AttributeField::new('barcodes', '@marketplace.admin.field.barcodes')->setFilter(BarcodeAdapter::class)->allowMultiValues();
     }
 }

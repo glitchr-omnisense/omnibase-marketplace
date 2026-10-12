@@ -27,6 +27,6 @@ class BarcodeStandardCrudController extends AdapterCrudController
 
     protected function adapterFields(string $pageName): iterable
     {
-        yield SelectField::new('standard')->setColumns(4);
+        yield SelectField::new('standard', '@marketplace.admin.field.standard')->setColumns(4);
     }
 }

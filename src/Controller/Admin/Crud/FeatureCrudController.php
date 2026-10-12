@@ -42,10 +42,10 @@ class FeatureCrudController extends AbstractMarketplaceCrudController
             'label' => ['required' => true],
             'description' => ['required' => false],
         ])->setColumns(12);
-        yield SlugField::new('slug')->setColumns(4);
-        yield IconField::new('icon')->setTargetColor('color')->setColumns(4);
-        yield ColorField::new('color')->hideOnIndex()->setColumns(4);
-        yield ImageField::new('image')->setRequired(false)->setColumns(6);
-        yield SelectField::new('threads', 'Products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(4);
+        yield IconField::new('icon', '@marketplace.admin.field.icon')->setTargetColor('color')->setColumns(4);
+        yield ColorField::new('color', '@marketplace.admin.field.color')->hideOnIndex()->setColumns(4);
+        yield ImageField::new('image', '@marketplace.admin.field.image')->setRequired(false)->setColumns(6);
+        yield SelectField::new('threads', '@marketplace.admin.field.products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
     }
 }

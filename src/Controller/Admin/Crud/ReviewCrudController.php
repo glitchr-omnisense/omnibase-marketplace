@@ -41,15 +41,15 @@ class ReviewCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('title')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield SelectField::new('product')->setClass(Product::class)->setColumns(6);
-        yield SelectField::new('store')->setClass(Store::class)->setColumns(6)->hideOnIndex();
-        yield IntegerField::new('rating')->setRequired(false)->setColumns(3);
-        yield DateTimePickerField::new('publishedAt')->setRequired(false)->setColumns(3);
-        yield SelectField::new('taxa')->setClass(Taxon::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
-        yield ImageField::new('pictures')->setMultipleFiles()->setRequired(false)->hideOnIndex();
-        yield TextareaField::new('excerpt')->setRequired(false)->hideOnIndex();
-        yield TextareaField::new('content')->setRequired(false)->hideOnIndex();
+        yield TextField::new('title', '@marketplace.admin.field.title')->setColumns(6);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield SelectField::new('product', '@marketplace.admin.field.product')->setClass(Product::class)->setColumns(6);
+        yield SelectField::new('store', '@marketplace.admin.field.store')->setClass(Store::class)->setColumns(6)->hideOnIndex();
+        yield IntegerField::new('rating', '@marketplace.admin.field.rating')->setRequired(false)->setColumns(3);
+        yield DateTimePickerField::new('publishedAt', '@marketplace.admin.field.published_at')->setRequired(false)->setColumns(3);
+        yield SelectField::new('taxa', '@marketplace.admin.field.taxa')->setClass(Taxon::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield ImageField::new('pictures', '@marketplace.admin.field.pictures')->setMultipleFiles()->setRequired(false)->hideOnIndex();
+        yield TextareaField::new('excerpt', '@marketplace.admin.field.excerpt')->setRequired(false)->hideOnIndex();
+        yield TextareaField::new('content', '@marketplace.admin.field.content')->setRequired(false)->hideOnIndex();
     }
 }

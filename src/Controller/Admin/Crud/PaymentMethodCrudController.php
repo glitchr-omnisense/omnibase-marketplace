@@ -58,12 +58,12 @@ class PaymentMethodCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('label')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield TextField::new('gatewayFactory', 'Gateway')->setColumns(6);
-        yield IntegerField::new('refundFee')->setColumns(3)->hideOnIndex();
-        yield ImageField::new('thumbnail')->setRequired(false)->setColumns(3)->hideOnIndex();
-        yield AttributeField::new('scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
-        yield AttributeField::new('rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
+        yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield TextField::new('gatewayFactory', '@marketplace.admin.field.gateway')->setColumns(6);
+        yield IntegerField::new('refundFee', '@marketplace.admin.field.refund_fee')->setColumns(3)->hideOnIndex();
+        yield ImageField::new('thumbnail', '@marketplace.admin.field.thumbnail')->setRequired(false)->setColumns(3)->hideOnIndex();
+        yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
+        yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
     }
 }

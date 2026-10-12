@@ -37,8 +37,8 @@ class TaxRateCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('label')->setColumns(6);
-        yield NumberField::new('rate')->percentage(0, 100)->setColumns(3);
-        yield AttributeField::new('scopes')->setFilter(AbstractScopeAdapter::class);
+        yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
+        yield NumberField::new('rate', '@marketplace.admin.field.rate')->percentage(0, 100)->setColumns(3);
+        yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class);
     }
 }

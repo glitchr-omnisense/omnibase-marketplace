@@ -36,9 +36,9 @@ class FeeCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('label')->setColumns(6);
-        yield AttributeField::new('scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
-        yield AttributeField::new('rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
-        yield AttributeField::new('actions')->setFilter(AbstractActionAdapter::class)->hideOnIndex();
+        yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
+        yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
+        yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
+        yield AttributeField::new('actions', '@marketplace.admin.field.actions')->setFilter(AbstractActionAdapter::class)->hideOnIndex();
     }
 }

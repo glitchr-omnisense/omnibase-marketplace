@@ -112,7 +112,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => QuoteStatus::class, 'choice_label' => fn (QuoteStatus $s) => '@marketplace.quote.state.'.$s->value])
             ->formatValue(fn ($value) => $value instanceof QuoteStatus ? $this->translator->trans('@marketplace.quote.state.'.$value->value) : $value);
         yield TextField::new('contactName', '@marketplace.quote.contact')->setColumns(3);
-        yield EmailField::new('email')->setColumns(3);
+        yield EmailField::new('email', '@marketplace.admin.field.email')->setColumns(3);
         yield TextField::new('phone', '@marketplace.quote.form.phone')->setColumns(3)->hideOnIndex()->setRequired(false);
         yield TextField::new('companyName', '@marketplace.quote.company')->setColumns(3);
         yield TextField::new('siret', 'SIRET')->setColumns(3)->hideOnIndex();
@@ -140,7 +140,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         yield CollectionField::new('lines', '@marketplace.quote.lines')->setEntryType(QuoteLineType::class)->allowAdd()->allowDelete()->hideOnIndex()
             ->setFormTypeOptions(['by_reference' => false, 'allow_object' => true]);
         yield IntegerField::new('total', '@marketplace.quote.total_cents')->onlyOnIndex();
-        yield DateTimeField::new('createdAt')->onlyOnIndex();
+        yield DateTimeField::new('createdAt', '@marketplace.admin.field.created_at')->onlyOnIndex();
     }
 
     public function createEntity(string $entityFqcn): object
