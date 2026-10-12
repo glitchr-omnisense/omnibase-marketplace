@@ -31,8 +31,8 @@ class BrandCrudController extends AbstractMarketplaceCrudController
         yield IdField::new('id')->onlyOnIndex();
         yield ImageField::new('logo', '@marketplace.brand.logo')->setColumns(3);
         yield TextField::new('title', '@marketplace.brand.name')->setColumns(6);
-        yield StateField::new('state')->setColumns(3);
-        yield SlugField::new('slug')->setColumns(4)->hideOnIndex();
+        yield StateField::new('state', '@marketplace.admin.field.state')->setColumns(3);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(4)->hideOnIndex();
         yield CountryField::new('country', '@marketplace.brand.country')->setColumns(4);
         yield TextField::new('region', '@marketplace.brand.region')->setColumns(4);
         yield TextField::new('website', '@marketplace.brand.website')->setColumns(6)->hideOnIndex();

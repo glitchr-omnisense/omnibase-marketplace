@@ -78,10 +78,10 @@ class ExchangeRateCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield CurrencyField::new('source')->setColumns(3);
-        yield CurrencyField::new('target')->setColumns(3);
-        yield NumberField::new('rate')->setNumDecimals(10)->setColumns(3);
-        yield TextField::new('provider')->setRequired(false)->setColumns(3);
-        yield DateTimeField::new('updatedAt')->hideOnForm();
+        yield CurrencyField::new('source', '@marketplace.admin.field.source')->setColumns(3);
+        yield CurrencyField::new('target', '@marketplace.admin.field.target')->setColumns(3);
+        yield NumberField::new('rate', '@marketplace.admin.field.rate')->setNumDecimals(10)->setColumns(3);
+        yield TextField::new('provider', '@marketplace.admin.field.provider')->setRequired(false)->setColumns(3);
+        yield DateTimeField::new('updatedAt', '@marketplace.admin.field.updated_at')->hideOnForm();
     }
 }

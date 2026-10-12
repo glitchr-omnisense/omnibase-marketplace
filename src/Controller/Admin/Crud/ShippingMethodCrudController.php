@@ -48,17 +48,17 @@ class ShippingMethodCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('label')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield TextField::new('typeRate')->setColumns(3)->setHelp('RATE_FLAT, RATE_PRIORITY, RATE_INTERNATIONAL');
-        yield IntegerField::new('unitPrice')->setColumns(3);
-        yield CurrencyField::new('currency')->setColumns(2);
-        yield IntegerField::new('deliveryTime')->setColumns(2)->setHelp('Jours');
-        yield IntegerField::new('shippingDelay')->setColumns(2)->hideOnIndex();
-        yield TextField::new('trackingUrl')->hideOnIndex()->setHelp('https://www.laposte.fr/outils/suivre-vos-envois?code={number}');
-        yield TextField::new('gatewayName', 'Carrier')->setRequired(false)->setColumns(4)->hideOnIndex();
-        yield ImageField::new('thumbnail')->setRequired(false)->setColumns(4)->hideOnIndex();
-        yield AttributeField::new('scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
-        yield AttributeField::new('rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
+        yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield TextField::new('typeRate', '@marketplace.admin.field.type_rate')->setColumns(3)->setHelp('RATE_FLAT, RATE_PRIORITY, RATE_INTERNATIONAL');
+        yield IntegerField::new('unitPrice', '@marketplace.admin.field.unit_price')->setColumns(3);
+        yield CurrencyField::new('currency', '@marketplace.admin.field.currency')->setColumns(2);
+        yield IntegerField::new('deliveryTime', '@marketplace.admin.field.delivery_time')->setColumns(2)->setHelp('Jours');
+        yield IntegerField::new('shippingDelay', '@marketplace.admin.field.shipping_delay')->setColumns(2)->hideOnIndex();
+        yield TextField::new('trackingUrl', '@marketplace.admin.field.tracking_url')->hideOnIndex()->setHelp('https://www.laposte.fr/outils/suivre-vos-envois?code={number}');
+        yield TextField::new('gatewayName', '@marketplace.admin.field.carrier')->setRequired(false)->setColumns(4)->hideOnIndex();
+        yield ImageField::new('thumbnail', '@marketplace.admin.field.thumbnail')->setRequired(false)->setColumns(4)->hideOnIndex();
+        yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
+        yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
     }
 }

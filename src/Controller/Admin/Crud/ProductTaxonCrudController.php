@@ -20,6 +20,6 @@ class ProductTaxonCrudController extends TaxonCrudController
 
     protected function taxonFields(string $pageName): iterable
     {
-        yield SelectField::new('store')->setClass(Store::class)->setRequired(false)->setColumns(6);
+        yield SelectField::new('store', '@marketplace.admin.field.store')->setClass(Store::class)->setRequired(false)->setColumns(6);
     }
 }

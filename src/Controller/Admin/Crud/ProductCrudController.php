@@ -46,25 +46,25 @@ class ProductCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('title')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
+        yield TextField::new('title', '@marketplace.admin.field.title')->setColumns(6);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
         // The store it is sold in, chosen from the list: AssociationField would embed the store's own
         // fields in the product's form, down to properties nothing can read (Thread::$ownerPositions).
         // Its stores are given as its choices: they are printed as the <select>'s options, so the store is
         // chosen without a script too (left to itself the field asks them of an autocomplete, by script only).
-        yield SelectField::new('parent', 'Store')->setClass(Store::class)->setChoices($this->stores())->setColumns(6);
-        yield IntegerField::new('unitPrice')->setColumns(3);
+        yield SelectField::new('parent', '@marketplace.admin.field.store')->setClass(Store::class)->setChoices($this->stores())->setColumns(6);
+        yield IntegerField::new('unitPrice', '@marketplace.admin.field.unit_price')->setColumns(3);
         // A starting price shown as "from" (what is priced on request); empty: the lowest of the variants.
         yield IntegerField::new('priceFrom', '@marketplace.product.price_from_field')->setColumns(3)->setRequired(false)->hideOnIndex();
-        yield CurrencyField::new('currency')->setColumns(3);
-        yield IntegerField::new('stock')->setColumns(3);
-        yield SelectField::new('availability')->setColumns(3)->hideOnIndex();
-        yield SelectField::new('channels')->setClass(Channel::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield CurrencyField::new('currency', '@marketplace.admin.field.currency')->setColumns(3);
+        yield IntegerField::new('stock', '@marketplace.admin.field.stock')->setColumns(3);
+        yield SelectField::new('availability', '@marketplace.admin.field.availability')->setColumns(3)->hideOnIndex();
+        yield SelectField::new('channels', '@marketplace.admin.field.channels')->setClass(Channel::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         // features are the thread's tags (Product::$features aliases the column)
-        yield SelectField::new('tags', 'Features')->setClass(Feature::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
-        yield TextField::new('headline')->hideOnIndex();
-        yield TextareaField::new('excerpt')->hideOnIndex();
-        yield TextareaField::new('content')->hideOnIndex();
+        yield SelectField::new('tags', '@marketplace.admin.field.features')->setClass(Feature::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield TextField::new('headline', '@marketplace.admin.field.headline')->hideOnIndex();
+        yield TextareaField::new('excerpt', '@marketplace.admin.field.excerpt')->hideOnIndex();
+        yield TextareaField::new('content', '@marketplace.admin.field.content')->hideOnIndex();
     }
 
     /** @return array<string, Store> title => store, in the titles' order */

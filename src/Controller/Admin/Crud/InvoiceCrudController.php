@@ -104,16 +104,16 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('number')->setColumns(3);
-        yield TextField::new('type')->setColumns(2);
+        yield TextField::new('number', '@marketplace.admin.field.number')->setColumns(3);
+        yield TextField::new('type', '@marketplace.admin.field.type')->setColumns(2);
         // With glitchr/omnibill, where it stands on the gateway it went through: "sent · Encaissée (email)".
-        yield TextField::new('state')->setColumns(2)
+        yield TextField::new('state', '@marketplace.admin.field.state')->setColumns(2)
             ->formatValue(fn (?string $state, Invoice $invoice) => null !== $this->invoices->gateway() && null !== ($lifecycle = $this->invoices->lifecycle($invoice)) ? $state.' · '.$lifecycle : $state);
-        yield TextField::new('orderReference')->setColumns(3);
-        yield DateTimeField::new('issuedAt')->setColumns(2);
-        yield DateTimeField::new('sentAt')->hideOnIndex();
-        yield DateTimeField::new('paidAt')->hideOnIndex();
-        yield DateTimeField::new('cancelledAt')->hideOnIndex();
+        yield TextField::new('orderReference', '@marketplace.admin.field.order_reference')->setColumns(3);
+        yield DateTimeField::new('issuedAt', '@marketplace.admin.field.issued_at')->setColumns(2);
+        yield DateTimeField::new('sentAt', '@marketplace.admin.field.sent_at')->hideOnIndex();
+        yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->hideOnIndex();
+        yield DateTimeField::new('cancelledAt', '@marketplace.admin.field.cancelled_at')->hideOnIndex();
     }
 
     #[AdminAction('/{entityId}/send')]

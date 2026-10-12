@@ -42,10 +42,10 @@ class ShipmentCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('number', 'Tracking number')->setColumns(4);
-        yield SelectField::new('order')->setClass(Order::class)->setColumns(4);
-        yield SelectField::new('method')->setClass(ShippingMethod::class)->setColumns(4);
-        yield AssociationField::new('items')->renderAsCount()->onlyOnIndex();
-        yield DateTimeField::new('createdAt')->hideOnForm();
+        yield TextField::new('number', '@marketplace.admin.field.tracking_number')->setColumns(4);
+        yield SelectField::new('order', '@marketplace.admin.field.order')->setClass(Order::class)->setColumns(4);
+        yield SelectField::new('method', '@marketplace.admin.field.method')->setClass(ShippingMethod::class)->setColumns(4);
+        yield AssociationField::new('items', '@marketplace.admin.field.items')->renderAsCount()->onlyOnIndex();
+        yield DateTimeField::new('createdAt', '@marketplace.admin.field.created_at')->hideOnForm();
     }
 }

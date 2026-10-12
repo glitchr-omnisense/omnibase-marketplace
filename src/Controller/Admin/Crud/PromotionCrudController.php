@@ -39,12 +39,12 @@ class PromotionCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('label')->setColumns(6);
-        yield IntegerField::new('priority')->setColumns(2);
-        yield DateTimeField::new('validAt')->setColumns(2);
-        yield DateTimeField::new('expiredAt')->setColumns(2);
-        yield AttributeField::new('rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
-        yield AttributeField::new('scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
-        yield AttributeField::new('actions')->setFilter(AbstractActionAdapter::class)->hideOnIndex();
+        yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
+        yield IntegerField::new('priority', '@marketplace.admin.field.priority')->setColumns(2);
+        yield DateTimeField::new('validAt', '@marketplace.admin.field.valid_at')->setColumns(2);
+        yield DateTimeField::new('expiredAt', '@marketplace.admin.field.expired_at')->setColumns(2);
+        yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
+        yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
+        yield AttributeField::new('actions', '@marketplace.admin.field.actions')->setFilter(AbstractActionAdapter::class)->hideOnIndex();
     }
 }

@@ -50,24 +50,24 @@ class StoreCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('title')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield CurrencyField::new('currency')->setColumns(3);
-        yield BooleanField::new('open')->setColumns(3);
+        yield TextField::new('title', '@marketplace.admin.field.title')->setColumns(6);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield CurrencyField::new('currency', '@marketplace.admin.field.currency')->setColumns(3);
+        yield BooleanField::new('open', '@marketplace.admin.field.open')->setColumns(3);
         // Store::$regions and $products alias the thread's tags and children
-        yield SelectField::new('tags', 'Regions')->setClass(Region::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield SelectField::new('tags', '@marketplace.admin.field.regions')->setClass(Region::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         // Find the company by its name in the register (Omnistate): the pick fills its VAT number.
-        yield TextField::new('company', 'Rechercher la société')->onlyOnForms()->setColumns(6)
+        yield TextField::new('company', '@marketplace.admin.field.company_search')->onlyOnForms()->setColumns(6)
             ->setFormType(CompanySearchType::class)
             ->setFormTypeOptions(['mapped' => false, 'required' => false, 'fill' => ['vatNumber' => 'vatNumber']])
             ->setHelp('Nom ou SIREN : le numéro de TVA se remplit avec celui de la société choisie.');
         // VAT: the owner's choice, and only with a valid VAT number.
-        yield BooleanField::new('chargesVat', 'Applique la TVA')->setColumns(3)->hideOnIndex();
-        yield TextField::new('vatNumber', 'N° de TVA intracommunautaire')->setRequired(false)->setColumns(3)->hideOnIndex()
+        yield BooleanField::new('chargesVat', '@marketplace.admin.field.charges_vat')->setColumns(3)->hideOnIndex();
+        yield TextField::new('vatNumber', '@marketplace.admin.field.vat_number')->setRequired(false)->setColumns(3)->hideOnIndex()
             ->setHelp('Sans numéro de TVA valide, la TVA ne peut pas être appliquée.');
         // Its owners read the whole marketplace in the back office (MarketplaceVoter).
-        yield SelectField::new('owners')->setClass(User::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
-        yield SelectField::new('children', 'Products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
-        yield TextareaField::new('excerpt')->hideOnIndex();
+        yield SelectField::new('owners', '@marketplace.admin.field.owners')->setClass(User::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield SelectField::new('children', '@marketplace.admin.field.products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
+        yield TextareaField::new('excerpt', '@marketplace.admin.field.excerpt')->hideOnIndex();
     }
 }
