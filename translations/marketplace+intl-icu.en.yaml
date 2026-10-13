@@ -7,6 +7,7 @@ store:
   empty: "The shelves are empty for now."
 product:
   price_from: "from"
+  price_on_request: "Price on request"
   price_excl_vat: "excl. VAT"
   price_incl_vat: "incl. VAT"
   price_from_field: "Starting price shown (cents; empty: the lowest of the variants)"

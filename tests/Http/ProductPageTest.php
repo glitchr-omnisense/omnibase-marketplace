@@ -63,4 +63,22 @@ final class ProductPageTest extends MarketplaceKernelTestCase
         $shelf = $this->open('/boutique/'.$this->store()->getSlug());
         self::assertSame(200, $shelf->getStatusCode(), $this->said($shelf));
     }
+
+    public function testAShelfSaysOnRequestForWhatHasNoPriceAndNeverAPriceOfZero(): void
+    {
+        $this->goods('mug', 1900);
+        $unpriced = $this->goods('sans-prix', 1900);
+        (new \ReflectionProperty(Product::class, 'unitPrice'))->setValue($unpriced, null);
+
+        $shelf = $this->open('/boutique/'.$this->store()->getSlug());
+        self::assertSame(200, $shelf->getStatusCode(), $this->said($shelf));
+
+        $html = (string) $shelf->getContent();
+        $onRequest = self::getContainer()->get('translator')->trans('product.price_on_request', [], 'marketplace');
+        self::assertNotSame('product.price_on_request', $onRequest, 'the text is translated');
+        self::assertSame(1, substr_count($html, 'marketplace-price-request'), 'one card says "on request": the one without a price');
+        self::assertStringContainsString($onRequest, $html);
+        self::assertSame(1, substr_count($html, '<span class="marketplace-price">'), 'and the other shows its price');
+        self::assertDoesNotMatchRegularExpression('/\b0[,.]00/', strip_tags($html), 'a price of zero is not shown');
+    }
 }

@@ -332,15 +332,22 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
      */
     public function getPriceRange(): array
     {
+        $prices = $this->variantPrices() ?: [(int) $this->getPrice()];
+
+        return [min($prices), max($prices)];
+    }
+
+    /** @return list<int> the prices of its variants still for sale */
+    private function variantPrices(): array
+    {
         $prices = [];
         foreach ($this->getVariants() ?? [] as $variant) {
             if ($variant instanceof self && $variant->isForSell() && null !== $variant->getUnitPrice()) {
                 $prices[] = (int) $variant->getUnitPrice();
             }
         }
-        $prices = $prices ?: [(int) $this->getPrice()];
 
-        return [min($prices), max($prices)];
+        return $prices;
     }
 
     /**
@@ -362,18 +369,33 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         return $this;
     }
 
-    /** The price a list shows: the one typed (priceFrom), else the lowest of its range. */
-    public function getStartingPrice(): int
+    /**
+     * The price a list shows: the one typed (priceFrom), else the lowest of
+     * its range. Null when there is none to show: no price was ever written
+     * (nor on a variant), or a product of its own kind has an empty range -
+     * a list says "on request" then, never a price of zero.
+     */
+    public function getStartingPrice(): ?int
     {
-        return $this->priceFrom ?? $this->getPriceRange()[0];
+        if (null !== $this->priceFrom) {
+            return $this->priceFrom;
+        }
+        if (!$this->variantPrices() && null === $this->getPrice()) {
+            return null;
+        }
+
+        return $this->getPriceRange()[0] ?? null;
     }
 
     /** Whether that price is a "from": typed as one, or the lowest of several. */
     public function isPricedFrom(): bool
     {
-        [$lowest, $highest] = $this->getPriceRange();
+        if (null !== $this->priceFrom) {
+            return true;
+        }
+        $range = $this->getPriceRange();
 
-        return null !== $this->priceFrom || $lowest !== $highest;
+        return 2 === \count($range) && reset($range) !== end($range);
     }
 
     /**

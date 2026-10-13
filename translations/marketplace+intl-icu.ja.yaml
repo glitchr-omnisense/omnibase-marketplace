@@ -7,6 +7,7 @@ store:
   empty: "まだ商品がありません。"
 product:
   price_from: "最低価格"
+  price_on_request: "価格はお問い合わせください"
   price_excl_vat: "税抜"
   price_incl_vat: "税込"
   price_from_field: "表示する開始価格（セント。空欄：バリエーションの最安値）"

@@ -1,6 +1,6 @@
 {#
  # A product's price as a list shows it: "dès 130 € HT" when it is a
  # starting price (typed by hand, or the lowest of its variants), its price
- # otherwise. Variables: product; price_tax ('excl' | 'incl', optional).
+ # otherwise, "on request" when it has none. Variables: product; price_tax ('excl' | 'incl', optional).
  #}
-{% include '@Marketplace/client/_price.html.twig' with {amount: product.startingPrice, currency: product.currency, price_from: product.pricedFrom, price_tax: price_tax|default(null)} only %}
+{% if product.startingPrice is null %}<span class="marketplace-price marketplace-price-request">{{ '@marketplace.product.price_on_request'|trans }}</span>{% else %}{% include '@Marketplace/client/_price.html.twig' with {amount: product.startingPrice, currency: product.currency, price_from: product.pricedFrom, price_tax: price_tax|default(null)} only %}{% endif %}

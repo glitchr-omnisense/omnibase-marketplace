@@ -102,7 +102,7 @@ Back office: `OptionGroupCrudController` (Boutique › Options).
 ```php
 $product->getPriceRange();      // [lowest, highest] of its variants still for sale; its own price without variants
 $product->setPriceFrom(30000);  // typed by hand, for what is priced on request: shown, never charged
-$product->getStartingPrice();   // priceFrom, else the lowest of the range
+$product->getStartingPrice();   // priceFrom, else the lowest of the range; null when there is no price at all
 $product->isPricedFrom();       // typed, or the lowest of several
 ```
 
@@ -111,7 +111,7 @@ $product->isPricedFrom();       // typed, or the lowest of several
 {% include '@Marketplace/client/_price.html.twig' with {amount: 13000, currency: 'EUR', price_from: true, price_tax: 'incl'} %}
 ```
 
-The product card shows the starting price when there is one.
+The product card shows the starting price when there is one, and "price on request" (`product.price_on_request`, `.marketplace-price-request`) when there is none: no price was ever written, or a product of its own kind has an empty `getPriceRange()`. `getStartingPrice()` is null then, and a price of zero is shown only when it was given.
 
 A shop that quotes to businesses says "HT" after every price without
 passing `price_tax` each time: `marketplace.price_tax: excl` (or `incl`;

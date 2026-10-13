@@ -178,4 +178,24 @@ final class OptionsTest extends TestCase
         self::assertSame([0, 0], $sign->getPriceRange(), 'shown, never charged: the range is the real prices');
         self::assertNull($sign->setPriceFrom(null)->getPriceFrom());
     }
+
+    public function testWhatHasNoPriceHasNoStartingPrice(): void
+    {
+        $unwritten = $this->product(0);
+        (new \ReflectionProperty(Product::class, 'unitPrice'))->setValue($unwritten, null);
+        self::assertNull($unwritten->getStartingPrice(), 'no price was ever written');
+        self::assertFalse($unwritten->isPricedFrom());
+
+        // A product of its own kind whose range is empty (a wallpaper with no width yet).
+        $empty = $this->getMockBuilder(Product::class)->disableOriginalConstructor()->onlyMethods(['getPriceRange'])->getMock();
+        $empty->method('getPriceRange')->willReturn([]);
+        (new \ReflectionProperty(Product::class, 'unitPrice'))->setValue($empty, 1200);
+        (new \ReflectionProperty(Product::class, 'variants'))->setValue($empty, new ArrayCollection());
+        self::assertNull($empty->getStartingPrice());
+        self::assertFalse($empty->isPricedFrom());
+        self::assertSame(30000, $empty->setPriceFrom(30000)->getStartingPrice(), 'a price typed by hand still shows');
+        self::assertTrue($empty->isPricedFrom());
+
+        self::assertSame(0, $this->product(0)->getStartingPrice(), 'zero is a price when it was given');
+    }
 }
