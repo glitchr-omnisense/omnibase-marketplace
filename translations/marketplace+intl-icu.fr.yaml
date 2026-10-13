@@ -8,6 +8,7 @@ store:
   empty: "Les rayons sont vides pour l'instant."
 product:
   price_from: "dès"
+  price_on_request: "Prix sur demande"
   price_excl_vat: "HT"
   price_incl_vat: "TTC"
   price_from_field: "Prix de départ affiché (centimes, vide : le plus bas des variantes)"
