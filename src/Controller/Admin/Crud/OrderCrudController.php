@@ -121,7 +121,7 @@ class OrderCrudController extends AbstractMarketplaceCrudController
         yield DateTimeField::new('createdAt', '@marketplace.admin.field.created_at')->setColumns(3)->setDisabled();
         yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->setColumns(3)->setDisabled();
         yield AssociationField::new('region', '@marketplace.admin.field.region')->setColumns(3)->hideOnIndex();
-        yield AssociationField::new('shippingMethod', '@marketplace.admin.field.shipping_method')->setColumns(3)->hideOnIndex();
+        yield AssociationField::new('shippingMethod', '@marketplace.admin.field.shipping_method')->setRequired(false)->setColumns(3)->hideOnIndex();
         yield AssociationField::new('transactions', '@marketplace.admin.field.transactions')->renderAsCount()->hideOnIndex();
         yield AssociationField::new('shipments', '@marketplace.admin.field.shipments')->renderAsCount()->hideOnIndex();
         // The buyers' files for its lines (the artwork of a printed item): downloads.

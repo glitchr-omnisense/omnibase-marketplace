@@ -51,7 +51,7 @@ class StoreCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('title', '@marketplace.admin.field.title')->setColumns(6);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('title')->setColumns(6)->hideOnIndex();
         yield CurrencyField::new('currency', '@marketplace.admin.field.currency')->setColumns(3);
         yield BooleanField::new('open', '@marketplace.admin.field.open')->setColumns(3);
         // Store::$regions and $products alias the thread's tags and children
@@ -68,6 +68,6 @@ class StoreCrudController extends AbstractMarketplaceCrudController
         // Its owners read the whole marketplace in the back office (MarketplaceVoter).
         yield SelectField::new('owners', '@marketplace.admin.field.owners')->setClass(User::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         yield SelectField::new('children', '@marketplace.admin.field.products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
-        yield TextareaField::new('excerpt', '@marketplace.admin.field.excerpt')->hideOnIndex();
+        yield TextareaField::new('excerpt', '@marketplace.admin.field.excerpt')->setRequired(false)->hideOnIndex();
     }
 }

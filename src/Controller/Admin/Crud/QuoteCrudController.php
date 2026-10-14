@@ -114,9 +114,9 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         yield TextField::new('contactName', '@marketplace.quote.contact')->setColumns(3);
         yield EmailField::new('email', '@marketplace.admin.field.email')->setColumns(3);
         yield TextField::new('phone', '@marketplace.quote.form.phone')->setColumns(3)->hideOnIndex()->setRequired(false);
-        yield TextField::new('companyName', '@marketplace.quote.company')->setColumns(3);
-        yield TextField::new('siret', 'SIRET')->setColumns(3)->hideOnIndex();
-        yield TextField::new('vatNumber', '@marketplace.quote.vat')->setColumns(3)->hideOnIndex();
+        yield TextField::new('companyName', '@marketplace.quote.company')->setRequired(false)->setColumns(3);
+        yield TextField::new('siret', 'SIRET')->setRequired(false)->setColumns(3)->hideOnIndex();
+        yield TextField::new('vatNumber', '@marketplace.quote.vat')->setRequired(false)->setColumns(3)->hideOnIndex();
         yield TextField::new('companyBadge', '@marketplace.quote.register')->setColumns(6)->setDisabled()->hideOnForm()->hideOnIndex();
         yield TextField::new('direction', '@marketplace.quote.form.direction')->setColumns(3)->hideOnIndex()
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => TradeDirection::class, 'required' => false, 'placeholder' => '—', 'choice_label' => fn (TradeDirection $d) => '@marketplace.quote.direction.'.$d->value])
@@ -124,19 +124,19 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         yield TextField::new('incoterm', 'Incoterm')->setColumns(2)
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => Incoterm::class, 'required' => false, 'placeholder' => '—'])
             ->formatValue(fn ($value) => $value instanceof Incoterm ? $value->value : $value);
-        yield TextField::new('place', '@marketplace.quote.form.place')->setColumns(3)->hideOnIndex();
-        yield CountryField::new('country', '@marketplace.quote.form.country')->setColumns(2);
-        yield TextField::new('volume', '@marketplace.quote.form.volume')->setColumns(4)->hideOnIndex();
-        yield DateField::new('targetDate', '@marketplace.quote.form.target_date')->setColumns(3)->hideOnIndex();
-        yield TextareaField::new('deliveryAddress', '@marketplace.quote.form.delivery')->hideOnIndex();
+        yield TextField::new('place', '@marketplace.quote.form.place')->setRequired(false)->setColumns(3)->hideOnIndex();
+        yield CountryField::new('country', '@marketplace.quote.form.country')->setRequired(false)->setColumns(2);
+        yield TextField::new('volume', '@marketplace.quote.form.volume')->setRequired(false)->setColumns(4)->hideOnIndex();
+        yield DateField::new('targetDate', '@marketplace.quote.form.target_date')->setRequired(false)->setColumns(3)->hideOnIndex();
+        yield TextareaField::new('deliveryAddress', '@marketplace.quote.form.delivery')->setRequired(false)->hideOnIndex();
         yield SelectField::new('store', '@marketplace.quote.store')->setClass(Store::class)->setRequired(false)->setColumns(4)->hideOnIndex();
-        yield DateField::new('validUntil', '@marketplace.quote.valid_until')->setColumns(3)->hideOnIndex();
+        yield DateField::new('validUntil', '@marketplace.quote.valid_until')->setRequired(false)->setColumns(3)->hideOnIndex();
         yield IntegerField::new('discountPercent', '@marketplace.quote.discount')->setColumns(2)->hideOnIndex();
-        yield TextareaField::new('request', '@marketplace.quote.request')->hideOnIndex()->setHelp('@marketplace.quote.request_help');
+        yield TextareaField::new('request', '@marketplace.quote.request')->setRequired(false)->hideOnIndex()->setHelp('@marketplace.quote.request_help');
         // What came with the request: downloads, kept out of the public directory.
         yield TextField::new('attachments', '@marketplace.quote.attachments')->hideOnForm()->hideOnIndex()
             ->setTemplatePath('@Marketplace/admin/field/attachments.html.twig');
-        yield TextareaField::new('message', '@marketplace.quote.message')->hideOnIndex()->setHelp('@marketplace.quote.message_help');
+        yield TextareaField::new('message', '@marketplace.quote.message')->setRequired(false)->hideOnIndex()->setHelp('@marketplace.quote.message_help');
         yield CollectionField::new('lines', '@marketplace.quote.lines')->setEntryType(QuoteLineType::class)->allowAdd()->allowDelete()->hideOnIndex()
             ->setFormTypeOptions(['by_reference' => false, 'allow_object' => true]);
         yield IntegerField::new('total', '@marketplace.quote.total_cents')->onlyOnIndex();

@@ -59,9 +59,9 @@ class PaymentMethodCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(6);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('label')->setColumns(6)->hideOnIndex();
         yield TextField::new('gatewayFactory', '@marketplace.admin.field.gateway')->setColumns(6);
-        yield IntegerField::new('refundFee', '@marketplace.admin.field.refund_fee')->setColumns(3)->hideOnIndex();
+        yield IntegerField::new('refundFee', '@marketplace.admin.field.refund_fee')->setRequired(false)->setColumns(3)->hideOnIndex();
         yield ImageField::new('thumbnail', '@marketplace.admin.field.thumbnail')->setRequired(false)->setColumns(3)->hideOnIndex();
         yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
         yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();

@@ -45,11 +45,11 @@ class CouponCrudController extends AbstractMarketplaceCrudController
         yield TextField::new('label', '@marketplace.admin.field.label')->setColumns(5);
         yield DateTimeField::new('validAt', '@marketplace.admin.field.valid_at')->setColumns(2);
         yield DateTimeField::new('expiredAt', '@marketplace.admin.field.expired_at')->setColumns(2);
-        yield IntegerField::new('quota', '@marketplace.admin.field.quota')->setColumns(2);
-        yield IntegerField::new('quotaPerCustomer', '@marketplace.admin.field.quota_per_customer')->setColumns(2);
+        yield IntegerField::new('quota', '@marketplace.admin.field.quota')->setRequired(false)->setColumns(2);
+        yield IntegerField::new('quotaPerCustomer', '@marketplace.admin.field.quota_per_customer')->setRequired(false)->setColumns(2);
         yield BooleanField::new('individualUse', '@marketplace.admin.field.individual_use')->setColumns(2);
         // A plain member picker: an AssociationField would embed the whole member form.
-        yield SelectField::new('owner', '@marketplace.admin.field.owner')->setColumns(6)->hideOnIndex();
+        yield SelectField::new('owner', '@marketplace.admin.field.owner')->setRequired(false)->setColumns(6)->hideOnIndex();
         yield AttributeField::new('rules', '@marketplace.admin.field.rules')->setFilter(AbstractRuleAdapter::class)->hideOnIndex();
         yield AttributeField::new('scopes', '@marketplace.admin.field.scopes')->setFilter(AbstractScopeAdapter::class)->hideOnIndex();
         yield AttributeField::new('actions', '@marketplace.admin.field.actions')->setFilter(AbstractActionAdapter::class)->hideOnIndex();

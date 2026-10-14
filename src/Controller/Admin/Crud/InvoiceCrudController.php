@@ -109,11 +109,11 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         // With glitchr/omnibill, where it stands on the gateway it went through: "sent · Encaissée (email)".
         yield TextField::new('state', '@marketplace.admin.field.state')->setColumns(2)
             ->formatValue(fn (?string $state, Invoice $invoice) => null !== $this->invoices->gateway() && null !== ($lifecycle = $this->invoices->lifecycle($invoice)) ? $state.' · '.$lifecycle : $state);
-        yield TextField::new('orderReference', '@marketplace.admin.field.order_reference')->setColumns(3);
+        yield TextField::new('orderReference', '@marketplace.admin.field.order_reference')->setRequired(false)->setColumns(3);
         yield DateTimeField::new('issuedAt', '@marketplace.admin.field.issued_at')->setColumns(2);
-        yield DateTimeField::new('sentAt', '@marketplace.admin.field.sent_at')->hideOnIndex();
-        yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->hideOnIndex();
-        yield DateTimeField::new('cancelledAt', '@marketplace.admin.field.cancelled_at')->hideOnIndex();
+        yield DateTimeField::new('sentAt', '@marketplace.admin.field.sent_at')->setRequired(false)->hideOnIndex();
+        yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->setRequired(false)->hideOnIndex();
+        yield DateTimeField::new('cancelledAt', '@marketplace.admin.field.cancelled_at')->setRequired(false)->hideOnIndex();
     }
 
     #[AdminAction('/{entityId}/send')]

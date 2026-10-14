@@ -46,7 +46,7 @@ class RegionCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TranslationField::new()->showOnIndex('label')->setFields(['label' => ['required' => true]])->setColumns(6);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(3)->hideOnIndex();
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('translations.label')->setColumns(3)->hideOnIndex();
         yield BooleanField::new('enabled', '@marketplace.admin.field.enabled')->withConfirmation()->setColumns(3);
         // Region::$stores aliases the tag's threads
         yield SelectField::new('threads', '@marketplace.admin.field.stores')->setClass(Store::class)->allowMultipleChoices()->setColumns(6);
