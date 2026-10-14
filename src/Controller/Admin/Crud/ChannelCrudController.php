@@ -32,9 +32,9 @@ class ChannelCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TranslationField::new()->showOnIndex('label')->setFields(['label' => ['required' => true]])->setColumns(6);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6);
-        yield IconField::new('icon', '@marketplace.admin.field.icon')->setTargetColor('color')->setColumns(3);
-        yield ColorField::new('color', '@marketplace.admin.field.color')->hideOnIndex()->setColumns(3);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('translations.label')->setColumns(6);
+        yield IconField::new('icon', '@marketplace.admin.field.icon')->setRequired(false)->setTargetColor('color')->setColumns(3);
+        yield ColorField::new('color', '@marketplace.admin.field.color')->setRequired(false)->hideOnIndex()->setColumns(3);
         yield SelectField::new('products', '@marketplace.admin.field.products')->setClass(Product::class)->allowMultipleChoices()->renderAsCount()->onlyOnIndex();
     }
 }

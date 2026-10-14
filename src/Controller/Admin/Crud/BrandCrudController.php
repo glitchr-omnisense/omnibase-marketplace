@@ -29,16 +29,16 @@ class BrandCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield ImageField::new('logo', '@marketplace.brand.logo')->setColumns(3);
+        yield ImageField::new('logo', '@marketplace.brand.logo')->setRequired(false)->setColumns(3);
         yield TextField::new('title', '@marketplace.brand.name')->setColumns(6);
         yield StateField::new('state', '@marketplace.admin.field.state')->setColumns(3);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(4)->hideOnIndex();
-        yield CountryField::new('country', '@marketplace.brand.country')->setColumns(4);
-        yield TextField::new('region', '@marketplace.brand.region')->setColumns(4);
-        yield TextField::new('website', '@marketplace.brand.website')->setColumns(6)->hideOnIndex();
-        yield TextField::new('headline', '@marketplace.brand.headline')->setColumns(6)->hideOnIndex();
-        yield TextareaField::new('excerpt', '@marketplace.brand.excerpt')->hideOnIndex();
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('title')->setColumns(4)->hideOnIndex();
+        yield CountryField::new('country', '@marketplace.brand.country')->setRequired(false)->setColumns(4);
+        yield TextField::new('region', '@marketplace.brand.region')->setRequired(false)->setColumns(4);
+        yield TextField::new('website', '@marketplace.brand.website')->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield TextField::new('headline', '@marketplace.brand.headline')->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield TextareaField::new('excerpt', '@marketplace.brand.excerpt')->setRequired(false)->hideOnIndex();
         yield EditorField::new('content', '@marketplace.brand.story')->hideOnIndex();
-        yield ImageField::new('gallery', '@marketplace.brand.gallery')->hideOnIndex();
+        yield ImageField::new('gallery', '@marketplace.brand.gallery')->setRequired(false)->hideOnIndex();
     }
 }

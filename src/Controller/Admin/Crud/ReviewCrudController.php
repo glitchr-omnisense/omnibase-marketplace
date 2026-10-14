@@ -42,10 +42,10 @@ class ReviewCrudController extends AbstractMarketplaceCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('title', '@marketplace.admin.field.title')->setColumns(6);
-        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setColumns(6)->hideOnIndex();
-        yield SelectField::new('product', '@marketplace.admin.field.product')->setClass(Product::class)->setColumns(6);
-        yield SelectField::new('store', '@marketplace.admin.field.store')->setClass(Store::class)->setColumns(6)->hideOnIndex();
-        yield IntegerField::new('rating', '@marketplace.admin.field.rating')->setRequired(false)->setColumns(3);
+        yield SlugField::new('slug', '@marketplace.admin.field.slug')->setTargetFieldName('title')->setColumns(6)->hideOnIndex();
+        yield SelectField::new('product', '@marketplace.admin.field.product')->setRequired(false)->setClass(Product::class)->setColumns(6);
+        yield SelectField::new('store', '@marketplace.admin.field.store')->setRequired(false)->setClass(Store::class)->setColumns(6)->hideOnIndex();
+        yield IntegerField::new('rating', '@marketplace.admin.field.rating')->setColumns(3);
         yield DateTimePickerField::new('publishedAt', '@marketplace.admin.field.published_at')->setRequired(false)->setColumns(3);
         yield SelectField::new('taxa', '@marketplace.admin.field.taxa')->setClass(Taxon::class)->allowMultipleChoices()->setRequired(false)->setColumns(6)->hideOnIndex();
         yield ImageField::new('pictures', '@marketplace.admin.field.pictures')->setMultipleFiles()->setRequired(false)->hideOnIndex();

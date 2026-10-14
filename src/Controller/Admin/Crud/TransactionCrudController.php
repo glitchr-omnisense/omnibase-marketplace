@@ -42,14 +42,14 @@ class TransactionCrudController extends AbstractMarketplaceCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('number', '@marketplace.admin.field.number')->setColumns(4);
-        yield AssociationField::new('order', '@marketplace.admin.field.order')->setColumns(4);
+        yield TextField::new('number', '@marketplace.admin.field.number')->setRequired(false)->setColumns(4);
+        yield AssociationField::new('order', '@marketplace.admin.field.order')->setRequired(false)->setColumns(4);
         yield TextField::new('state', '@marketplace.admin.field.state')->setColumns(4);
         yield IntegerField::new('totalAmount', '@marketplace.admin.field.total_amount')->setColumns(4);
-        yield TextField::new('currencyCode', '@marketplace.admin.field.currency_code')->setColumns(4);
-        yield TextField::new('clientEmail', '@marketplace.admin.field.client_email')->hideOnIndex();
-        yield TextField::new('description', '@marketplace.admin.field.description')->hideOnIndex();
-        yield TextField::new('comment', '@marketplace.admin.field.comment')->hideOnIndex();
+        yield TextField::new('currencyCode', '@marketplace.admin.field.currency_code')->setRequired(false)->setColumns(4);
+        yield TextField::new('clientEmail', '@marketplace.admin.field.client_email')->setRequired(false)->hideOnIndex();
+        yield TextField::new('description', '@marketplace.admin.field.description')->setRequired(false)->hideOnIndex();
+        yield TextField::new('comment', '@marketplace.admin.field.comment')->setRequired(false)->hideOnIndex();
         yield DateTimeField::new('createdAt', '@marketplace.admin.field.created_at');
         yield DateTimeField::new('updatedAt', '@marketplace.admin.field.updated_at')->hideOnIndex();
     }
