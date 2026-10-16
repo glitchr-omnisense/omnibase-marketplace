@@ -103,10 +103,13 @@ class Barcode extends AbstractAttribute
         }
 
         parent::setAdapter($adapter);
-        $array = explode(' ', $this->value);
 
-        $value = end($array);
-        $this->setValue($value);
+        // The value prefixed again with the new adapter's standard; a new
+        // barcode has none yet (the constructor sets the adapter first).
+        if (null !== $this->value) {
+            $array = explode(' ', $this->value);
+            $this->setValue(end($array));
+        }
 
         return $this;
     }
