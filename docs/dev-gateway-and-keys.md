@@ -23,7 +23,7 @@ gateways by name, and this one is `dev`.
 
 ## Paying in a demonstration: the `dev` gateway, and no other
 
-glitchr/omnibase's `demo` environment (its `docs/20-architecture/demo.md`)
+omniscient/omnibase's `demo` environment (its `docs/20-architecture/demo.md`)
 runs a site as production does, without debug - and no money may move there.
 In `demo`, and there only besides debug:
 

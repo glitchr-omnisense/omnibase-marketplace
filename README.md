@@ -1,6 +1,6 @@
 # base-bundle-marketplace
 
-A shop for [glitchr/omnibase](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of latoucheoriginale, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omniscient/omnibase](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of latoucheoriginale, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
@@ -252,7 +252,7 @@ A refusal reason is a translation key in the `marketplace` domain.
 
 ## Requirements
 
-PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, glitchr/omnibase 3.x and omnibase/admin.
+PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, omniscient/omnibase 3.x and omnibase/admin.
 
 ## Licence
 
@@ -277,7 +277,7 @@ files to download, a pickup time - listen to `Event\QuickOrderDoneEvent` and
 set a response.
 
 The form is `Form\QuickOrderType` (`marketplace_quick_order_form(product, back)`
-gives it to a template of yours), guarded as glitchr/omnibase guards a form -
+gives it to a template of yours), guarded as omniscient/omnibase guards a form -
 its option `guard`, action `quick_order`: a trap, the time it takes, the lists,
 the captcha when the site has glitchr/omnishield; a signed-in member is asked
 no address. A buyer back from the payment provider in the same browser lands
