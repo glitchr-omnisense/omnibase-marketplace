@@ -178,7 +178,7 @@ class Referrals
                 ++$rejected;
                 continue;
             }
-            $this->reward($referral, $referrer, Reward::REFERRER, $this->referrer);
+            $this->reward($referral, $referrer, Reward::REFERRER, $this->referrer, $now);
             $referral->markRewarded();
             $this->entityManager->flush();
             ++$rewarded;
@@ -229,13 +229,14 @@ class Referrals
     }
 
     /** @param RewardConfig $config */
-    private function reward(Referral $referral, User $beneficiary, string $role, array $config): ?Reward
+    private function reward(Referral $referral, User $beneficiary, string $role, array $config, ?\DateTimeImmutable $at = null): ?Reward
     {
         $type = $config['type'] ?? null;
         if (null === $type) {
             return null;
         }
-        $reward = new Reward($referral, $beneficiary, $role);
+        // Granted at the moment the release stands for: the monthly ceiling counts it in that month.
+        $reward = new Reward($referral, $beneficiary, $role, $at);
         if ('credit' === $type) {
             $kind = (string) ($config['credit_kind'] ?? '');
             $quantity = (int) ($config['credit_quantity'] ?? 0);
