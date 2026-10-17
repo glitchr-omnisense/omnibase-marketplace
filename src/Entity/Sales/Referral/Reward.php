@@ -45,12 +45,12 @@ class Reward
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $grantedAt;
 
-    public function __construct(Referral $referral, User $beneficiary, string $role)
+    public function __construct(Referral $referral, User $beneficiary, string $role, ?\DateTimeImmutable $grantedAt = null)
     {
         $this->referral = $referral;
         $this->beneficiary = $beneficiary;
         $this->role = $role;
-        $this->grantedAt = new \DateTimeImmutable();
+        $this->grantedAt = $grantedAt ?? new \DateTimeImmutable();
     }
 
     public function getId(): ?int { return $this->id; }
