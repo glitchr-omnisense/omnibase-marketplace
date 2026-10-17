@@ -15,6 +15,7 @@ use Base\Marketplace\Twig\QuickOrderTwigExtension;
 use Base\Service\FormGuard;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\UriSigner;
 use Tests\Base\Marketplace\MarketplaceKernelTestCase;
 use Tests\Base\Marketplace\ShopFixtureTrait;
 
@@ -235,10 +236,15 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
         self::assertStringContainsString((string) $order->getReference(), (string) self::$kernel->handle(Request::create((string) $response->headers->get('Location')))->getContent());
 
         // Back from the provider in the same browser: the order's signed page, not the basket of somebody signed in.
-        $return = self::$kernel->handle(Request::create('/panier/'.$order->getId().'/paiement/manual', 'GET', [], $cookies));
+        // The provider sends the browser back to the shop's https address: the Location follows the request's
+        // scheme (http for a bare '/panier/...'), and doneUrl() outside a request is https.
+        $return = self::$kernel->handle(Request::create('https://localhost/panier/'.$order->getId().'/paiement/manual', 'GET', [], $cookies));
         self::assertTrue($return->isRedirect(), (string) $return->getStatusCode());
-        self::assertStringContainsString('/commande-express/merci/'.$order->getReference(), (string) $return->headers->get('Location'));
-        self::assertSame(self::getContainer()->get(QuickOrder::class)->doneUrl($order), $return->headers->get('Location'));
+        $location = (string) $return->headers->get('Location');
+        self::assertStringContainsString('/commande-express/merci/'.$order->getReference(), $location);
+        // The same page as doneUrl()'s, signed apart: its expiry may fall a second later.
+        self::assertSame(strtok(self::getContainer()->get(QuickOrder::class)->doneUrl($order), '?'), strtok($location, '?'));
+        self::assertTrue(self::getContainer()->get(UriSigner::class)->check($location), 'a signed link');
 
         // Another browser, which made no such order: the shop's own return, to the basket.
         $stranger = self::$kernel->handle(Request::create('/panier/'.$order->getId().'/paiement/manual'));
