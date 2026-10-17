@@ -33,7 +33,7 @@
     "require": {
         "php": "^8.2",
         "doctrine/orm": "^2.15|^3.0",
-        "glitchr/omnibase": "3.0.*-dev",
+        "omniscient/omnibase": "3.0.*-dev",
         "omnibase/admin": "dev-main",
         "omniscient/omnistate": "1.x-dev",
         "omnistate/annuaire-entreprises": "1.x-dev",
@@ -80,7 +80,7 @@
         "omniscient/omnibill": "Send the invoices through its gateways, their lifecycle statuses kept (marketplace.invoice.gateway); not on Packagist yet - a vcs repository, https://github.com/glitchr-studio/omnibill",
         "omnibill/email": "The default invoicing gateway: the invoice e-mailed from the seller's address, its statuses kept by hand (https://github.com/glitchr-studio/omnibill-email)",
         "omnibill/afnor": "An approved platform (XP Z12-013), the day the shop must issue through one (https://github.com/glitchr-studio/omnibill-afnor)",
-        "omniscient/omnisign": "Accept a priced quote by signing it in the page (marketplace.quotes.signature), with glitchr/omnibase's Base\\Service\\Signatures; not on Packagist yet - https://github.com/glitchr-studio/omnisign"
+        "omniscient/omnisign": "Accept a priced quote by signing it in the page (marketplace.quotes.signature), with omniscient/omnibase's Base\\Service\\Signatures; not on Packagist yet - https://github.com/glitchr-studio/omnisign"
     },
     "repositories": [
         {
