@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Controller\Backoffice\Crud\Layout\Attribute\AdapterCrudController;
+use Base\Admin\Controller\Crud\Layout\Attribute\AdapterCrudController;
 use Base\Field\SelectField;
 use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
 use Base\Marketplace\Controller\Admin\MarketplaceAdminTrait;

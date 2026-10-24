@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Controller\Admin\Crud;
 
-use Base\Controller\Backoffice\Crud\Thread\TaxonCrudController;
+use Base\Admin\Controller\Crud\Thread\TaxonCrudController;
 use Base\Field\SelectField;
 use Base\Marketplace\Entity\Review\Taxon;
 use Base\Marketplace\Entity\Store;
