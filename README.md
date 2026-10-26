@@ -1,6 +1,6 @@
 # base-bundle-marketplace
 
-A shop for [omniscient/omnibase](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of latoucheoriginale, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omnisense/omnibase](https://gitlab.glitchr.dev/public-repository/symfony/bundle/base) 3.x applications: stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of latoucheoriginale, ported to base-bundle 3.x attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
@@ -10,7 +10,7 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 - **Products.** Products belong to a store and carry a price in the currency's smallest unit. Stock is optional, and an empty stock means unlimited. Subclass `Product` for what your shop really sells.
 - **Carts and checkout.** A member gets one cart order per store. Checkout creates a transaction, hands it to a payment gateway, then confirms or cancels the order.
 - **Orders.** Each order gets a readable reference such as `CCC-XXXX-YYY`, a state, a paid date and its transactions.
-- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions, and - with [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade) installed - a bridge to every gateway configured there (Stripe, PayPal, a Shopify or WooCommerce shop): a payment method names one, and that is where the money goes. The same gateways can hold the catalogue (see below).
+- **Payment gateways.** A gateway is any service implementing `PaymentGatewayInterface`. The bundle ships `manual`, which records a pending payment and shows the method's instructions, and - with [glitchr/omnitrade](https://github.com/glitchr-omnisense/omnitrade) installed - a bridge to every gateway configured there (Stripe, PayPal, a Shopify or WooCommerce shop): a payment method names one, and that is where the money goes. The same gateways can hold the catalogue (see below).
 - **Admin CRUDs.** Store, Product, Order and PaymentMethod get CRUDs under `Controller/Admin/Crud`, loaded only when base-bundle-admin is installed.
 - **Pages.** Client pages are in French by default:
 
@@ -126,7 +126,7 @@ A shipping method in the order's currency is offered with its charge. `RATE_FLAT
 
 Staff see the paid orders waiting at `/admin/commandes/a-expedier` (`marketplace_shipping_queue`, `ROLE_ADMIN`), a screen of the back office; its first address, `/commandes/a-expedier`, redirects there. They mark one shipped with its tracking number, which creates a Shipment, and later delivered. The member follows the parcel on their order page, and a tracking URL may hold `{number}`.
 
-The carrier itself is [glitchr/omnibus](https://github.com/glitchr-studio/omnibus)'s: a shipping
+The carrier itself is [glitchr/omnibus](https://github.com/glitchr-omnisense/omnibus)'s: a shipping
 method names a gateway configured under `omnibus.gateways` (`gatewayName`), and when that package
 is installed `Service\Shipping` books the parcel there (`book()`: the label, the tracking number
 on the shipment) and follows it (`track()`). What the buyer pays stays the method's own price,
@@ -135,7 +135,7 @@ set by hand; `ratesFor()` says what the carrier's tariff would be. The sender is
 
 ## Paying through glitchr/omnitrade
 
-Real money goes through [glitchr/omnitrade](https://github.com/glitchr-studio/omnitrade), the
+Real money goes through [glitchr/omnitrade](https://github.com/glitchr-omnisense/omnitrade), the
 sibling family: one contract for payment providers (`omnitrade/stripe`, `omnitrade/paypal`) and
 commerce platforms (`omnitrade/shopify`, `omnitrade/woocommerce`). Install the core and a
 provider, register `Omnitrade\Bridge\Symfony\OmnitradeBundle`, configure its gateways:
@@ -252,7 +252,7 @@ A refusal reason is a translation key in the `marketplace` domain.
 
 ## Requirements
 
-PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, omniscient/omnibase 3.x and omnibase/admin.
+PHP 8.2+, Symfony 7.4 or 8, Doctrine ORM 3, omnisense/omnibase 3.x and omnibase/admin.
 
 ## Licence
 
@@ -277,7 +277,7 @@ files to download, a pickup time - listen to `Event\QuickOrderDoneEvent` and
 set a response.
 
 The form is `Form\QuickOrderType` (`marketplace_quick_order_form(product, back)`
-gives it to a template of yours), guarded as omniscient/omnibase guards a form -
+gives it to a template of yours), guarded as omnisense/omnibase guards a form -
 its option `guard`, action `quick_order`: a trap, the time it takes, the lists,
 the captcha when the site has glitchr/omnishield; a signed-in member is asked
 no address. A buyer back from the payment provider in the same browser lands
