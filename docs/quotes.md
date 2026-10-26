@@ -33,7 +33,7 @@ declined.
 
 ## Accepting by signing it (glitchr/omnisign)
 
-With [glitchr/omnisign](https://github.com/glitchr-studio/omnisign) installed, omniscient/omnibase's
+With [glitchr/omnisign](https://github.com/glitchr-omnisense/omnisign) installed, omnisense/omnibase's
 `Base\Service\Signatures` there, and a gateway named, accepting a priced quote is **signing it in
 the page**:
 
@@ -51,7 +51,7 @@ marketplace:
 2. Signed, the client comes back to `/cotation/<token>/signee` (`marketplace_quote_signed`): the
    provider is asked where it stands and, completed, the quote is accepted as a click accepts it -
    its order, its payment (`Service\QuoteToOrder`). The provider's webhook
-   (`/signatures/{gateway}/webhook`, omniscient/omnibase) accepts it too, for its client, if they never
+   (`/signatures/{gateway}/webhook`, omnisense/omnibase) accepts it too, for its client, if they never
    come back.
 3. Declined, expired or cancelled: the quote stays open, its page says so, and the client may sign
    again (a new envelope).
@@ -96,12 +96,12 @@ of the public directory and downloaded from the back office
 `marketplace.attachments.*`. A file refused is said on its field and nothing
 is kept.
 
-Robots: the form is guarded as omniscient/omnibase guards a form - its option
-`guard` (`action: quote`; omniscient/omnibase's `docs/20-architecture/guard.md`):
+Robots: the form is guarded as omnisense/omnibase guards a form - its option
+`guard` (`action: quote`; omnisense/omnibase's `docs/20-architecture/guard.md`):
 a trap, the time it takes (a signed stamp), the lists of
 `base.guard.reputation`, the captcha when the site has glitchr/omnishield
 (without it, the trap and the time alone). A robot is refused on the form;
-nothing is stored nor mailed. Under the form, omniscient/omnibase's
+nothing is stored nor mailed. Under the form, omnisense/omnibase's
 data-protection notice (`Base\Form\Type\PrivacyType`), with its box to tick
 when `consent` is on. `Form\QuoteRequestType` takes the same as options:
 `phone`, `attachments`, `privacy` (true, a translation key of the site's own

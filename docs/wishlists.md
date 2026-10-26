@@ -24,7 +24,7 @@ product pages (`omnitrade/web`, `omnitrade/amazon`); contributions need its
 Connect and `omnitrade/stripe`. Without them lists and reservations work,
 wishes are written by hand.
 
-In a demonstration (omniscient/omnibase's `demo` environment) none of these
+In a demonstration (omnisense/omnibase's `demo` environment) none of these
 gateways is reached, whatever keys they hold: an address is kept as pasted,
 no account is opened at the provider, a contribution is refused - unless the
 application names a trial gateway of its own as the payout gateway there

@@ -30,7 +30,7 @@ Back office: `BrandCrudController` (Boutique › Marques).
 
 ## AttributeSet: a typed sheet per taxon, without code
 
-The attributes are omniscient/omnibase's (an adapter: its code, its label in
+The attributes are omnisense/omnibase's (an adapter: its code, its label in
 each language, its type - text, number, choice...). An `AttributeSet` says
 which ones a kind of product has, for a `Product\Taxon` (a taxon without a
 set takes its parent's; a set without taxon is every product's), each in a
@@ -101,7 +101,7 @@ link to a quotation.
 ## A blog post's products
 
 A thread (a blog post of omnibase/blog, an event of omnibase/agenda) features
-products through omniscient/omnibase's `Thread::$connexes`, in either direction:
+products through omnisense/omnibase's `Thread::$connexes`, in either direction:
 
 ```twig
 {% for product in marketplace_products_of(post) %}…{% endfor %}
