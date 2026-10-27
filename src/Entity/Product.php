@@ -712,6 +712,24 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         return $this->identifiers;
     }
 
+    /**
+     * Its stock keeping unit: the SKU among its identifiers' barcodes, or null. What a payment
+     * provider's line item names (Payment\Omnitrade\OmnitradeGateway) - a product sold without
+     * one (a licence, an hour pack) has none.
+     */
+    public function getSku(): ?string
+    {
+        foreach ($this->identifiers ?? [] as $identifier) {
+            foreach ($identifier->getBarcodes() as $barcode) {
+                if (Barcode::SKU === $barcode->getStandard() && null !== $barcode->getValue() && '' !== $barcode->getValue()) {
+                    return $barcode->getValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function addIdentifier(Identifier $identifier): self
     {
         if (!$this->identifiers->contains($identifier)) {
