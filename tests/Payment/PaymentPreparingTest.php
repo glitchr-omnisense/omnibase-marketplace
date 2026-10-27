@@ -81,7 +81,7 @@ final class PaymentPreparingTest extends TestCase
 
     private function product(ProductKind $kind, ?PlanTerms $terms = null): Product
     {
-        $product = $this->getMockBuilder(Product::class)->disableOriginalConstructor()->onlyMethods(['__toString', 'isShippable'])->addMethods(['getSku'])->getMock();
+        $product = $this->getMockBuilder(Product::class)->disableOriginalConstructor()->onlyMethods(['__toString', 'isShippable', 'getSku'])->getMock();
         $product->method('__toString')->willReturn('Formule D');
         $product->setKind($kind);
         $product->setPlan($terms);
