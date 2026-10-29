@@ -1,6 +1,6 @@
 ---
 title: Made to order
-order: 90
+order: 39
 ---
 
 # Made to order: suppliers

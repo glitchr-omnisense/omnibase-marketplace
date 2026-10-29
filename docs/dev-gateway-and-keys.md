@@ -1,3 +1,8 @@
+---
+title: "The \"dev\" gateway and the shop's keys"
+order: 42
+---
+
 # The "dev" gateway and the shop's keys
 
 ## Paying in development: the `dev` gateway
@@ -29,7 +34,7 @@ In `demo`, and there only besides debug:
 
 - the `dev` gateway is registered and takes the orders: the fixtures' "dev"
   payment method is the one a visitor pays with;
-- **the gateways of glitchr/omnitrade are not there at all**
+- **the gateways of omnisense/omnitrade are not there at all**
   (`PaymentGatewayRegistry` leaves them out): a method on `stripe`, `paypal`
   or any gateway of `omnitrade.gateways` is not offered at the checkout, its
   return page and its webhook find no gateway, and the back office does not
@@ -43,7 +48,7 @@ gateway of its own that reaches a real provider says no in `demo` itself
 
 ### Lists, payout accounts, the catalogue: the same rule, at the one door
 
-The checkout is not the only thing that talks to glitchr/omnitrade. A list's
+The checkout is not the only thing that talks to omnisense/omnitrade. A list's
 contributions (`Wishlist\Contributions`: a destination charge to its owner's
 connected account), that account itself (`Wishlist\PayoutAccounts`: opened,
 completed and refreshed at the provider), an address read for a wish
@@ -65,7 +70,7 @@ In `demo`, **no path of the bundle reaches a gateway of `omnitrade.gateways`**:
 
 **A trial gateway of the application's own** is the one way through - for a
 site whose lists must take contributions in its demonstration. It writes a
-glitchr/omnitrade factory whose gateways move no money and marks it
+omnisense/omnitrade factory whose gateways move no money and marks it
 `Base\Marketplace\Payment\Omnitrade\TrialGatewayFactoryInterface`:
 
 ```php
@@ -101,7 +106,7 @@ other.
 
 ## Stripe's keys on the API keys page
 
-With omnibase/admin installed and glitchr/omnitrade's `stripe` gateway
+With omnibase/admin installed and omnisense/omnitrade's `stripe` gateway
 registered, `Base\Marketplace\Settings\PaymentKeysSection` puts Stripe's three
 keys on `/admin/api-key`: `api.payment_method.stripe.publishable`,
 `api.payment_method.stripe.api_key`, `api.payment_method.stripe.webhook_secret`.

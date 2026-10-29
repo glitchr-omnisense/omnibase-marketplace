@@ -1,6 +1,6 @@
 ---
 title: Plans, subscriptions, rights and credits
-order: 60
+order: 36
 ---
 
 # Plans, subscriptions, rights and credits
@@ -23,7 +23,7 @@ bin/console doctrine:migrations:diff
 bin/console doctrine:migrations:migrate
 ```
 
-Subscriptions need `glitchr/omnitrade` with its subscriptions (1.x) and a
+Subscriptions need `omnisense/omnitrade` with its subscriptions (1.x) and a
 provider that offers them (`omnitrade/stripe`); passes and credit packs need
 nothing more than a payment method.
 

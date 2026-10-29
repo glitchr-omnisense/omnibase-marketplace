@@ -1,6 +1,6 @@
 ---
 title: Lists of wishes
-order: 70
+order: 37
 ---
 
 # Lists of wishes, reservations, contributions
@@ -19,7 +19,7 @@ The update adds five tables (`marketplace_wishlist`,
 `marketplace_wishlist_contribution`, `marketplace_payout_account`): a
 migration (`doctrine:migrations:diff`, `migrate`).
 
-Reading a pasted address needs `glitchr/omnitrade` and a gateway that reads
+Reading a pasted address needs `omnisense/omnitrade` and a gateway that reads
 product pages (`omnitrade/web`, `omnitrade/amazon`); contributions need its
 Connect and `omnitrade/stripe`. Without them lists and reservations work,
 wishes are written by hand.

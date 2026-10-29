@@ -1,6 +1,6 @@
 ---
 title: Business quotes and exports
-order: 22
+order: 34
 ---
 
 # Business quotes and exports
@@ -31,9 +31,9 @@ order: 22
 Statuses (`Enum\QuoteStatus`): requested, draft, sent, accepted, paid,
 declined.
 
-## Accepting by signing it (glitchr/omnisign)
+## Accepting by signing it (omnisense/omnisign)
 
-With [glitchr/omnisign](https://github.com/glitchr-omnisense/omnisign) installed, omnisense/omnibase's
+With [omnisense/omnisign](https://github.com/glitchr-omnisense/omnisign) installed, omnisense/omnibase's
 `Base\Service\Signatures` there, and a gateway named, accepting a priced quote is **signing it in
 the page**:
 
@@ -99,7 +99,7 @@ is kept.
 Robots: the form is guarded as omnisense/omnibase guards a form - its option
 `guard` (`action: quote`; omnisense/omnibase's `docs/20-architecture/guard.md`):
 a trap, the time it takes (a signed stamp), the lists of
-`base.guard.reputation`, the captcha when the site has glitchr/omnishield
+`base.guard.reputation`, the captcha when the site has omnisense/omnishield
 (without it, the trap and the time alone). A robot is refused on the form;
 nothing is stored nor mailed. Under the form, omnisense/omnibase's
 data-protection notice (`Base\Form\Type\PrivacyType`), with its box to tick
