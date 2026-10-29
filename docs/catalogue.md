@@ -1,6 +1,6 @@
 ---
 title: Brands, typed sheets, filters, pairings
-order: 20
+order: 30
 ---
 
 # Brands, typed sheets, filters, pairings

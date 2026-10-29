@@ -1,3 +1,8 @@
+---
+title: "Invoices and credit notes"
+order: 33
+---
+
 # Invoices and credit notes
 
 `Entity\Invoice` is the shop's invoice and its credit note (avoir). `Service\Invoices` issues them,
@@ -105,13 +110,13 @@ The XML is checked against the profile's schema (`FacturX::validate()`, the libr
 validator). The Schematron rules of EN 16931 (KoSIT's validator, which needs Java) are not run here.
 
 Today's French reform requires the reception of electronic invoices from 2026-09-01, and their
-emission from 2027-09-01 for small and medium companies. Sending goes through `glitchr/omnibill`
+emission from 2027-09-01 for small and medium companies. Sending goes through `omnisense/omnibill`
 when it is installed (below); until the shop must use an approved platform, its `omnibill/email`
 gateway sends the invoice by e-mail, its PDF attached.
 
-## Sending through glitchr/omnibill
+## Sending through omnisense/omnibill
 
-With `glitchr/omnibill` installed, `Invoices::send()` (the invoices' screen, "Send") hands the
+With `omnisense/omnibill` installed, `Invoices::send()` (the invoices' screen, "Send") hands the
 invoice to an omnibill gateway, and keeps where it stands there beside it
 (`Invoice\Transmission\Entity\InvoiceFlow`: the gateway, its reference, the lifecycle statuses of
 the reform - sent, deposited, refused, paid... - with their codes 200 to 213).

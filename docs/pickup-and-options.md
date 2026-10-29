@@ -1,6 +1,6 @@
 ---
 title: Hand-overs, options, starting prices, files
-order: 95
+order: 32
 ---
 
 # Hand-overs, options, starting prices, files

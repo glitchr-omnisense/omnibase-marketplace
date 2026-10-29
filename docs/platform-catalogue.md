@@ -1,14 +1,14 @@
 ---
 title: A catalogue kept on a platform
-order: 23
+order: 35
 ---
 
 # A catalogue kept on a platform
 
 The catalogue is kept in the back office by default. It may live on a
 platform instead - Stripe's Products (no extra cost when Stripe already takes
-the payments), a Shopify shop, a WooCommerce site: any glitchr/omnitrade
-gateway answering `FetchProducts` (see glitchr/omnitrade's
+the payments), a Shopify shop, a WooCommerce site: any omnisense/omnitrade
+gateway answering `FetchProducts` (see omnisense/omnitrade's
 `docs/catalogue.md`). The payments stay wherever the shop pays.
 
 ```yaml
