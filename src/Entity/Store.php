@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Contract\Link;
 use Base\Marketplace\Entity\Product\Taxon as ProductTaxon;
 use Base\Marketplace\Entity\Review\Taxon as ReviewTaxon;
 use Base\Marketplace\Entity\Sales\Region;
@@ -39,7 +40,7 @@ class Store extends Thread implements \Base\Database\Entity\Extension\Translatab
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        return $this->getRouter()->generate('marketplace_store', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
+        return Link::to('marketplace_store', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
     }
 
     public function __construct(?MerchantInterface $merchant = null)

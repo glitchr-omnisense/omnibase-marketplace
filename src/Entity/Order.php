@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Contract\Link;
 use Base\Marketplace\Attribute\OrderReference;
 use Base\Marketplace\Entity\Order\Address\BillingAddress;
 use Base\Marketplace\Entity\Order\Address\ShippingAddress;
@@ -46,7 +47,7 @@ class Order implements IconizeInterface, LinkableInterface
             'reference' => $this->getReference(),
         ]);
 
-        return $this->getRouter()->generate($routeName, $routeParameters, $referenceType);
+        return Link::to($routeName, $routeParameters, $referenceType);
     }
 
     public function __iconize(): ?array

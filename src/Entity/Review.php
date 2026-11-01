@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Contract\Link;
 use Base\Entity\User;
 use Base\Marketplace\Repository\ReviewRepository;
 use Base\Database\Attribute\Hierarchify;
@@ -81,7 +82,7 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
             'id' => $this->getId(),
         ]);
 
-        return $this->getRouter()->generate($routeName, $routeParameters, $referenceType);
+        return Link::to($routeName, $routeParameters, $referenceType);
     }
 
     /**

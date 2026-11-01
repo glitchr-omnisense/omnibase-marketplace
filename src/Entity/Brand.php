@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Contract\Link;
 use Base\Database\Attribute\Uploader;
 use Base\Entity\Thread;
 use Base\Marketplace\Repository\BrandRepository;
@@ -43,7 +44,7 @@ class Brand extends Thread implements \Base\Database\Entity\Extension\Translatab
             return null;
         }
 
-        return $this->getRouter()->generate($route, array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
+        return Link::to($route, array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
     }
 
     public function __construct(?string $name = null)

@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Contract\Link;
 use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Product\Association;
 use Base\Marketplace\Entity\Product\Attribute;
@@ -103,7 +104,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
             'slug' => $this->getSlug(),
         ]);
 
-        return $this->getRouter()->generate($routeName, $routeParameters, $referenceType);
+        return Link::to($routeName, $routeParameters, $referenceType);
     }
 
     /**
