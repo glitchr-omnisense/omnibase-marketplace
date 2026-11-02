@@ -53,6 +53,11 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
     {
         $identifierName = camel2snake(strtolower(str_replace(['App\\', '\\'], ['', '/'], static::class)));
 
+        // omnibridge's Views (omnisense/omnibase 4.x, step F5a: TwigViews under Symfony); BaseTrait's deprecated getTwig() on the core 3.x.
+        if (method_exists(\Omnibridge\Runtime::class, 'views') && \Omnibridge\Runtime::has(\Omnibridge\Contract\Views::class)) {
+            return \Omnibridge\Runtime::views()->render($identifierName . '.html.twig', ['review' => $this]);
+        }
+
         return $this->getTwig()->render($identifierName . '.html.twig', ['review' => $this]);
     }
 

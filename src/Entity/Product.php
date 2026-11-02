@@ -84,6 +84,11 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
 
     public function __autocomplete(): string
     {
+        // omnibridge's Views (omnisense/omnibase 4.x, step F5a: TwigViews under Symfony); BaseTrait's deprecated getTwig() on the core 3.x.
+        if (method_exists(\Omnibridge\Runtime::class, 'views') && \Omnibridge\Runtime::has(\Omnibridge\Contract\Views::class)) {
+            return \Omnibridge\Runtime::views()->render('entity/marketplace/product.html.twig', ['product' => $this]);
+        }
+
         return $this->getTwig()->render('entity/marketplace/product.html.twig', ['product' => $this]);
     }
 
