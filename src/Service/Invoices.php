@@ -9,7 +9,7 @@ use Base\Marketplace\Invoice\InvoiceComposer;
 use Base\Marketplace\Invoice\InvoiceNumbering;
 use Base\Marketplace\Invoice\Transmission\InvoiceTransmission;
 use Base\Marketplace\Repository\InvoiceRepository;
-use Base\Response\PdfResponse;
+use Omnibridge\Symfony\Omnibase\Response\PdfResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;

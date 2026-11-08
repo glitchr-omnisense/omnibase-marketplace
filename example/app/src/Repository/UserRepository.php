@@ -2,6 +2,6 @@
 
 namespace App\Repository;
 
-class UserRepository extends \Base\Repository\UserRepository
+class UserRepository extends \Omnibridge\Doctrine\Omnibase\Repository\UserRepository
 {
 }

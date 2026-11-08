@@ -8,7 +8,7 @@ use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Enum\Operation;
-use Base\Field\Type\MoneyType;
+use Omnibridge\Symfony\Omnibase\Field\Type\MoneyType;
 use Base\Traits\BaseTrait;
 use Doctrine\ORM\Mapping as ORM;
 

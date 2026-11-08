@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Product;
 
 use Base\Marketplace\Entity\Product\Identifier;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Identifier|null find($id, $lockMode = null, $lockVersion = null)

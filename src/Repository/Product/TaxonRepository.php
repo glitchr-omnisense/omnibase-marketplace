@@ -10,6 +10,6 @@ use Base\Marketplace\Entity\Product\Taxon;
  * @method Taxon[]    findAll()
  * @method Taxon[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class TaxonRepository extends \Base\Repository\Thread\TaxonRepository
+class TaxonRepository extends \Omnibridge\Doctrine\Omnibase\Repository\Thread\TaxonRepository
 {
 }

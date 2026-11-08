@@ -4,7 +4,7 @@ namespace Base\Marketplace\Repository\Sales;
 
 use Base\Marketplace\Entity\Sales\Channel;
 use Base\Attributes\Traits\HierarchifyTrait;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Channel|null find($id, $lockMode = null, $lockVersion = null)

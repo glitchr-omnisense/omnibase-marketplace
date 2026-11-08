@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales;
 
 use Base\Marketplace\Entity\Sales\Forex;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Forex|null find($id, $lockMode = null, $lockVersion = null)

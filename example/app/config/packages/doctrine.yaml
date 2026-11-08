@@ -8,8 +8,8 @@ doctrine:
             Base\Marketplace\Model\MerchantInterface: App\Entity\User
         # Base ships its own naming strategy and metadata factory: they resolve
         # the App\ <-> Base\ mirrored entities and the Set/Enum column types.
-        naming_strategy: Base\Database\Mapping\NamingStrategy
-        class_metadata_factory_name: Base\Database\Mapping\ClassMetadataFactory
+        naming_strategy: Omnibridge\Doctrine\Omnibase\Database\Mapping\NamingStrategy
+        class_metadata_factory_name: Omnibridge\Doctrine\Omnibase\Database\Mapping\ClassMetadataFactory
         # auto_mapping picks up both bundles' entities: Base\Entity\* from
         # base-bundle and Base\Marketplace\Entity\* from this one (the mapping is
         # derived from the bundle class's own directory, so src/Entity needs

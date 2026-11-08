@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute\Scope;
 
 use Base\Marketplace\Entity\Sales\Attribute\Scope\ProductAdapter;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method ProductAdapter|null find($id, $lockMode = null, $lockVersion = null)

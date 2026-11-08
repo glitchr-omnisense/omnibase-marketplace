@@ -102,7 +102,7 @@ a trap, the time it takes (a signed stamp), the lists of
 `base.guard.reputation`, the captcha when the site has omnisense/omnishield
 (without it, the trap and the time alone). A robot is refused on the form;
 nothing is stored nor mailed. Under the form, omnisense/omnibase's
-data-protection notice (`Base\Form\Type\PrivacyType`), with its box to tick
+data-protection notice (`Omnibridge\Symfony\Omnibase\Form\Type\PrivacyType`), with its box to tick
 when `consent` is on. `Form\QuoteRequestType` takes the same as options:
 `phone`, `attachments`, `privacy` (true, a translation key of the site's own
 notice, or false), `privacy_consent`, `privacy_parameters`, and the core's

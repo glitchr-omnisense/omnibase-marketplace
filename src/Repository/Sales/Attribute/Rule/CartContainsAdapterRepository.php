@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute\Rule;
 
 use Base\Marketplace\Entity\Sales\Attribute\Rule\CartContainsAdapter;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method CartContainsAdapter|null find($id, $lockMode = null, $lockVersion = null)

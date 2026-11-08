@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Repository;
 
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 use Base\Marketplace\Entity\Invoice;
 use Base\Marketplace\Entity\Order;
 

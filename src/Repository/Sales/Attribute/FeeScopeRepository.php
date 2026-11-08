@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute;
 
 use Base\Marketplace\Entity\Sales\Attribute\FeeScope;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method FeeScope|null find($id, $lockMode = null, $lockVersion = null)

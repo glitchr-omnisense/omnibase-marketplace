@@ -10,7 +10,7 @@ use Base\Marketplace\Repository\Sales\Attribute\Scope\TaxonAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
-use Base\Field\Type\SelectType;
+use Omnibridge\Symfony\Omnibase\Field\Type\SelectType;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaxonAdapterRepository::class)]

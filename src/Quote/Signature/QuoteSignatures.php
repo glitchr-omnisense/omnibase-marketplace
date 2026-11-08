@@ -10,7 +10,7 @@ use Base\Marketplace\Entity\Quote;
 use Base\Marketplace\Pricing\ExportExemption;
 use Base\Marketplace\Service\QuoteStatusGuard;
 use Base\Marketplace\Service\QuoteToOrder;
-use Base\Response\PdfResponse;
+use Omnibridge\Symfony\Omnibase\Response\PdfResponse;
 use Base\Service\Signatures;
 use Doctrine\ORM\EntityManagerInterface;
 use Omnisign\Model\Document;

@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Review;
-use Base\Repository\ThreadRepository;
+use Omnibridge\Doctrine\Omnibase\Repository\ThreadRepository;
 
 /**
  * @method Review|null find($id, $lockMode = null, $lockVersion = null)

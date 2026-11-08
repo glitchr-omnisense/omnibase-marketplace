@@ -8,7 +8,7 @@ use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
 use Base\Enum\Operation;
-use Base\Field\Type\NumberType;
+use Omnibridge\Symfony\Omnibase\Field\Type\NumberType;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CartQuantityAdapterRepository::class)]

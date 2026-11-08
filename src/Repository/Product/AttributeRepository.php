@@ -10,6 +10,6 @@ use Base\Marketplace\Entity\Product;
  * @method Product[]    findAll()
  * @method Product[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class AttributeRepository extends \Base\Repository\Layout\AttributeRepository
+class AttributeRepository extends \Omnibridge\Doctrine\Omnibase\Repository\Layout\AttributeRepository
 {
 }

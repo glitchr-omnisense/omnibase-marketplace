@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute;
 
 use Base\Marketplace\Entity\Sales\Attribute\ShippingMethodRule;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method ShippingMethodRule|null find($id, $lockMode = null, $lockVersion = null)

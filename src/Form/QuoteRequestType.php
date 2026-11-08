@@ -4,7 +4,7 @@ namespace Base\Marketplace\Form;
 
 use Base\Marketplace\Enum\Incoterm;
 use Base\Marketplace\Enum\TradeDirection;
-use Base\Form\Type\PrivacyType;
+use Omnibridge\Symfony\Omnibase\Form\Type\PrivacyType;
 use Base\Service\FormGuard;
 use Base\Marketplace\Model\QuoteRequest;
 use Symfony\Component\Form\AbstractType;

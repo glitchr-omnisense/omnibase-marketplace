@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute\Action;
 
 use Base\Marketplace\Entity\Sales\Attribute\Action\PercentageAmountAdapter;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method PercentageAmountAdapter|null find($id, $lockMode = null, $lockVersion = null)

@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Store;
-use Base\Repository\ThreadRepository;
+use Omnibridge\Doctrine\Omnibase\Repository\ThreadRepository;
 
 /**
  * @method Store|null find($id, $lockMode = null, $lockVersion = null)

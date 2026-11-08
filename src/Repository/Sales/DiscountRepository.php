@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales;
 
 use Base\Marketplace\Entity\Sales\Discount;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Discount|null find($id, $lockMode = null, $lockVersion = null)

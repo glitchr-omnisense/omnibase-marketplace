@@ -7,7 +7,7 @@ use Base\Marketplace\Repository\Sales\Attribute\Rule\CartContainsAdapterReposito
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractRuleAdapter;
-use Base\Field\Type\NumberType;
+use Omnibridge\Symfony\Omnibase\Field\Type\NumberType;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CartContainsAdapterRepository::class)]

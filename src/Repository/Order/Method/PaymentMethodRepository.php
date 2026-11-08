@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Order\Method;
 
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method PaymentMethod|null find($id, $lockMode = null, $lockVersion = null)
