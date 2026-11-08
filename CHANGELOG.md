@@ -6,6 +6,9 @@
 - `QuoteCrudController` numbers a new quote in `persistRecord()`, omnibase/admin's write hook on the persistence the site
   chose, in place of the former `persistEntity(EntityManagerInterface)` (deprecated since the admin's step B1a); its
   repository is given by `setQuotes()`. Needs omnibase/admin from its step B1a.
+- `OrderCrudController`'s "cart" filter says its condition in the core's finder language (`Filter::matchWith()`: the
+  state LIKE, or NOT LIKE, 'ORDER_CART%'), which every persistence reads; `applyWith()` keeps the same condition for a
+  list still built on Doctrine's QueryBuilder (omnisense/omnibase 4.x). tests/Controller/OrderCartFilterTest.
 
 ### Changed
 - Accepts omnisense/omnibase 5.0 (`3.0.*-dev || 4.0.*-dev || 5.0.*-dev`; plan "omnibase agnostic", step S): the bundle runs
