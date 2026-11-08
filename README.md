@@ -1,6 +1,6 @@
 # omnibase/marketplace
 
-A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (3.x or 4.0): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (3.x, 4.0 or 5.0): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 

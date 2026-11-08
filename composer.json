@@ -34,7 +34,7 @@
         "php": "^8.2",
         "doctrine/orm": "^2.15|^3.0",
         "omnibridge/symfony": "1.x-dev",
-        "omnisense/omnibase": "3.0.*-dev || 4.0.*-dev",
+        "omnisense/omnibase": "3.0.*-dev || 4.0.*-dev || 5.0.*-dev",
         "omnibase/admin": "dev-main",
         "omnisense/omnistate": "1.x-dev",
         "omnistate/annuaire-entreprises": "1.x-dev",

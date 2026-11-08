@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Changed
+- Accepts omnisense/omnibase 5.0 (`3.0.*-dev || 4.0.*-dev || 5.0.*-dev`; plan "omnibase agnostic", step S): the bundle runs
+  unchanged on it, `Base\Bundle\AbstractBaseBundle` and the other former names it uses being aliases of
+  omnibridge/symfony's classes there. The sites on 4.x resolve as before.
 - `Product` and `Review::__autocomplete()` render through omnibridge's `Views` (`Runtime::views()`: omnibridge/twig's
   `TwigViews` under Symfony, omnisense/omnibase 4.x step F5a) where the runtime answers it, BaseTrait's deprecated
   `getTwig()` otherwise (the core 3.x): the same template, the same HTML.
