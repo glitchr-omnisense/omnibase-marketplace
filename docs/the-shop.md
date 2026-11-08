@@ -95,7 +95,7 @@ gateway interface, picked up by autoconfiguration:
 final class TokensGateway implements PaymentGatewayInterface
 {
     public static function name(): string { return 'tokens'; }
-    public function supports(Order $order, PaymentMethod $method): bool { return 'PEP' === $order->getCurrency(); }
+    public function supports(Order $order, PaymentMethod $method): bool { return 'TOK' === $order->getCurrency(); }
     public function pay(Order $order, Transaction $transaction, PaymentMethod $method): PaymentResult
     {
         // debit, then:

@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Browsing: the stores, a store's shelf, a product. Route names are
- * marketplace_*; the paths are French, as a French site's are - an application
+ * marketplace_*; the paths are French, as the shop's first site was - an application
  * wanting others overrides the routes, not the controller.
  */
 class StoreController extends AbstractController

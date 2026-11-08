@@ -51,7 +51,7 @@ class Transaction implements IconizeInterface
     #[ORM\Column(type: 'string', length: 64, nullable: true)]
     protected ?string $clientId = null;
 
-    /** In the smallest unit of the currency (cents, or one token). */
+    /** In the smallest unit of the currency (cents, or one unit of an in-game currency). */
     #[ORM\Column(type: 'integer')]
     protected int $totalAmount = 0;
 

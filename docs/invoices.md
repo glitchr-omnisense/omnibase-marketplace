@@ -198,7 +198,7 @@ marketplace:
 
 ## The PDF's look
 
-`@Marketplace/invoice/invoice.pdf.twig`, laid out after another site's invoice. A site dresses
+`@Marketplace/invoice/invoice.pdf.twig`, laid out as a French shop's invoice. A site dresses
 it in its own `templates/bundles/MarketplaceBundle/invoice/invoice.pdf.twig`, extending the bundle's
 one (`{% extends '@!Marketplace/invoice/invoice.pdf.twig' %}`) and filling its blocks: `style`,
 `logo` (a data: URI, `|embed_base64`: nothing is fetched from elsewhere), `seller`, `footer`.

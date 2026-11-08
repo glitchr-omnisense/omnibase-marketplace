@@ -1,6 +1,6 @@
 # omnibase/marketplace
 
-A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (3.x or 4.0): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It is the marketplace of a shop site, ported to the core's attributes and stripped of that shop's wallpapers. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (3.x or 4.0): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
@@ -27,7 +27,7 @@ Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 | `marketplace_payment_webhook` | `/marketplace/{gateway}/webhook` (POST) |
 | `marketplace_invoice` | `/factures/{number}` |
 
-The promotions, fees, taxes, shipping and review entities come from a shop site and are mapped. The shop pages do not use them yet.
+The promotions, fees, taxes, shipping and review entities come from that first shop and are mapped. The shop pages do not use them yet.
 
 ## Try it in one command
 
@@ -235,7 +235,7 @@ A customer with a confirmed number from another EU country than the store's is t
 final class TokensGateway implements PaymentGatewayInterface
 {
     public static function name(): string { return 'tokens'; }
-    public function supports(Order $order, PaymentMethod $method): bool { return 'PEP' === $order->getCurrency(); }
+    public function supports(Order $order, PaymentMethod $method): bool { return 'TOK' === $order->getCurrency(); }
     public function pay(Order $order, Transaction $transaction, PaymentMethod $method): PaymentResult
     {
         // debit, then:

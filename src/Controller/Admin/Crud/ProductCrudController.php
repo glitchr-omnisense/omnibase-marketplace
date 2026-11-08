@@ -18,7 +18,8 @@ use Base\Marketplace\Entity\Store;
 
 /**
  * Admin CRUD for the products. Prices are integers in the currency's
- * smallest unit (cents, or one token); an empty stock means unlimited.
+ * smallest unit (cents, or one unit of an in-game currency); an empty stock
+ * means unlimited.
  */
 class ProductCrudController extends AbstractMarketplaceCrudController
 {

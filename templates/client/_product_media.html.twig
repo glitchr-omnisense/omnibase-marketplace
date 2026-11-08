@@ -1,4 +1,4 @@
-{# A product's picture. Override to draw products that are not photographs (a site may draw avatar items). #}
+{# A product's picture. Override to draw products that are not photographs (avatar items, say). #}
 {% set image = product.image is defined ? product.image : null %}
 {% if image %}
     <img src="{{ asset(image.source ?? '') }}" alt="{{ product.title }}" loading="lazy">
