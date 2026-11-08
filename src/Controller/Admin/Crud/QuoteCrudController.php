@@ -24,7 +24,7 @@ use Base\Marketplace\Enum\QuoteStatus;
 use Base\Marketplace\Enum\TradeDirection;
 use Base\Marketplace\Form\QuoteLineType;
 use Base\Marketplace\Repository\QuoteRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Omnibridge\Persistence\UnitOfWork;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
@@ -45,6 +45,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
     private MailerInterface $mailer;
     private TranslatorInterface $translator;
     private int $validity = 30;
+    private QuoteRepository $quotes;
 
     private ?\Base\Marketplace\Quote\Signature\QuoteSignatures $signatures = null;
 
@@ -148,15 +149,21 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         return (new Quote())->setStatus(QuoteStatus::DRAFT);
     }
 
+    #[Required]
+    public function setQuotes(QuoteRepository $quotes): void
+    {
+        $this->quotes = $quotes;
+    }
+
     /** Numbered when saved, not when the form opens: two forms open took the same number. */
-    public function persistEntity(EntityManagerInterface $entityManager, object $entity): void
+    public function persistRecord(UnitOfWork $unitOfWork, object $entity): void
     {
         if ($entity instanceof Quote) {
-            $entityManager->getRepository(Quote::class)->saveNumbered($entity);
+            $this->quotes->saveNumbered($entity);
 
             return;
         }
-        parent::persistEntity($entityManager, $entity);
+        parent::persistRecord($unitOfWork, $entity);
     }
 
     /** Sent: the client gets their link by mail, and may accept it until its date. */
