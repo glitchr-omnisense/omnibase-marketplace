@@ -13,10 +13,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * marketplace:invoice:status [<number>...]: asks the gateway the invoices
- * went through (glitchr/omnibill) where they stand, and keeps it on them -
+ * went through (omnisense/omnibill) where they stand, and keeps it on them -
  * every invoice transmitted whose status is not final (paid, refused,
  * rejected) when none is named. For a platform without webhooks, from a
- * cron. Registered only with glitchr/omnibill.
+ * cron. Registered only with omnisense/omnibill.
  */
 #[AsCommand(name: 'marketplace:invoice:status', description: 'Ask the invoicing gateway where the invoices sent stand.')]
 class InvoiceStatusCommand extends Command

@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * One attribute of a set: the adapter (its code, its translated label, its
- * type, from glitchr/omnibase), its unit, where it comes, whether a product
+ * type, from omnisense/omnibase), its unit, where it comes, whether a product
  * must have it, whether the list filters on it and how (a choice among the
  * values met, or a range for a number).
  */

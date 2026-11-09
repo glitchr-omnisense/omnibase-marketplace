@@ -34,7 +34,7 @@ use Twig\Environment;
  * With marketplace.invoice.auto_issue, an order's invoice is issued when it
  * is paid (EventListener\InvoiceOnPaymentListener).
  *
- * With glitchr/omnibill, send() goes through its gateway
+ * With omnisense/omnibill, send() goes through its gateway
  * (marketplace.invoice.gateway: omnibill/email by default, an approved
  * platform later) and the invoice keeps where it stands there
  * (Invoice\Transmission\InvoiceTransmission); without it, send() mails the
@@ -147,7 +147,7 @@ class Invoices
         $this->transmission?->paid($invoice, $at);
     }
 
-    /** The gateway invoices go through (glitchr/omnibill), null when they are mailed by this bundle. */
+    /** The gateway invoices go through (omnisense/omnibill), null when they are mailed by this bundle. */
     public function gateway(): ?string
     {
         return $this->transmission?->name();

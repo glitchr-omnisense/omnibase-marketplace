@@ -8,7 +8,7 @@ use Base\Marketplace\Entity\Order\Transaction;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
- * An order is about to be handed to a glitchr/omnitrade gateway: the last
+ * An order is about to be handed to an omnisense/omnitrade gateway: the last
  * moment to say how. A listener may
  *
  *   - send the money to a connected account (Stripe Connect) and keep a fee:

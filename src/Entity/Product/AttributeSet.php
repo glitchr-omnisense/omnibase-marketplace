@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * The typed sheet of a kind of product, without code: which attributes a
- * product of this taxon has (glitchr/omnibase's attribute adapters: a text,
+ * product of this taxon has (omnisense/omnibase's attribute adapters: a text,
  * a number with its unit, a choice, a colour...), in which order, which are
  * required and which the list filters on.
  *

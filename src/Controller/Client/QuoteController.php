@@ -41,7 +41,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * an order waiting in the client's carts (Service\QuoteToOrder) - or
  * declined, and the client's quotes in their account.
  *
- * With glitchr/omnisign and marketplace.quotes.signature, accepting a priced
+ * With omnisense/omnisign and marketplace.quotes.signature, accepting a priced
  * quote is signing it in the page (Quote\Signature\QuoteSignatures): the
  * client goes to the provider's signing page and comes back to
  * /cotation/<token>/signee, the quote accepted once the signature is
@@ -176,7 +176,7 @@ class QuoteController extends AbstractController
             'items' => $quoteToOrder->itemsOf($quote),
             'awaiting_payment' => QuoteStatusGuard::isAwaitingPayment($quote),
             'export' => $quote->getCountry() && !ExportExemption::inEu($quote->getCountry()),
-            // Accepting it is signing it (glitchr/omnisign), and where its latest signature stands.
+            // Accepting it is signing it (omnisense/omnisign), and where its latest signature stands.
             'signing' => $this->signing(),
             'signature' => $this->signatures?->latest($quote),
         ]);
@@ -317,7 +317,7 @@ class QuoteController extends AbstractController
         return $quote->getClient() ? $quote->getClient()->getId() === $user?->getId() : 0 === strcasecmp($quote->getEmail(), (string) $user?->getEmail());
     }
 
-    /** Whether accepting a quote is signing it: glitchr/omnisign, and marketplace.quotes.signature. */
+    /** Whether accepting a quote is signing it: omnisense/omnisign, and marketplace.quotes.signature. */
     private function signing(): bool
     {
         return null !== $this->signatures && $this->signatures->isEnabled();

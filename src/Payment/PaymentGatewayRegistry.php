@@ -10,12 +10,12 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Every gateway of the application, by name(): its own first (manual, and
- * whatever it wrote), then - when glitchr/omnitrade is installed - a bridge
+ * whatever it wrote), then - when omnisense/omnitrade is installed - a bridge
  * to each gateway configured under omnitrade.gateways, by that name. A
  * PaymentMethod's gatewayFactory is one of these names.
  *
- * In a demonstration (glitchr/omnibase's `demo` environment) no money moves:
- * the gateways of glitchr/omnitrade - Stripe, PayPal, a real provider behind
+ * In a demonstration (omnisense/omnibase's `demo` environment) no money moves:
+ * the gateways of omnisense/omnitrade - Stripe, PayPal, a real provider behind
  * each - are not there at all, neither offered at the checkout nor reached
  * by a return page or a webhook. The application's own stay (manual, and the
  * "dev" gateway, registered there for that purpose).

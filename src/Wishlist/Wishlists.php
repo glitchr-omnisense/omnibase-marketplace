@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Lists and their wishes: made, filled from a pasted address (read through
- * glitchr/omnitrade when it is installed), from this shop's catalogue or by
+ * omnisense/omnitrade when it is installed), from this shop's catalogue or by
  * hand, and their prices read again when they are old.
  */
 class Wishlists

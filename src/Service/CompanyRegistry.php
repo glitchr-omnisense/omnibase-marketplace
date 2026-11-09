@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Who a French company is, from its SIREN (9 digits) or SIRET (14), through
- * Omnistate (glitchr/omnistate): the State's free register, API Recherche
+ * Omnistate (omnisense/omnistate): the State's free register, API Recherche
  * d'entreprises (omnistate/annuaire-entreprises: no key; INSEE's Sirene and
  * the RNE - the same companies as Infogreffe's, without its fee). The number
  * is checked here first (its length, its Luhn key), then looked up;

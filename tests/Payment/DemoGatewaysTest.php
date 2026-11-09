@@ -21,9 +21,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * Paying in a demonstration (glitchr/omnibase's `demo` environment, which
+ * Paying in a demonstration (omnisense/omnibase's `demo` environment, which
  * never runs in debug): the "dev" gateway is there - and there only, besides
- * debug -, the gateways of glitchr/omnitrade are not: no real provider is
+ * debug -, the gateways of omnisense/omnitrade are not: no real provider is
  * offered at the checkout nor reached by a return page.
  */
 final class DemoGatewaysTest extends TestCase
@@ -77,7 +77,7 @@ final class DemoGatewaysTest extends TestCase
     private function registry(string $environment, bool $debug): PaymentGatewayRegistry
     {
         if (!class_exists(Registry::class)) {
-            self::markTestSkipped('Requires glitchr/omnitrade.');
+            self::markTestSkipped('Requires omnisense/omnitrade.');
         }
 
         // An omnitrade gateway named "card", as omnitrade.gateways would configure a Stripe one: it takes a purchase, nothing more.

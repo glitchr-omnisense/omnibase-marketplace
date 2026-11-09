@@ -14,7 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
  * A list of wishes: a wedding's or a birthday's gifts, a birth list, a
  * fund. Its owner keeps it; it may belong to something of the application's
  * (an event: Model\WishlistHolderInterface). Its items are objects from any
- * shop (read through glitchr/omnitrade from their page), products of this
+ * shop (read through omnisense/omnitrade from their page), products of this
  * shop, or pots; those who give reserve an object or contribute money, paid
  * straight to the owner's payout account.
  *

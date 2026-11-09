@@ -14,9 +14,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * A product bought in one step (Service\QuickOrder): the buyer's e-mail
  * address - none for a member signed in, the order is theirs - and where to
- * come back to. Public, with no account: guarded as glitchr/omnibase guards
+ * come back to. Public, with no account: guarded as omnisense/omnibase guards
  * a form (its option `guard`, action "quick_order": a trap, the time it
- * takes, the lists, the captcha when the site has glitchr/omnishield); a
+ * takes, the lists, the captcha when the site has omnisense/omnishield); a
  * form's own trap only where the host's core is from before the guard.
  *
  * Printed by @Marketplace/client/_quick_order.html.twig, which asks
@@ -39,7 +39,7 @@ class QuickOrderType extends AbstractType
         $builder->add('back', HiddenType::class, ['data' => $options['back']]);
 
         if (!class_exists(FormGuard::class)) {
-            // A glitchr/omnibase from before the forms' guard: the form's own trap, read by the controller.
+            // An omnisense/omnibase from before the forms' guard: the form's own trap, read by the controller.
             $builder->add('website', TextType::class, ['required' => false, 'label' => false,
                 'row_attr' => ['class' => 'marketplace-quick-trap', 'aria-hidden' => 'true'],
                 'attr' => ['tabindex' => '-1', 'autocomplete' => 'off']]);
@@ -57,7 +57,7 @@ class QuickOrderType extends AbstractType
         $resolver->setAllowedTypes('ask_email', 'bool');
         $resolver->setAllowedTypes('back', ['null', 'string']);
         if (class_exists(FormGuard::class)) {
-            // glitchr/omnibase's forms' guard: the buyer's address is the field "email"; there is no name.
+            // omnisense/omnibase's forms' guard: the buyer's address is the field "email"; there is no name.
             $resolver->setDefault('guard', ['action' => 'quick_order', 'email' => 'email', 'name' => '']);
         }
     }

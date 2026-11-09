@@ -18,7 +18,7 @@ use Tests\Base\Marketplace\MarketplaceKernelTestCase;
  * the public directory and read from the back office only, omnibase's
  * data-protection notice, and the core's forms' guard (option `guard`): a
  * filled trap, a form sent faster than its delay, a missing captcha token
- * refused, nothing kept. In the core's harness (no glitchr/omnishield), the
+ * refused, nothing kept. In the core's harness (no omnisense/omnishield), the
  * trap and the time alone; in a site with omnishield's "fixed" test gateway,
  * the captcha too.
  */
@@ -58,7 +58,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
         $fields += ['guard_website' => '', 'guard_opened' => self::getContainer()->get(FormGuard::class)->stamp(time() - 10)];
         $post = ['quote_request' => $fields];
         if (null !== $captcha && str_contains($html, 'omnishield-token')) {
-            // glitchr/omnishield's "fixed" test gateway: its token, outside the form.
+            // omnisense/omnishield's "fixed" test gateway: its token, outside the form.
             $post['omnishield-token'] = $captcha;
         }
         if (str_contains($html, 'quote_request[_captcha]')) {
@@ -152,7 +152,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
     {
         [$html] = $this->form();
         if (!str_contains($html, 'omnishield-token')) {
-            self::markTestSkipped('The host application has no captcha (glitchr/omnishield and its "fixed" test gateway).');
+            self::markTestSkipped('The host application has no captcha (omnisense/omnishield and its "fixed" test gateway).');
         }
         $before = $this->entityManager->getRepository(Quote::class)->count([]);
         $response = $this->send(['email' => 'nocaptcha@example.org'], [], null);

@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Enum;
 
-/** Where a subscription stands; the values are glitchr/omnitrade's (Model\Subscription). */
+/** Where a subscription stands; the values are omnisense/omnitrade's (Model\Subscription). */
 enum SubscriptionStatus: string
 {
     case INCOMPLETE = 'incomplete';

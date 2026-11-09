@@ -8,7 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 /**
  * For the tests that write to a database (rights, credits, lists,
  * referrals): they need a host application - its kernel, its User, its
- * schema - and are skipped in a bare checkout. In glitchr/omnibase's Docker
+ * schema - and are skipped in a bare checkout. In omnisense/omnibase's Docker
  * harness the database is a fresh SQLite file at each run.
  */
 abstract class MarketplaceKernelTestCase extends KernelTestCase

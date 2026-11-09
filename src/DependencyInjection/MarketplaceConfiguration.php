@@ -62,12 +62,12 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                     ->variablePrototype()->end()
                     ->defaultValue([])
                 ->end()
-                // Who parcels leave from, for the carriers (glitchr/omnibus): Shipping::sender().
+                // Who parcels leave from, for the carriers (omnisense/omnibus): Shipping::sender().
                 // The shop's invoices (Entity\Invoice, Service\Invoices): who issues them, how they are numbered, when.
                 ->arrayNode('invoice')->addDefaultsIfNotSet()
                     ->children()
                         ->booleanNode('auto_issue')->defaultFalse()->info('Issue the invoice of an order as soon as it is paid (OrderPaidEvent). Off: from the back office.')->end()
-                        ->scalarNode('gateway')->defaultValue('email')->info('With glitchr/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle\'s own e-mail.')->end()
+                        ->scalarNode('gateway')->defaultValue('email')->info('With omnisense/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle\'s own e-mail.')->end()
                         ->scalarNode('prefix')->defaultValue('F')->info('The invoices\' series: F-2026-000001. One sequence per series and year, without a gap.')->end()
                         ->scalarNode('credit_prefix')->defaultValue('A')->info('The credit notes\' series: A-2026-000001.')->end()
                         ->integerNode('digits')->min(1)->max(12)->defaultValue(6)->end()
@@ -139,7 +139,7 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                         ->booleanNode('phone')->defaultTrue()->info('The form asks a phone number (optional).')->end()
                         ->booleanNode('attachments')->defaultTrue()->info('The form takes files (a logo, a photo of the shopfront): kept out of the public directory, downloaded from the back office.')->end()
                         ->booleanNode('consent')->defaultFalse()->info('The data-protection box must be ticked (the notice is shown either way).')->end()
-                        ->scalarNode('signature')->defaultNull()->info('With glitchr/omnisign: the gateway (omnisign.gateways.<name>) a priced quote is signed through, in the site\'s page, to be accepted. Null: accepting is a click, as without omnisign.')->end()
+                        ->scalarNode('signature')->defaultNull()->info('With omnisense/omnisign: the gateway (omnisign.gateways.<name>) a priced quote is signed through, in the site\'s page, to be accepted. Null: accepting is a click, as without omnisign.')->end()
                         ->scalarNode('signature_template')->defaultNull()->info('A template of the provider\'s to sign instead of the quote\'s PDF: DocuSeal\'s open-source edition signs its own templates only.')->end()
                     ->end()
                 ->end()
@@ -173,7 +173,7 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                         ->scalarNode('timezone')->defaultNull()->info('The shop\'s clock ("Europe/Paris"); null: PHP\'s, which omnibase sets to the visitor\'s.')->end()
                     ->end()
                 ->end()
-                // A platform holding the catalogue (glitchr/omnitrade): Catalogue\PlatformSynchronizer.
+                // A platform holding the catalogue (omnisense/omnitrade): Catalogue\PlatformSynchronizer.
                 ->arrayNode('catalogue')->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('source')->defaultNull()

@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
 /**
  * The shop's keys on omnibase/admin's API keys page: Stripe's, when the
- * "stripe" gateway of glitchr/omnitrade is there. Typed there, they win over
+ * "stripe" gateway of omnisense/omnitrade is there. Typed there, they win over
  * the configuration (api.payment_method.<gateway>.<option>, read by
  * Payment\Omnitrade\OmnitradeGateways) - the applications no longer list
  * them in a SystemController of their own.

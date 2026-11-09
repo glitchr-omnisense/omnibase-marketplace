@@ -1312,7 +1312,7 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         $value = $attribute?->resolve($locale);
         // Not written in this language: the default one's (a grape's name is the same in Japanese).
         if (null !== $attribute && null !== $locale && (null === $value || '' === $value || [] === $value)) {
-            // By its name: glitchr/omnibase's translate($locale) answers that language alone - its own
+            // By its name: omnisense/omnibase's translate($locale) answers that language alone - its own
             // fallback is for the page's language, asked without a locale.
             $value = $attribute->resolve(Localizer::getDefaultLocale());
         }

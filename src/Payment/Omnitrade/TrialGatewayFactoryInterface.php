@@ -6,11 +6,11 @@ use Omnitrade\GatewayFactoryInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * A glitchr/omnitrade gateway factory of the application's own whose gateways
+ * An omnisense/omnitrade gateway factory of the application's own whose gateways
  * move no money and reach no provider: accounts ready at once, a payment
  * paid on the spot by nobody, a product read from nowhere.
  *
- * In a demonstration (glitchr/omnibase's `demo` environment) these are the
+ * In a demonstration (omnisense/omnibase's `demo` environment) these are the
  * only omnitrade gateways the marketplace talks to: OmnitradeGateways gives
  * the gateway such a factory makes, asked by the factory's name, and none of
  * omnitrade.gateways - whatever keys they hold. An application that wants

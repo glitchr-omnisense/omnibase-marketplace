@@ -81,13 +81,13 @@ class PlatformSynchronizer
     }
 
     /**
-     * @throws \LogicException without glitchr/omnitrade, and in a demonstration (glitchr/omnibase's `demo`
+     * @throws \LogicException without omnisense/omnitrade, and in a demonstration (omnisense/omnibase's `demo`
      *                         environment): its catalogue is its fixtures', no platform is read there
      */
     public function gateway(string $name): GatewayInterface
     {
         if (!$this->registry) {
-            throw new \LogicException('glitchr/omnitrade is not installed: no platform to read a catalogue from.');
+            throw new \LogicException('omnisense/omnitrade is not installed: no platform to read a catalogue from.');
         }
         if ('demo' === $this->environment) {
             throw new \LogicException(sprintf('The demonstration reads no platform: its catalogue is its fixtures\', and the "%s" gateway is not reached there.', $name));

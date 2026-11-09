@@ -10,9 +10,9 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * An approved platform's callback about an invoice it carries
- * (glitchr/omnibill, omnibill.gateways.<gateway>: a gateway that takes
+ * (omnisense/omnibill, omnibill.gateways.<gateway>: a gateway that takes
  * webhooks): its signature checked by the gateway, the invoice's lifecycle
- * status updated. Without glitchr/omnibill there is no transmission: 404.
+ * status updated. Without omnisense/omnibill there is no transmission: 404.
  */
 class InvoiceWebhookController extends AbstractController
 {

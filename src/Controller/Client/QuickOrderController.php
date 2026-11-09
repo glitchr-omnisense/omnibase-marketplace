@@ -26,7 +26,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * A product bought in one step (Service\QuickOrder): the form of
  * @Marketplace/client/_quick_order.html.twig (Form\QuickOrderType, guarded
- * as glitchr/omnibase guards a form) posts an e-mail address here, the
+ * as omnisense/omnibase guards a form) posts an e-mail address here, the
  * payment follows, and the buyer ends on the order's own page - a signed
  * link, no account.
  *

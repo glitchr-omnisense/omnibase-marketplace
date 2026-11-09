@@ -10,7 +10,7 @@ use Omnistate\Omnistate;
 
 /**
  * Intra-EU VAT numbers - a customer's, a store's - checked with the European
- * Commission's VIES through Omnistate (glitchr/omnistate, omnistate/vies)
+ * Commission's VIES through Omnistate (omnisense/omnistate, omnistate/vies)
  * when they are given, never while a page is built. A SIREN or a SIRET is
  * enough for a French business: its VAT number is its SIREN with a key.
  *

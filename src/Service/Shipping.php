@@ -29,7 +29,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  * set by hand on the method - the shop's price - whatever the carrier
  * charges the shop.
  *
- * The carrier itself is glitchr/omnibus's: a ShippingMethod names a gateway
+ * The carrier itself is omnisense/omnibus's: a ShippingMethod names a gateway
  * configured under omnibus.gateways (`gatewayName`), and when that package
  * is installed the shipment is booked there (book(): the label, the
  * tracking number on the Shipment) and followed (track()). The sender is
@@ -229,7 +229,7 @@ final class Shipping
             : $method->getTrackingUrl().rawurlencode($number);
     }
 
-    // --- The carrier (glitchr/omnibus) ----------------------------------------
+    // --- The carrier (omnisense/omnibus) ----------------------------------------
 
     /** The omnibus carrier the method names (its gatewayName), when that package is installed and the gateway configured. */
     public function carrierFor(?ShippingMethod $method): ?Carrier

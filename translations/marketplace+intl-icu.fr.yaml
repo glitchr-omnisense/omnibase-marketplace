@@ -504,7 +504,7 @@ invoice:
     credit_confirm: "Annuler cette facture par un avoir ? Une facture émise ne se modifie pas : l'avoir l'annule entièrement."
     refresh: "Actualiser l'état"
     refreshed: "Facture {number} : {status}."
-  # Where an invoice stands on the gateway it went through (glitchr/omnibill): the reform's lifecycle statuses.
+  # Where an invoice stands on the gateway it went through (omnisense/omnibill): the reform's lifecycle statuses.
   lifecycle:
     sent: "Envoyée"
     deposited: "Déposée"

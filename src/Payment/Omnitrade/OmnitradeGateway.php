@@ -23,7 +23,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * A payment method that names a glitchr/omnitrade gateway: the shop's
+ * A payment method that names an omnisense/omnitrade gateway: the shop's
  * PaymentMethod is a proxy, its `gatewayFactory` the name of a gateway
  * configured under omnitrade.gateways (stripe, paypal, a Shopify shop...),
  * and this bridge takes the order there.
@@ -175,7 +175,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
     public function payment(Order $order, Transaction $transaction, PaymentMethod $method, ?PaymentPreparingEvent $event = null): Payment
     {
         $event ??= $this->prepare($order, $transaction, $method);
-        // A destination and its fee only where glitchr/omnitrade knows them (1.x with Connect).
+        // A destination and its fee only where omnisense/omnitrade knows them (1.x with Connect).
         $connect = null !== $event->destination && property_exists(Payment::class, 'destination')
             ? ['destination' => $event->destination, 'applicationFee' => null !== $event->applicationFee && $event->applicationFee > 0 ? Money::of($event->applicationFee, strtoupper((string) $order->getCurrency())) : null]
             : [];

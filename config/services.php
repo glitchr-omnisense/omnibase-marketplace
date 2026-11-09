@@ -21,7 +21,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  * The admin CRUD controllers are loaded only when base-bundle-admin is there.
  * The company register and the VAT number checks ask Omnistate: the app
  * registers Omnistate\Bridge\Symfony\OmnistateBundle. Payments go through
- * glitchr/omnitrade's gateways and parcels through glitchr/omnibus's
+ * omnisense/omnitrade's gateways and parcels through omnisense/omnibus's
  * carriers when those packages are installed (their bundles registered);
  * without them, the manual gateway and hand-priced shipping remain.
  */
@@ -59,17 +59,17 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Quote/',
             // Registered in debug only, by MarketplaceExtension.
             $src . '/Payment/DevGateway.php',
-            // The bridges to glitchr/omnitrade's gateways: built by
+            // The bridges to omnisense/omnitrade's gateways: built by
             // OmnitradeGateways, registered below when that package is there.
             $src . '/Payment/Omnitrade/OmnitradeGateway.php',
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Payment/Omnitrade/']),
             // The buyer's return page and the providers' webhooks: only with omnitrade.
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Controller/Client/PaymentController.php', $src . '/Console/StripeWebhookCommand.php']),
-            // The catalogue read from a platform needs glitchr/omnitrade's catalogue (FetchProducts).
+            // The catalogue read from a platform needs omnisense/omnitrade's catalogue (FetchProducts).
             ...(class_exists('Omnitrade\\Request\\FetchProducts') ? [] : [$src . '/Catalogue/', $src . '/Console/CatalogueSyncCommand.php']),
-            // Subscriptions need glitchr/omnitrade's (Model\Subscription, from its Connect and subscriptions release on).
+            // Subscriptions need omnisense/omnitrade's (Model\Subscription, from its Connect and subscriptions release on).
             ...(class_exists('Omnitrade\\Model\\Subscription') ? [] : [$src . '/Service/Subscriptions.php', $src . '/EventListener/SubscriptionNotificationListener.php', $src . '/Console/SubscriptionsCommand.php']),
-            // Lists: reading an address needs glitchr/omnitrade, contributions and payout accounts its Connect.
+            // Lists: reading an address needs omnisense/omnitrade, contributions and payout accounts its Connect.
             ...(class_exists('Omnitrade\\Registry') ? [] : [$src . '/Wishlist/ProductLookup.php']),
             ...(class_exists('Omnitrade\\Model\\Account') ? [] : [$src . '/Wishlist/Contributions.php', $src . '/Wishlist/PayoutAccounts.php', $src . '/EventListener/WishlistNotificationListener.php']),
             $src . '/Wishlist/WishlistException.php',
@@ -77,7 +77,7 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Supply/SupplyException.php',
             // The partner workshop is written to: needs symfony/mailer and the Twig bridge.
             ...(interface_exists('Symfony\\Component\\Mailer\\MailerInterface') && class_exists('Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail') ? [] : [$src . '/Supply/OfflineSupplier.php']),
-            // Invoices sent through glitchr/omnibill's gateways, where they stand kept beside them: only with that
+            // Invoices sent through omnisense/omnibill's gateways, where they stand kept beside them: only with that
             // family (its entity mapped by MarketplaceExtension, with the family too; never a service).
             $src . '/Invoice/Transmission/Entity/',
             $src . '/Invoice/Transmission/TransmissionException.php',
@@ -95,14 +95,14 @@ return function (ContainerConfigurator $configurator) {
             ->tag('controller.service_arguments');
     }
 
-    // The carriers (glitchr/omnibus) the shipping methods name: Shipping
+    // The carriers (omnisense/omnibus) the shipping methods name: Shipping
     // books and tracks through Omnibus\Registry when the package is there.
     if (class_exists('Omnibus\\Registry')) {
         $services->get('Base\\Marketplace\\Service\\Shipping')
             ->arg('$carriers', service('Omnibus\\Registry')->nullOnInvalid());
     }
 
-    // The invoices' gateways (glitchr/omnibill): its registry when its bundle is registered; omnibill/email's
+    // The invoices' gateways (omnisense/omnibill): its registry when its bundle is registered; omnibill/email's
     // statuses kept beside the invoices (Invoice\Transmission\InvoiceStatusStore), for a site's own "email" gateway too.
     if (class_exists('Omnibill\\Registry')) {
         $email = interface_exists('Omnibill\\Email\\StatusStoreInterface');
@@ -119,8 +119,8 @@ return function (ContainerConfigurator $configurator) {
             ->public();
     }
 
-    // A priced quote accepted by signing it in the page (marketplace.quotes.signature): only with glitchr/omnisign
-    // and glitchr/omnibase's Signatures. Nothing in Quote/Signature/ implements an omnisign interface.
+    // A priced quote accepted by signing it in the page (marketplace.quotes.signature): only with omnisense/omnisign
+    // and omnisense/omnibase's Signatures. Nothing in Quote/Signature/ implements an omnisign interface.
     if (class_exists('Omnisign\\Registry') && class_exists('Base\\Service\\Signatures')) {
         $services->load('Base\\Marketplace\\Quote\\Signature\\', $src . '/Quote/Signature/');
     }

@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final class DevGateway implements PaymentGatewayInterface
 {
-    /** glitchr/omnibase's demonstration environment (Base\Demo\DemoMode::ENVIRONMENT). */
+    /** omnisense/omnibase's demonstration environment (Base\Demo\DemoMode::ENVIRONMENT). */
     public const DEMO_ENVIRONMENT = 'demo';
 
     public function __construct(

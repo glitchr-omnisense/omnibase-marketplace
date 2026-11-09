@@ -41,7 +41,7 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
     {
         parent::setUp();
         if (!class_exists(FormGuard::class)) {
-            self::markTestSkipped('The host\'s glitchr/omnibase has no forms\' guard.');
+            self::markTestSkipped('The host\'s omnisense/omnibase has no forms\' guard.');
         }
         if ([] !== $this->entityManager->getRepository(PaymentMethod::class)->findAll()) {
             self::markTestSkipped('The host has payment methods of its own: which one takes a quick order would be theirs to say.');
@@ -110,7 +110,7 @@ final class QuickOrderTest extends MarketplaceKernelTestCase
         $this->cookies = $cookies;
         $post = [
             'quick_order' => $fields + $form,
-            // glitchr/omnishield's "fixed" test gateway, where the host has it: its token, outside the form.
+            // omnisense/omnishield's "fixed" test gateway, where the host has it: its token, outside the form.
             'omnishield-token' => 'omnishield-fixed-token',
         ];
 

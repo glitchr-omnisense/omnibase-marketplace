@@ -25,7 +25,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * issued from the order (OrderCrudController's "Issue the invoice"), or by
  * itself when the order is paid (marketplace.invoice.auto_issue).
  *
- * With glitchr/omnibill, sending goes through its gateway: the screen shows
+ * With omnisense/omnibill, sending goes through its gateway: the screen shows
  * where the invoice stands there (its lifecycle status), and asks again.
  */
 class InvoiceCrudController extends AbstractMarketplaceCrudController
@@ -106,7 +106,7 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('number', '@marketplace.admin.field.number')->setColumns(3);
         yield TextField::new('type', '@marketplace.admin.field.type')->setColumns(2);
-        // With glitchr/omnibill, where it stands on the gateway it went through: "sent · Encaissée (email)".
+        // With omnisense/omnibill, where it stands on the gateway it went through: "sent · Encaissée (email)".
         yield TextField::new('state', '@marketplace.admin.field.state')->setColumns(2)
             ->formatValue(fn (?string $state, Invoice $invoice) => null !== $this->invoices->gateway() && null !== ($lifecycle = $this->invoices->lifecycle($invoice)) ? $state.' · '.$lifecycle : $state);
         yield TextField::new('orderReference', '@marketplace.admin.field.order_reference')->setRequired(false)->setColumns(3);

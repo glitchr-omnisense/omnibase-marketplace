@@ -94,7 +94,7 @@ class ShippingMethod implements IconizeInterface
     }
 
     /**
-     * The carrier: the name of a glitchr/omnibus gateway configured under
+     * The carrier: the name of an omnisense/omnibus gateway configured under
      * omnibus.gateways (Service\Shipping::carrierFor()). Its parameters
      * (omnibus.<slug> in the parameter bag: service, pickup_point, the
      * carrier's options) go with every shipment booked through it.

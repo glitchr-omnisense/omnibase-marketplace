@@ -11,8 +11,8 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * The bridges to glitchr/omnitrade's configured gateways, one per name.
- * Registered only when glitchr/omnitrade is installed (config/services.php);
+ * The bridges to omnisense/omnitrade's configured gateways, one per name.
+ * Registered only when omnisense/omnitrade is installed (config/services.php);
  * PaymentGatewayRegistry asks here after the application's own gateways.
  *
  * A gateway's options may also be typed in the back office, as settings
@@ -24,7 +24,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * configuration serves. Any provider, any option: nothing to write per
  * provider.
  *
- * In a demonstration (glitchr/omnibase's `demo` environment) no money moves
+ * In a demonstration (omnisense/omnibase's `demo` environment) no money moves
  * and no provider is reached - whoever asks: the checkout, a list's
  * contributions, its owner's payout account, an address read for a wish all
  * come here. There, none of omnitrade.gateways answers, whatever keys it
@@ -38,7 +38,7 @@ final class OmnitradeGateways
 {
     public const SETTINGS = 'api.payment_method';
 
-    /** glitchr/omnibase's demonstration environment (Base\Demo\DemoMode::ENVIRONMENT). */
+    /** omnisense/omnibase's demonstration environment (Base\Demo\DemoMode::ENVIRONMENT). */
     private const DEMO_ENVIRONMENT = 'demo';
 
     /** @var array<string, ?OmnitradeGateway> by name and typed options */

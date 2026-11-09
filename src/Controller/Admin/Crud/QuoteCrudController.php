@@ -49,7 +49,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
 
     private ?\Base\Marketplace\Quote\Signature\QuoteSignatures $signatures = null;
 
-    /** The quotes signed in the page: with glitchr/omnisign only (the service does not exist without it). */
+    /** The quotes signed in the page: with omnisense/omnisign only (the service does not exist without it). */
     #[Required]
     public function setQuoteSignatures(?\Base\Marketplace\Quote\Signature\QuoteSignatures $signatures = null): void
     {
@@ -92,7 +92,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
             ->displayIf(fn (Quote $quote) => $quote->getStatus()->isEditable());
 
         $actions = parent::configureActions($actions)->add(Actions::PAGE_INDEX, $send)->add(Actions::PAGE_DETAIL, $send)->add(Actions::PAGE_EDIT, $send);
-        // Signed in the page (glitchr/omnisign, marketplace.quotes.signature): the signed quote and its evidence.
+        // Signed in the page (omnisense/omnisign, marketplace.quotes.signature): the signed quote and its evidence.
         if (null !== $this->signatures) {
             foreach (['document' => 'fa-solid fa-file-signature', 'preuve' => 'fa-solid fa-stamp'] as $kind => $icon) {
                 $actions->add(Actions::PAGE_DETAIL, Action::new('signature_'.$kind, '@marketplace.quote.signature.'.('preuve' === $kind ? 'evidence' : 'download'), $icon)

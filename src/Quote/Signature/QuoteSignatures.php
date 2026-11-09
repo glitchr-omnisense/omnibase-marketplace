@@ -25,7 +25,7 @@ use Twig\Environment;
 
 /**
  * A priced quote accepted by signing it in the site's page, through
- * glitchr/omnisign (glitchr/omnibase's Base\Service\Signatures): its PDF
+ * omnisense/omnisign (omnisense/omnibase's Base\Service\Signatures): its PDF
  * (@Marketplace/quote/quote.pdf.twig) sent as an envelope about the quote,
  * the client signing where they are, the quote accepted - its order, its
  * payment, as an acceptance without a signature - once the provider says it
@@ -38,7 +38,7 @@ use Twig\Environment;
  *             signature: contracts            # a gateway of omnisign.gateways; absent (null): accepting is a click
  *             signature_template: ~           # DocuSeal's open-source edition signs its own templates only: one's id
  *
- * This folder is registered only when glitchr/omnisign and the core's
+ * This folder is registered only when omnisense/omnisign and the core's
  * Signatures are there; nothing of it implements an omnisign interface.
  */
 #[AsEventListener(event: SignatureEvent::COMPLETED, method: 'onCompleted')]

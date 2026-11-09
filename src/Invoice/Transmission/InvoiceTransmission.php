@@ -28,7 +28,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The shop's invoices through glitchr/omnibill: an invoice sent is
+ * The shop's invoices through omnisense/omnibill: an invoice sent is
  * submitted to a gateway - omnibill/email by default, an approved platform
  * (omnibill/afnor) the day the shop must issue through one -, and where it
  * stands there (sent, deposited, refused, paid...) is kept beside it
@@ -41,7 +41,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * "email" needs no configuration: with omnibill/email installed and no
  * omnibill gateway of that name, the invoice goes from the seller's address
  * (marketplace.invoice.seller.email). This folder is registered, and its
- * entity mapped, only when glitchr/omnibill is installed: without it,
+ * entity mapped, only when omnisense/omnibill is installed: without it,
  * Service\Invoices sends its own e-mail and nothing here exists. What
  * omnibill throws leaves as a TransmissionException (a LogicException).
  */

@@ -40,7 +40,7 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
     {
         parent::setUp();
         if (!class_exists(Account::class)) {
-            self::markTestSkipped('Needs glitchr/omnitrade with Connect.');
+            self::markTestSkipped('Needs omnisense/omnitrade with Connect.');
         }
         // "stripe" and "web" as an application configures them: here a provider that counts what it is asked.
         $this->provider = new StubProvider();

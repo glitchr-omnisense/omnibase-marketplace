@@ -6,12 +6,12 @@ use Base\Marketplace\Entity\Invoice;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Where an invoice stands on the glitchr/omnibill gateway it went through:
+ * Where an invoice stands on the omnisense/omnibill gateway it went through:
  * the gateway, its reference of the transmission, the lifecycle statuses
  * known (sent, deposited, refused, paid...). One per invoice, beside it -
  * the invoice itself does not change once issued.
  *
- * Mapped only when glitchr/omnibill is installed (MarketplaceExtension):
+ * Mapped only when omnisense/omnibill is installed (MarketplaceExtension):
  * a site without the family has no table for it, and needs none.
  */
 #[ORM\Entity]

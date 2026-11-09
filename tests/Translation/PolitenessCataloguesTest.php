@@ -7,7 +7,7 @@ use Symfony\Component\Yaml\Yaml;
 
 /**
  * The bundle's catalogues, read as files, for a site that sets
- * glitchr/omnibase's base.translator.politeness: a variant ("key._polite")
+ * omnisense/omnibase's base.translator.politeness: a variant ("key._polite")
  * stands beside the text it is a variant of and takes the same parameters,
  * and - in French, written with "tu" - a polite one no longer says it, nor
  * does any text without a polite variant.

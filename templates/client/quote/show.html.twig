@@ -43,7 +43,7 @@
     </table>
     <p class="marketplace-quote-vat">{{ (export ? '@marketplace.quote.vat_export' : '@marketplace.quote.vat_added')|trans }}</p>
 
-    {# Accepting it is signing it in the page (glitchr/omnisign): where its latest signature stands. #}
+    {# Accepting it is signing it in the page (omnisense/omnisign): where its latest signature stands. #}
     {% if signature ?? null %}
         {% if signature.completed %}
         <p class="marketplace-quote-signature is-signed">{{ '@marketplace.quote.signature.done'|trans({'{date}': (signature.completedAt ?? signature.updatedAt)|format_date('long', locale: app.request.locale)}) }}

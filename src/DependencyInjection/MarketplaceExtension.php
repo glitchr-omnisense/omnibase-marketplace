@@ -45,7 +45,7 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         $container->prependExtensionConfig('doctrine', ['dbal' => ['types' => $types]]);
         $container->prependExtensionConfig('base', ['attributes' => ['paths' => [\dirname(__DIR__) . '/Attribute']]]);
 
-        // Where an invoice stands on a glitchr/omnibill gateway (Invoice\Transmission\Entity\InvoiceFlow):
+        // Where an invoice stands on an omnisense/omnibill gateway (Invoice\Transmission\Entity\InvoiceFlow):
         // mapped only with the family - a site without it has no such table, and needs none.
         if (class_exists('Omnibill\\Registry')) {
             $container->prependExtensionConfig('doctrine', ['orm' => ['mappings' => ['MarketplaceInvoiceTransmission' => [
@@ -76,7 +76,7 @@ class MarketplaceExtension extends AbstractBaseExtension implements PrependExten
         $loader->load('services.php');
 
         // The "dev" gateway - paid by nobody, at once - exists in debug, and in the
-        // demonstration (glitchr/omnibase's `demo` environment, which never runs in debug): nowhere else.
+        // demonstration (omnisense/omnibase's `demo` environment, which never runs in debug): nowhere else.
         $debug = $container->hasParameter('kernel.debug') && $container->getParameter('kernel.debug');
         $demo = $container->hasParameter('kernel.environment') && DevGateway::DEMO_ENVIRONMENT === $container->getParameter('kernel.environment');
         if ($debug || $demo) {

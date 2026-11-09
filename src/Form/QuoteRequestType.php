@@ -25,10 +25,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * what, which way, on which terms, where, how much, for when. The trade
  * fields are left out with `trade: false` (a studio's quote needs none).
  * Options: phone, attachments (files, checked by Service\Attachments),
- * privacy / privacy_consent / privacy_parameters (glitchr/omnibase's
- * PrivacyType). Guarded as glitchr/omnibase guards a form (its option
+ * privacy / privacy_consent / privacy_parameters (omnisense/omnibase's
+ * PrivacyType). Guarded as omnisense/omnibase guards a form (its option
  * `guard`, action "quote"): a trap, the time it takes, the lists, the captcha
- * when the site has glitchr/omnishield - in place of the form's own trap, which
+ * when the site has omnisense/omnishield - in place of the form's own trap, which
  * stays only where the host's core is from before the guard.
  */
 class QuoteRequestType extends AbstractType
@@ -85,14 +85,14 @@ class QuoteRequestType extends AbstractType
             ]);
         }
         if (!class_exists(FormGuard::class)) {
-            // A glitchr/omnibase from before the forms' guard: the form's own trap, off-screen for people
+            // An omnisense/omnibase from before the forms' guard: the form's own trap, off-screen for people
             // (and for screen readers), filled by robots - read by the controller.
             $builder->add('website', TextType::class, ['mapped' => false, 'required' => false, 'label' => false,
                 'row_attr' => ['class' => 'base-trap', 'aria-hidden' => 'true', 'style' => 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden'],
                 'attr' => ['tabindex' => '-1', 'autocomplete' => 'off']]);
         }
         if (false !== $options['privacy'] || $options['privacy_consent']) {
-            // glitchr/omnibase's notice, and the box to tick when the shop asks for it.
+            // omnisense/omnibase's notice, and the box to tick when the shop asks for it.
             $builder->add('privacy', PrivacyType::class, [
                 'notice' => $options['privacy'],
                 'notice_parameters' => $options['privacy_parameters'],
@@ -122,7 +122,7 @@ class QuoteRequestType extends AbstractType
         $resolver->setAllowedTypes('privacy', ['bool', 'string']);
         $resolver->setAllowedTypes('privacy_parameters', 'array');
         if (class_exists(FormGuard::class)) {
-            // glitchr/omnibase's forms' guard: the sender's name is contactName.
+            // omnisense/omnibase's forms' guard: the sender's name is contactName.
             $resolver->setDefault('guard', ['action' => 'quote', 'name' => 'contactName']);
         }
     }

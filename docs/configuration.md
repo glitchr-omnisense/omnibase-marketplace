@@ -79,7 +79,7 @@ marketplace:
         # Issue the invoice of an order as soon as it is paid (OrderPaidEvent). Off: from the back office.
         auto_issue:           false
 
-        # With glitchr/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle's own e-mail.
+        # With omnisense/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle's own e-mail.
         gateway:              email
 
         # The invoices' series: F-2026-000001. One sequence per series and year, without a gap.
@@ -186,7 +186,7 @@ marketplace:
         # The data-protection box must be ticked (the notice is shown either way).
         consent:              false
 
-        # With glitchr/omnisign: the gateway (omnisign.gateways.<name>) a priced quote is signed through, in the site's page, to be accepted. Null: accepting is a click, as without omnisign.
+        # With omnisense/omnisign: the gateway (omnisign.gateways.<name>) a priced quote is signed through, in the site's page, to be accepted. Null: accepting is a click, as without omnisign.
         signature:            null
 
         # A template of the provider's to sign instead of the quote's PDF: DocuSeal's open-source edition signs its own templates only.

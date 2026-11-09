@@ -20,7 +20,7 @@ use Tests\Base\Marketplace\MarketplaceKernelTestCase;
 use Tests\Base\Marketplace\ShopFixtureTrait;
 
 /**
- * A priced quote accepted by signing it in the page (glitchr/omnisign,
+ * A priced quote accepted by signing it in the page (omnisense/omnisign,
  * marketplace.quotes.signature): its PDF sent to be signed, nothing
  * accepted before the signature is completed, then the quote accepted as a
  * click accepts it - its order made -, the signed PDF and its evidence
@@ -28,7 +28,7 @@ use Tests\Base\Marketplace\ShopFixtureTrait;
  * nothing asks for a signature. DocuSeal answers as omnisign/docuseal's
  * recorded answers do (an instance of its open-source edition; its Pro
  * edition's /submissions/pdf answered alike). Skipped without
- * glitchr/omnisign, omnisign/docuseal and the core's Signatures.
+ * omnisense/omnisign, omnisign/docuseal and the core's Signatures.
  */
 final class QuoteSignaturesTest extends MarketplaceKernelTestCase
 {
@@ -42,7 +42,7 @@ final class QuoteSignaturesTest extends MarketplaceKernelTestCase
     protected function setUp(): void
     {
         if (!class_exists(Registry::class) || !class_exists(DocusealGatewayFactory::class) || !class_exists(Signatures::class)) {
-            self::markTestSkipped('Needs glitchr/omnisign, omnisign/docuseal and glitchr/omnibase\'s Signatures.');
+            self::markTestSkipped('Needs omnisense/omnisign, omnisign/docuseal and omnisense/omnibase\'s Signatures.');
         }
         parent::setUp();
         if (!class_exists(\Dompdf\Dompdf::class)) {

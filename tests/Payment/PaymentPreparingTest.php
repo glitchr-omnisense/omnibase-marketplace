@@ -28,7 +28,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 /**
  * Before an order goes to its provider: a listener sends it to a connected
  * account and keeps a fee, an order of one recurring plan becomes a
- * subscription. Both need glitchr/omnitrade's Connect and subscriptions.
+ * subscription. Both need omnisense/omnitrade's Connect and subscriptions.
  */
 final class PaymentPreparingTest extends TestCase
 {
@@ -38,7 +38,7 @@ final class PaymentPreparingTest extends TestCase
     protected function setUp(): void
     {
         if (!class_exists(Subscribe::class) || !property_exists(Payment::class, 'destination')) {
-            self::markTestSkipped('Needs glitchr/omnitrade with Connect and subscriptions.');
+            self::markTestSkipped('Needs omnisense/omnitrade with Connect and subscriptions.');
         }
     }
 

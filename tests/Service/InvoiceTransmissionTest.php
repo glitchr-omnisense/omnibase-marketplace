@@ -16,11 +16,11 @@ use Tests\Base\Marketplace\MarketplaceKernelTestCase;
 use Tests\Base\Marketplace\ShopFixtureTrait;
 
 /**
- * The shop's invoices through glitchr/omnibill: sent by omnibill/email
+ * The shop's invoices through omnisense/omnibill: sent by omnibill/email
  * when nothing else is configured - the seller's address, the bundle's
  * words, the PDF (Factur-X) attached -, their lifecycle statuses kept on
  * them and read back by the gateway; a site's own omnibill gateway taken
- * when it names one. Skipped without glitchr/omnibill and omnibill/email.
+ * when it names one. Skipped without omnisense/omnibill and omnibill/email.
  */
 final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
 {
@@ -31,7 +31,7 @@ final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
     protected function setUp(): void
     {
         if (!class_exists(Registry::class) || !class_exists(EmailGatewayFactory::class)) {
-            self::markTestSkipped('Needs glitchr/omnibill and omnibill/email.');
+            self::markTestSkipped('Needs omnisense/omnibill and omnibill/email.');
         }
         parent::setUp();
         if (!FacturX::available() || !class_exists(\Dompdf\Dompdf::class)) {

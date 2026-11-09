@@ -39,7 +39,7 @@ final class WishlistTest extends MarketplaceKernelTestCase
     {
         parent::setUp();
         if (!class_exists(Account::class)) {
-            self::markTestSkipped('Needs glitchr/omnitrade with Connect.');
+            self::markTestSkipped('Needs omnisense/omnitrade with Connect.');
         }
         $this->provider = new StubProvider();
         $this->registry = new Registry([$this->provider], ['stripe' => ['factory' => 'stub'], 'web' => ['factory' => 'stub']]);
