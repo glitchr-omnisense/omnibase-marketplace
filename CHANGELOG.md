@@ -47,6 +47,10 @@
   with the admin action's CSRF token, translated en and fr.
 
 ### Fixed
+- The credit note of an invoice without an order (`issueFor()`, or its order deleted since) names the invoice it
+  cancels, then the reason, the exemption and the nature of the operations that invoice stated
+  (`InvoiceComposer::operationOf()`): it carried the reason alone. A reason that already begins with that mention (what
+  omnibase/forge passed) is written once. `InvoiceSourceTest`.
 - The Factur-X lines are self-consistent: quantity times net price is the line's amount. Quantities and prices take
   the decimals a line needs (`FacturX::decimals()`, up to six and four): an hours line of 4h25 at 90.00 (397.50)
   carries 4.4167 hours, no longer 4.42 (397.80); a line's `unit` (`HUR`) is written, a piece (`H87`) by default.

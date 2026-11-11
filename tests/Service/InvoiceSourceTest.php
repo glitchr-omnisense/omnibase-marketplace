@@ -214,6 +214,47 @@ final class InvoiceSourceTest extends MarketplaceKernelTestCase
         self::assertEmpty(array_filter($mentions, fn ($m) => str_starts_with($m, 'Pénalités de retard') || str_starts_with($m, 'À régler')));
     }
 
+    public function testItsCreditNoteNamesTheInvoiceItCancels(): void
+    {
+        // An invoice without an order: its credit note used to carry the reason alone.
+        $invoice = $this->invoices->issueFor($this->source(), new \DateTimeImmutable('2026-11-02 10:00'));
+        $creditNote = $this->invoices->credit($invoice, 'Taux horaire erroné.', new \DateTimeImmutable('2026-11-05'));
+
+        $mentions = $creditNote->getMentions();
+        self::assertSame(sprintf('Avoir annulant la facture %s du 02/11/2026.', $invoice->getNumber()), $mentions[0]);
+        self::assertSame('Taux horaire erroné.', $mentions[1]);
+        self::assertSame('Nature des opérations : prestations de services.', $mentions[2], 'the nature the invoice stated, not the setting\'s (goods)');
+        self::assertEmpty(array_filter($mentions, fn ($m) => str_starts_with($m, 'À régler') || str_starts_with($m, 'Pénalités de retard') || str_starts_with($m, 'Prestations réalisées')), 'a credit note is not paid by a date');
+        self::assertSame($invoice, $creditNote->getCredited());
+        self::assertTrue($invoice->isCancelled());
+    }
+
+    public function testACreditReasonThatNamesTheInvoiceIsWrittenOnce(): void
+    {
+        // What omnibase/forge passed before marketplace wrote the mention itself: kept as it is, once.
+        $invoice = $this->invoices->issueFor($this->source(), new \DateTimeImmutable('2026-11-02 10:00'));
+        $reason = sprintf('Avoir annulant la facture %s du 02/11/2026. Taux horaire erroné.', $invoice->getNumber());
+        $mentions = $this->invoices->credit($invoice, $reason)->getMentions();
+
+        self::assertSame($reason, $mentions[0]);
+        self::assertCount(1, array_filter($mentions, fn ($m) => str_contains($m, 'Avoir annulant')));
+    }
+
+    public function testAnExemptInvoicesCreditNoteRestatesTheExemption(): void
+    {
+        $exemption = InvoiceComposer::exemption('TVA non applicable, art. 293 B du CGI');
+        $line = ['id' => '1', 'label' => 'Abonnement', 'quantity' => 1, 'unit_price' => 1200, 'rate' => 0.0, 'category' => 'E', 'total' => 1200, 'vat' => 0, 'total_with_vat' => 1200];
+        $invoice = $this->invoices->issueFor($this->source([
+            'lines' => [$line],
+            'totals' => ['lines' => 1200, 'vat_breakdown' => [['rate' => 0.0, 'category' => 'E', 'base' => 1200, 'vat' => 0]], 'total_without_vat' => 1200, 'vat' => 0, 'total' => 1200, 'exemption' => $exemption],
+        ]));
+
+        $mentions = $this->invoices->credit($invoice)->getMentions();
+
+        self::assertStringStartsWith('Avoir annulant la facture '.$invoice->getNumber(), $mentions[0]);
+        self::assertSame('TVA non applicable, art. 293 B du CGI', $mentions[1], 'no reason given: the exemption follows');
+    }
+
     public function testNothingToInvoiceIsRefused(): void
     {
         $this->expectException(\LogicException::class);

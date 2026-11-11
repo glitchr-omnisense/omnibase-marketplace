@@ -171,7 +171,10 @@ class Invoices
     /**
      * The credit note that cancels an invoice, whole: its lines and amounts,
      * its seller and buyer as the invoice has them, its own number in the
-     * credit notes' series; the invoice is cancelled by it.
+     * credit notes' series; the invoice is cancelled by it. Its mentions name
+     * the invoice it cancels ("Avoir annulant la facture F-2026-000042 du
+     * 02/11/2026."), then the reason, the exemption and the nature of the
+     * operations the invoice stated - an invoice with an order or without.
      */
     public function credit(Invoice $invoice, ?string $reason = null, ?\DateTimeImmutable $at = null): Invoice
     {
@@ -183,7 +186,10 @@ class Invoices
         }
         $at ??= new \DateTimeImmutable();
         $order = $invoice->getOrder();
-        $mentions = $order ? $this->composer->mentions($order, $invoice->getBuyer(), $invoice->getTotals(), $at, null, $invoice, $reason) : array_filter([$reason]);
+        // Without an order (issueFor(), or its order deleted since): the same mentions, written from the invoice itself.
+        $mentions = $order
+            ? $this->composer->mentions($order, $invoice->getBuyer(), $invoice->getTotals(), $at, null, $invoice, $reason)
+            : $this->composer->mentionsFor($invoice->getBuyer(), $invoice->getTotals(), null, $this->composer->operationOf($invoice), credited: $invoice, reason: $reason);
         $totals = ['paid' => 0, 'due' => 0] + $invoice->getTotals();
         $totals['paid'] = 0;
         $totals['due'] = $totals['total'];

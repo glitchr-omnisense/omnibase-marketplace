@@ -285,6 +285,22 @@ final class InvoiceComposer
         return $this->trans('@marketplace.invoice.mention.credit', ['{number}' => $credited->getNumber(), '{date}' => $credited->getIssuedAt()->format('d/m/Y')], $this->locale());
     }
 
+    /**
+     * The nature of the operations an invoice stated (goods, services, mixed),
+     * read back from its mentions; null when it states none this setting knows.
+     */
+    public function operationOf(Invoice $invoice): ?string
+    {
+        $locale = $this->locale();
+        foreach (self::OPERATIONS as $operation) {
+            if (\in_array($this->trans('@marketplace.invoice.mention.operation.'.$operation, [], $locale), $invoice->getMentions(), true)) {
+                return $operation;
+            }
+        }
+
+        return null;
+    }
+
     /** An invoice is written in its seller's language: French for a French seller. */
     private function locale(): ?string
     {

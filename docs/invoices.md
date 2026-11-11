@@ -56,7 +56,10 @@ $creditNote = $invoices->credit($invoice, 'Colis retourné');   // A-2026-000003
 (`Invoice::MUTABLE`). A correction is a credit note (`credit()`), which cancels the whole invoice:
 - it copies the invoice's seller, buyer, lines and amounts;
 - it takes its own number in the credit notes' series;
-- it names the invoice it cancels.
+- it names the invoice it cancels ("Avoir annulant la facture F-2026-000042 du 02/11/2026."), then
+  gives the reason, the exemption and the nature of the operations the invoice stated - an invoice
+  issued without an order too (`issueFor()`). A reason that already begins with that mention is
+  written as it is, once.
 
 The order may then be invoiced again. Partial credit notes do not exist yet.
 
