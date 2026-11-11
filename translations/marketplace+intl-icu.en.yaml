@@ -494,6 +494,20 @@ invoice:
     reissued: "Credit note {credit} issued for {invoice}, new invoice {new}: to send."
     lifecycle: "On the platform"
     invoices: "Invoices"
+    # What a person answers about what the platform cannot settle (an answer lost after it left).
+    status_unknown: "outcome unknown: check on the platform"
+    status_taken: "Received by the platform"
+    status_resend: "Absent: send again"
+    status_confirmed: "\"{status}\" of the invoice {number} marked as received by the platform."
+    status_resent: "\"{status}\" of the invoice {number} sent again."
+    status_not_sent: "\"{status}\" was not sent: {error}"
+    status_nothing_to_confirm: "No status of the invoice {number} waits for a check."
+    flow_id: "The platform's flow id"
+    deposit_taken: "Received by the platform"
+    deposit_again: "Absent: deposit again"
+    deposit_again_confirm: "Deposit this invoice again? Only when the platform shows no flow for it: an invoice is deposited there once."
+    deposit_confirmed: "Invoice {number} kept as deposited on the platform, flow {reference}."
+    deposited_again: "Invoice {number} deposited again."
   # Where an invoice stands on the gateway it went through (omnisense/omnibill): the reform's lifecycle statuses.
   lifecycle:
     sent: "Sent"
@@ -516,6 +530,7 @@ invoice:
     pending_help: "\"{status}\" waits to be declared to the platform: {error}"
     outcome_unknown: "Outcome unknown"
     outcome_unknown_help: "The invoice {number} left for the platform and its answer was lost: the platform may have it. It is looked up by its number (\"Refresh its status\"); it is sent again only once the platform says it does not have it."
+    outcome_unknown_confirm_help: "The invoice {number} left for the platform and its answer was lost, and the {gateway} gateway cannot tell whether the platform has it ({reason}). Check on the platform, then answer: \"Received by the platform\" with the flow id it shows, or \"Absent: deposit again\"."
   # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
   platform:
     no_siren: "The invoice {number} goes to a company established in France: the platform addresses it by its SIREN, which the customer has not. Add it to the customer, then issue a credit note and a new invoice."
@@ -527,8 +542,10 @@ invoice:
     no_lifecycle_writer: "no lifecycle message (CDAR) writer is installed (Invoice\\Transmission\\LifecycleMessageInterface): the status waits here."
     outcome_unknown: "The invoice {number} left and the platform's answer was lost ({error}): it may have been deposited. It will be looked up by its number before anything is sent again."
     outcome_unknown_wait: "The platform does not show the invoice {number} yet: a deposit may take a few minutes to appear. Refresh its status later before sending it again."
-    outcome_unknown_check: "The outcome of the invoice {number}'s deposit is unknown and the {gateway} gateway cannot look it up: check on the platform."
-    status_outcome_unknown: "its message left and the platform's answer was lost ({error}): it may have been taken. Check on the platform; it is not sent again by itself."
+    outcome_unknown_check: "The outcome of the invoice {number}'s deposit is unknown and the {gateway} gateway cannot look it up: check on the platform, then answer on the invoice's page (\"Received by the platform\" or \"Absent: deposit again\")."
+    status_outcome_unknown: "its message left and the platform's answer was lost ({error}): it may have been taken. Check on the platform, then answer \"Received by the platform\" or \"Absent: send again\"; it is not sent again by itself."
+    nothing_to_confirm: "The deposit of the invoice {number} waits for no check: its outcome is known, or the platform can still be asked (\"Refresh its status\")."
+    flow_id_needed: "Give the flow id the platform shows for the invoice {number}: it is followed by it from now on."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:

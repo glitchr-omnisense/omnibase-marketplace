@@ -1,0 +1,46 @@
+{#- The invoice's "On the platform" field (InvoiceCrudController): where it stands on its gateway
+    and what to do about it, then the answers a person gives about what the platform cannot settle.
+    Each answer posts to the CRUD's #[AdminAction] with its CSRF token, as its other actions do:
+
+      - a status sent whose answer was lost (statuses, by index): it may be on the platform, which
+        cannot be asked for it - « Received by the platform » marks it sent, « Absent: send again »
+        sends it once (confirmStatus);
+      - a deposit whose answer was lost and that its gateway cannot look up, or whose lookup
+        answered nothing to rely on (awaits_confirmation): « Received by the platform », with the
+        flow id the platform shows, keeps it as deposited; « Absent: deposit again » deposits it
+        once (confirmDeposit).
+
+    Expects: invoice, text, statuses, awaits_confirmation, controller. -#}
+{%- if text is empty and statuses is empty and not awaits_confirmation -%}
+    <span style="color: var(--admin-muted)">—</span>
+{%- else -%}
+    {%- if text is not empty %}<div>{{ text }}</div>{% endif -%}
+    {%- for index, status in statuses %}
+        <div class="marketplace-invoice-confirm" data-status-index="{{ index }}">
+            <strong>{{ ('@marketplace.invoice.lifecycle.' ~ status.status)|trans }}</strong> · {{ status.at|date('d/m/Y H:i') }} · <span class="muted">{{ '@marketplace.invoice.admin.status_unknown'|trans }}</span>
+            {% for taken in [1, 0] -%}
+                <form method="post" action="{{ admin_url(controller, 'confirmStatus', invoice.id) }}" style="display:inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token(admin_action_token_id('confirmStatus')) }}">
+                    <input type="hidden" name="index" value="{{ index }}">
+                    <input type="hidden" name="taken" value="{{ taken }}">
+                    <button type="submit" class="btn btn-sm btn-secondary">{{ (taken ? '@marketplace.invoice.admin.status_taken' : '@marketplace.invoice.admin.status_resend')|trans }}</button>
+                </form>
+            {%- endfor %}
+        </div>
+    {%- endfor -%}
+    {%- if awaits_confirmation %}
+        <div class="marketplace-invoice-confirm" data-deposit>
+            <form method="post" action="{{ admin_url(controller, 'confirmDeposit', invoice.id) }}" style="display:inline">
+                <input type="hidden" name="_token" value="{{ csrf_token(admin_action_token_id('confirmDeposit')) }}">
+                <input type="hidden" name="deposited" value="1">
+                <input type="text" name="reference" required maxlength="255" placeholder="{{ '@marketplace.invoice.admin.flow_id'|trans }}" aria-label="{{ '@marketplace.invoice.admin.flow_id'|trans }}">
+                <button type="submit" class="btn btn-sm btn-secondary">{{ '@marketplace.invoice.admin.deposit_taken'|trans }}</button>
+            </form>
+            <form method="post" action="{{ admin_url(controller, 'confirmDeposit', invoice.id) }}" style="display:inline">
+                <input type="hidden" name="_token" value="{{ csrf_token(admin_action_token_id('confirmDeposit')) }}">
+                <input type="hidden" name="deposited" value="0">
+                <button type="submit" class="btn btn-sm btn-secondary" data-confirm="{{ '@marketplace.invoice.admin.deposit_again_confirm'|trans }}">{{ '@marketplace.invoice.admin.deposit_again'|trans }}</button>
+            </form>
+        </div>
+    {%- endif -%}
+{%- endif -%}

@@ -12,9 +12,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Omnibill\Email\EmailGatewayFactory;
 use Omnibill\Email\StatusStoreInterface;
 use Omnibill\Exception\InvalidConfigException;
+use Omnibill\Exception\InvalidKeyException;
 use Omnibill\Exception\InvalidNotificationException;
+use Omnibill\Exception\NotSupportedException;
 use Omnibill\Exception\OmnibillException;
 use Omnibill\Exception\OutcomeUnknownException;
+use Omnibill\Exception\ProviderException;
+use Omnibill\Exception\UnreachableException;
+use Omnibill\Exception\UsageLimitReachedException;
 use Omnibill\FlowLookupInterface;
 use Omnibill\GatewayInterface;
 use Omnibill\Model\Addressing;
@@ -77,8 +82,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *     blindly: the platform is asked for the invoice's number (FindFlow, the
  *     trackingId it was given), at once and before any new submission; the
  *     invoice is deposited again only once the platform says it has none,
- *     SEARCH_DELAY after. A status whose answer was lost is not sent again
- *     by itself: a person checks on the platform.
+ *     SEARCH_DELAY after. A gateway that cannot look it up, or a lookup
+ *     whose answer is none to rely on, leaves it to a person, who checks on
+ *     the platform and answers (confirmDeposit()): there, under its flow id;
+ *     absent, deposited again once. A status whose answer was lost is not
+ *     sent again by itself: a person checks on the platform and answers
+ *     (confirmStatus()): received, or absent and sent again once.
  *
  * This folder is registered, and its entities mapped, only when
  * omnisense/omnibill is installed: without it, Service\Invoices sends its
@@ -186,7 +195,9 @@ class InvoiceTransmission
             return $this->trans('@marketplace.invoice.lifecycle.'.$flow->getStatus().'_help', ['{reason}' => $flow->getReason() ?? '-']);
         }
         if ($flow->isOutcomeUnknown()) {
-            return $this->trans('@marketplace.invoice.lifecycle.outcome_unknown_help', ['{number}' => $invoice->getNumber()]);
+            return $this->awaitsConfirmation($invoice)
+                ? $this->trans('@marketplace.invoice.lifecycle.outcome_unknown_confirm_help', ['{number}' => $invoice->getNumber(), '{gateway}' => $flow->getGateway(), '{reason}' => $flow->getReason() ?? '-'])
+                : $this->trans('@marketplace.invoice.lifecycle.outcome_unknown_help', ['{number}' => $invoice->getNumber()]);
         }
         foreach ($flow->pending() as $pending) {
             return $this->trans('@marketplace.invoice.lifecycle.pending_help', ['{status}' => $this->trans('@marketplace.invoice.lifecycle.'.$pending['status']), '{error}' => $pending['error'] ?? '-']);
@@ -370,11 +381,105 @@ class InvoiceTransmission
             if (!$gateway instanceof FlowLookupInterface || !$gateway->supports(FindFlow::class)) {
                 throw new TransmissionException($this->trans('@marketplace.invoice.platform.outcome_unknown_check', ['{number}' => $invoice->getNumber(), '{gateway}' => $row->getGateway()]));
             }
+            $flow = $gateway->findFlow($invoice->getNumber());
+            if ($row->isLookupInconclusive()) {
+                // An answer at last: no longer a person's to settle.
+                $row->lookedUp();
+                $this->entityManager->flush();
+            }
 
-            return $gateway->findFlow($invoice->getNumber());
+            return $flow;
+        } catch (UnreachableException|InvalidKeyException|UsageLimitReachedException $e) {
+            // The platform could not be asked: asked again later.
+            throw new TransmissionException($e->getMessage(), 0, $e);
+        } catch (ProviderException|InvalidConfigException|NotSupportedException $e) {
+            // Asked, and no answer to rely on: a person settles it (confirmDeposit()).
+            $row->lookupInconclusive($e->getMessage());
+            $this->entityManager->flush();
+            throw new TransmissionException($e->getMessage(), 0, $e);
         } catch (OmnibillException $e) {
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
+    }
+
+    /** Whether the row's gateway can look a submission up by the invoice's number (FindFlow). */
+    private function canLookUp(InvoiceFlow $row): bool
+    {
+        try {
+            $gateway = $this->gatewayNamed($row->getGateway(), $row->getInvoice());
+        } catch (OmnibillException) {
+            return false;
+        }
+
+        return $gateway instanceof FlowLookupInterface && $gateway->supports(FindFlow::class);
+    }
+
+    /**
+     * Whether the invoice's submission waits for a person: its outcome is
+     * unknown, and the platform cannot settle it - its gateway cannot look
+     * it up, or its last lookup answered nothing to rely on. They check on
+     * the platform, then confirmDeposit().
+     */
+    public function awaitsConfirmation(Invoice $invoice): bool
+    {
+        $row = $this->flowOf($invoice);
+
+        return null !== $row && $row->isOutcomeUnknown() && ($row->isLookupInconclusive() || !$this->canLookUp($row));
+    }
+
+    /**
+     * A submission whose outcome is unknown, settled by a person who checked
+     * on the platform (only when awaitsConfirmation()):
+     *
+     *   - $deposited, the platform has it under $reference, the flow id it
+     *     shows - what the invoice is followed by from then on (its status,
+     *     the webhook, the statuses declared): kept as if its answer had come
+     *     back, its status asked of the gateway where it can say, deposited
+     *     (sent, on a gateway that is no approved platform) otherwise;
+     *   - not, the transmission is forgotten (the row removed: nothing stands
+     *     on the platform): the next submission deposits it again, once.
+     *
+     * Returns the row kept, null once forgotten.
+     *
+     * @throws TransmissionException nothing to settle, or no flow id given
+     */
+    public function confirmDeposit(Invoice $invoice, bool $deposited, ?string $reference = null): ?InvoiceFlow
+    {
+        $row = $this->flowOf($invoice);
+        if (null === $row || !$this->awaitsConfirmation($invoice)) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.nothing_to_confirm', ['{number}' => $invoice->getNumber()]));
+        }
+        if (!$deposited) {
+            $this->logger?->notice('The invoice {number} is not on the platform, a person says: deposited again.', ['number' => $invoice->getNumber()]);
+            $this->entityManager->remove($row);
+            $this->entityManager->flush();
+
+            return null;
+        }
+        $reference = trim((string) $reference);
+        if ('' === $reference) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.flow_id_needed', ['{number}' => $invoice->getNumber()]));
+        }
+        $row->found(mb_substr($reference, 0, 255));
+        try {
+            $gateway = $this->gatewayNamed($row->getGateway(), $invoice);
+            if ($gateway->supports(FetchStatus::class)) {
+                $this->reflect($row, $gateway->fetchStatus($this->flow($row)));
+            }
+        } catch (OmnibillException $e) {
+            // Its status is asked again by refresh(); what the person saw stands meanwhile.
+            $this->logger?->warning('The status of the invoice {number} confirmed on the platform could not be read: {error}', ['number' => $invoice->getNumber(), 'error' => $e->getMessage()]);
+        }
+        if (null === $row->getStatus()) {
+            $status = $this->isPlatform($row->getGateway()) ? LifecycleStatus::DEPOSITED : LifecycleStatus::SENT;
+            $row->setHistory([self::row(new StatusChange($status, $invoice->getNumber(), new \DateTimeImmutable()))]);
+            $invoice->markSent();
+        }
+        $this->logger?->notice('The invoice {number} is on the platform under {reference}, a person says.', ['number' => $invoice->getNumber(), 'reference' => $reference]);
+        $this->entityManager->flush();
+        $this->paidWithTheOrder($row);
+
+        return $row;
     }
 
     /** A submission whose outcome was unknown, found on the platform: kept under its reference. */
@@ -465,6 +570,39 @@ class InvoiceTransmission
                 $sent += (int) $this->send($row, $index);
             }
         }
+        $this->entityManager->flush();
+
+        return $sent;
+    }
+
+    /**
+     * A status whose outcome was unknown (InvoiceFlow::unknownDeclared()),
+     * settled by a person who checked on the platform: there ($taken), it is
+     * marked sent and kept in the invoice's history; not there, it is sent
+     * again now, once. Whether it went - false when that status waits for
+     * no one, or did not go (its error kept, said on the invoice's page).
+     */
+    public function confirmStatus(Invoice $invoice, int $index, bool $taken): bool
+    {
+        $row = $this->flowOf($invoice);
+        $declared = $row?->unknownDeclared()[$index] ?? null;
+        if (null === $row || null === $declared) {
+            return false;
+        }
+        if ($taken) {
+            $row->declaredSent($index, null);
+            $status = LifecycleStatus::tryFrom($declared['status']);
+            $entry = null === $status ? null : self::row(new StatusChange($status, $invoice->getNumber(), new \DateTimeImmutable($declared['at']), $declared['reason'] ?? null));
+            if (null !== $entry && !\in_array($entry, $row->getHistory(), true)) {
+                $row->setHistory([...$row->getHistory(), $entry]);
+                $this->settle($row);
+            }
+            $this->entityManager->flush();
+
+            return true;
+        }
+        $row->declaredRetried($index);
+        $sent = $this->send($row, $index);
         $this->entityManager->flush();
 
         return $sent;

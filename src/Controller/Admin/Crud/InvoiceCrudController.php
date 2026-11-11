@@ -26,7 +26,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * itself when the order is paid (marketplace.invoice.auto_issue).
  *
  * With omnisense/omnibill, sending goes through its gateway: the screen shows
- * where the invoice stands there (its lifecycle status), and asks again.
+ * where the invoice stands there (its lifecycle status), and asks again. What
+ * the platform cannot settle is left to a person, on the invoice's screen: a
+ * deposit whose answer was lost on a gateway that cannot look it up (or whose
+ * lookup answered nothing to rely on), a status declared whose answer was
+ * lost - received by the platform, or absent and sent again.
  */
 class InvoiceCrudController extends AbstractMarketplaceCrudController
 {
@@ -119,9 +123,16 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         yield DateTimeField::new('sentAt', '@marketplace.admin.field.sent_at')->setRequired(false)->hideOnIndex();
         yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->setRequired(false)->hideOnIndex();
         yield DateTimeField::new('cancelledAt', '@marketplace.admin.field.cancelled_at')->setRequired(false)->hideOnIndex();
-        // Where it stands on its gateway and what to do about it: a rejection's reasons, a status waiting to be declared.
-        yield TextField::new('lifecycle', '@marketplace.invoice.admin.lifecycle')->hideOnIndex()->hideOnForm()
-            ->formatValue(fn ($value, Invoice $invoice) => implode(' — ', array_filter([$this->invoices->lifecycle($invoice), $this->invoices->guidance($invoice)])) ?: '—');
+        // Where it stands on its gateway and what to do about it: a rejection's reasons, a status waiting to be declared,
+        // and the answers a person gives about what the platform cannot settle (confirmDeposit(), confirmStatus()).
+        yield TextField::new('lifecycle', '@marketplace.invoice.admin.lifecycle')->hideOnIndex()->hideOnForm()->renderAsHtml()
+            ->formatValue(fn ($value, Invoice $invoice) => $this->renderView('@Marketplace/admin/invoice/_lifecycle.html.twig', [
+                'invoice' => $invoice,
+                'text' => implode(' — ', array_filter([$this->invoices->lifecycle($invoice), $this->invoices->guidance($invoice)])),
+                'statuses' => $this->invoices->unknownStatuses($invoice),
+                'awaits_confirmation' => $this->invoices->awaitsConfirmation($invoice),
+                'controller' => static::class,
+            ]));
     }
 
     #[AdminAction('/{entityId}/send')]
@@ -190,13 +201,68 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         });
     }
 
-    /** @param callable(): string $do the action, answering what to tell */
-    private function attempt(callable $do): Response
+    /**
+     * A deposit whose outcome is unknown, settled by a person who checked on the platform, when
+     * the platform cannot settle it (Invoices::awaitsConfirmation()): « deposited » with the flow
+     * id the platform shows, kept as deposited; otherwise deposited again now, once.
+     */
+    #[AdminAction('/{entityId}/deposit')]
+    public function confirmDeposit(Request $request, string $entityId): Response
+    {
+        /** @var Invoice $invoice */
+        $invoice = $this->findEntity($entityId);
+        $deposited = $request->request->getBoolean('deposited');
+        $reference = trim($request->request->getString('reference'));
+
+        return $this->attempt(function () use ($invoice, $deposited, $reference) {
+            $this->invoices->confirmDeposit($invoice, $deposited, $reference);
+
+            return $deposited
+                ? $this->translator->trans('@marketplace.invoice.admin.deposit_confirmed', ['{number}' => $invoice->getNumber(), '{reference}' => $reference])
+                : $this->translator->trans('@marketplace.invoice.admin.deposited_again', ['{number}' => $invoice->getNumber()]);
+        }, $invoice);
+    }
+
+    /**
+     * A status sent whose outcome is unknown, settled by a person who looked on the platform:
+     * « taken » (it is there) marks it sent; otherwise it is sent again now, once.
+     */
+    #[AdminAction('/{entityId}/status')]
+    public function confirmStatus(Request $request, string $entityId): Response
+    {
+        /** @var Invoice $invoice */
+        $invoice = $this->findEntity($entityId);
+        $index = $request->request->getInt('index');
+        $taken = $request->request->getBoolean('taken');
+        $status = $this->invoices->unknownStatuses($invoice)[$index]['status'] ?? null;
+
+        return $this->attempt(function () use ($invoice, $index, $taken, $status) {
+            if (null === $status) {
+                throw new \LogicException($this->translator->trans('@marketplace.invoice.admin.status_nothing_to_confirm', ['{number}' => $invoice->getNumber()]));
+            }
+            $label = $this->translator->trans('@marketplace.invoice.lifecycle.'.$status);
+            if (!$this->invoices->confirmStatus($invoice, $index, $taken)) {
+                // Not sent again: the gateway's answer, kept on the status and said on the page.
+                throw new \LogicException($this->translator->trans('@marketplace.invoice.admin.status_not_sent', ['{status}' => $label, '{error}' => $this->invoices->pendingError($invoice, $index) ?? '-']));
+            }
+
+            return $this->translator->trans($taken ? '@marketplace.invoice.admin.status_confirmed' : '@marketplace.invoice.admin.status_resent', ['{status}' => $label, '{number}' => $invoice->getNumber()]);
+        }, $invoice);
+    }
+
+    /**
+     * @param callable(): string $do   the action, answering what to tell
+     * @param Invoice|null       $back the invoice's own screen to go back to; the list otherwise
+     */
+    private function attempt(callable $do, ?Invoice $back = null): Response
     {
         try {
             $this->addFlash('success', $do());
         } catch (\LogicException $e) {
             $this->addFlash('danger', $this->translator->trans('@marketplace.invoice.admin.refused', ['{message}' => $e->getMessage()]));
+        }
+        if (null !== $back?->getId()) {
+            return $this->redirect($this->adminUrlGenerator->setController(static::class)->setAction(Action::DETAIL)->setEntityId($back->getId())->generateUrl());
         }
 
         return $this->redirectToIndex();

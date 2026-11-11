@@ -144,6 +144,35 @@ class InvoiceFlow
         return self::OUTCOME_UNKNOWN === $this->status;
     }
 
+    /**
+     * Its submission looked up, and the platform's answer none to rely on (its search refused, a
+     * configuration it cannot read): a person settles it. Kept as the history's one entry - its
+     * status OUTCOME_UNKNOWN still, its reason what the lookup answered -, the moment it was
+     * submitted kept (SEARCH_DELAY counts from it).
+     */
+    public function lookupInconclusive(string $why): static
+    {
+        $this->history = [['status' => self::OUTCOME_UNKNOWN, 'code' => null, 'at' => (new \DateTimeImmutable())->format(\DATE_ATOM), 'reason' => mb_substr($why, 0, 255)]];
+
+        return $this;
+    }
+
+    /** Looked up, and the platform answered: what an earlier lookup left inconclusive no longer holds. */
+    public function lookedUp(): static
+    {
+        if ($this->isOutcomeUnknown()) {
+            $this->history = [];
+        }
+
+        return $this;
+    }
+
+    /** Whether its outcome is unknown and its last lookup answered nothing to rely on. */
+    public function isLookupInconclusive(): bool
+    {
+        return $this->isOutcomeUnknown() && [] !== $this->history;
+    }
+
     /** How it went to an approved platform: the rule, the buyer's address, the file's fingerprint. */
     public function routed(?string $rule, ?string $recipientAddress, ?string $fileSha256): static
     {
@@ -192,7 +221,7 @@ class InvoiceFlow
 
     public function declaredSent(int $index, ?string $flow): static
     {
-        $this->declared[$index] = ['sent' => true, 'flow' => $flow, 'error' => null] + $this->declared[$index];
+        $this->declared[$index] = ['sent' => true, 'flow' => $flow, 'error' => null, 'unknown' => false] + $this->declared[$index];
         $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
@@ -208,13 +237,34 @@ class InvoiceFlow
 
     /**
      * The status's message left and its answer was lost: the platform may have it. It is not
-     * sent again by itself (sendPending() leaves it): a person checks on the platform.
+     * sent again by itself (sendPending() leaves it): a person checks on the platform, then
+     * answers « Reçu par la plateforme » or « Absent : renvoyer » (InvoiceTransmission::confirmStatus()).
      */
     public function declaredUnknown(int $index, string $error): static
     {
         $this->declared[$index]['unknown'] = true;
 
         return $this->declaredFailed($index, $error);
+    }
+
+    /** A person found the status was not on the platform: to be sent again (its outcome no longer unknown). */
+    public function declaredRetried(int $index): static
+    {
+        $this->declared[$index] = ['unknown' => false] + $this->declared[$index];
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    /**
+     * The statuses sent whose outcome is unknown, by index: each waits for a person, who checks
+     * on the platform (InvoiceTransmission::confirmStatus()).
+     *
+     * @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}>
+     */
+    public function unknownDeclared(): array
+    {
+        return array_filter($this->declared, static fn (array $d) => !$d['sent'] && ($d['unknown'] ?? false));
     }
 
     /** @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}> the statuses declared and not sent yet, by index */

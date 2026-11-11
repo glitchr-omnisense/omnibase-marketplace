@@ -201,6 +201,58 @@ class Invoices
         return null !== $this->transmission?->refresh($invoice);
     }
 
+    /**
+     * Whether the invoice's deposit waits for a person: its outcome unknown, and its gateway
+     * cannot look it up, or its lookup answered nothing to rely on (confirmDeposit()).
+     */
+    public function awaitsConfirmation(Invoice $invoice): bool
+    {
+        return $this->transmission?->awaitsConfirmation($invoice) ?? false;
+    }
+
+    /**
+     * A deposit whose outcome is unknown, settled by a person who checked on the platform:
+     * there under the flow id it shows ($reference), kept as deposited; absent, deposited
+     * again now, once (send()).
+     *
+     * @throws \LogicException nothing to settle, no flow id given, or the new deposit refused
+     */
+    public function confirmDeposit(Invoice $invoice, bool $deposited, ?string $reference = null): void
+    {
+        if (null === $this->transmission) {
+            throw new \LogicException(sprintf('The invoice %s went through no gateway.', $invoice->getNumber()));
+        }
+        if (null === $this->transmission->confirmDeposit($invoice, $deposited, $reference)) {
+            $this->send($invoice);
+        }
+    }
+
+    /**
+     * The statuses declared about the invoice whose outcome is unknown, by index: each waits
+     * for a person (confirmStatus()).
+     *
+     * @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}>
+     */
+    public function unknownStatuses(Invoice $invoice): array
+    {
+        return $this->transmission?->flowOf($invoice)?->unknownDeclared() ?? [];
+    }
+
+    /** Why a status declared about the invoice has not gone: the gateway's answer kept on it. */
+    public function pendingError(Invoice $invoice, int $index): ?string
+    {
+        return $this->transmission?->flowOf($invoice)?->getDeclared()[$index]['error'] ?? null;
+    }
+
+    /**
+     * A status whose outcome was unknown, settled by a person who checked on the platform:
+     * received ($taken), marked sent; absent, sent again now, once. Whether it went.
+     */
+    public function confirmStatus(Invoice $invoice, int $index, bool $taken): bool
+    {
+        return $this->transmission?->confirmStatus($invoice, $index, $taken) ?? false;
+    }
+
     /** The invoice's page as the PDF prints it (HTML). */
     public function html(Invoice $invoice): string
     {

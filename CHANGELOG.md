@@ -30,6 +30,14 @@
   period is looked up by its trackingId the same way (`EReporting::OUTCOME_UNKNOWN`). `receiveStatuses()` asks for the
   lifecycle flows only (`Receive`'s kinds): the suppliers' invoices are no longer downloaded. "Encaissée" carries the
   amount received at each VAT rate (`StatusChange::$amounts`).
+- What the platform cannot settle after an answer lost is settled by a person on the invoice's screen. A deposit whose
+  outcome is unknown on a gateway that cannot look it up (no `FindFlow`), or whose lookup answered nothing to rely on
+  (a `ProviderException`, kept as `InvoiceFlow::isLookupInconclusive()`), no longer stays blocked: « Reçue par la
+  plateforme » with the platform's flow id keeps it as deposited, « Absente : déposer de nouveau » deposits it again,
+  once (`InvoiceTransmission::confirmDeposit()`, `Invoices::awaitsConfirmation()`, `confirmDeposit`). A declared
+  status whose answer was lost: « Reçu par la plateforme » marks it sent, « Absent : renvoyer » sends it again, once
+  (`InvoiceTransmission::confirmStatus()`, `confirmStatus`), as omnibase/ledger's suppliers' invoices do. Both POST
+  with the admin action's CSRF token, translated en and fr.
 
 ### Fixed
 - The Factur-X lines are self-consistent: quantity times net price is the line's amount. Quantities and prices take

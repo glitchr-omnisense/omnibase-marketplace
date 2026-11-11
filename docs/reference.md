@@ -46,8 +46,10 @@ order: 45
 The back office's screens follow `marketplace.admin_role` (`ROLE_SUPERADMIN`
 by default) through the `MARKETPLACE_VIEW` voter attribute. Their own actions:
 the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid`,
-`reissue` (a credit note and a new invoice, for one rejected or refused) and
-`credit`; an order's `invoice`; a quote's `send`; with omnisense/omnibill, an
+`reissue` (a credit note and a new invoice, for one rejected or refused),
+`credit`, and with omnisense/omnibill `confirmDeposit` (`{id}/deposit`: `deposited=1` with the
+platform's flow id as `reference`, or `deposited=0`) and `confirmStatus` (`{id}/status`: `index`,
+`taken=1|0`), a person's answers about what the platform cannot settle; an order's `invoice`; a quote's `send`; with omnisense/omnibill, an
 e-reporting period's `collect` and `send` (`EReportCrudController`).
 
 ## Twig functions and filters
@@ -64,7 +66,7 @@ e-reporting period's `collect` and `send` (`EReportCrudController`).
 | `marketplace_age_gate()`, `marketplace_age_minimum()`, `marketplace_age_notice()` | function | whether to ask the visitor's age, the age, the notice |
 | `marketplace_attribute_set(product)`, `marketplace_attributes(...)` | function | a product's typed sheet and its values |
 | `marketplace_associations(...)`, `marketplace_products_of(...)` | function | pairings, a brand's or a set's products |
-| `invoice_money`, `invoice_rate` | filter | an amount and a rate as an invoice prints them |
+| `invoice_money`, `invoice_rate`, `invoice_quantity` | filter | an amount, a rate and a line's quantity (an hours line in hours and minutes) as an invoice prints them |
 
 ## Commands
 

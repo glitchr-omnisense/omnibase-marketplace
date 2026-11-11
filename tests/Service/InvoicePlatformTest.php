@@ -567,6 +567,120 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         self::assertSame($row, $transmission->flowOf($invoice), 'one row per invoice');
     }
 
+    public function testALookupWithNoAnswerToRelyOnLeavesTheDepositToAPersonWhoConfirmsIt(): void
+    {
+        $transmission = $this->transmission();
+        $invoices = $this->invoices($transmission);
+        $invoice = $this->invoice($invoices, self::company(), paid: false);
+
+        // The deposit's answer lost, and the platform's search unreachable when asked: asked again later, nothing offered.
+        $this->answers = [self::directory(), new MockResponse('upstream timed out', ['http_code' => 503]), new MockResponse('unavailable', ['http_code' => 503])];
+        try {
+            $invoices->send($invoice);
+            self::fail('An outcome unknown is no success.');
+        } catch (TransmissionException) {
+        }
+        $row = $transmission->flowOf($invoice);
+        self::assertSame([true, false], [$row->isOutcomeUnknown(), $row->isLookupInconclusive()]);
+        self::assertFalse($invoices->awaitsConfirmation($invoice), 'an unreachable platform is asked again, not left to a person');
+        try {
+            $invoices->confirmDeposit($invoice, true, $this->flowId);
+            self::fail('Nothing to confirm while the platform can still be asked.');
+        } catch (TransmissionException) {
+        }
+
+        // Asked again: the platform refuses its search - an answer that tells nothing. Now a person settles it.
+        $this->requests = [];
+        $this->answers = [new MockResponse('{"errorCode":"INVALID_FILTER","errorMessage":"trackingId not searchable"}', ['http_code' => 400])];
+        try {
+            $invoices->refresh($invoice);
+            self::fail('A lookup refused is no answer.');
+        } catch (TransmissionException $e) {
+            self::assertStringContainsString('HTTP 400', $e->getMessage());
+        }
+        self::assertTrue($row->isLookupInconclusive());
+        self::assertTrue($row->isOutcomeUnknown(), 'still unknown');
+        self::assertTrue($invoices->awaitsConfirmation($invoice));
+        self::assertStringContainsString('HTTP 400', (string) $invoices->guidance($invoice), 'the back office says what the lookup answered, and what to do');
+
+        // Confirmed without the flow id: refused, the flow is followed by it.
+        try {
+            $invoices->confirmDeposit($invoice, true, ' ');
+            self::fail('The flow id is needed.');
+        } catch (TransmissionException $e) {
+            self::assertStringContainsString($invoice->getNumber(), $e->getMessage());
+        }
+        self::assertTrue($row->isOutcomeUnknown());
+
+        // The person found it on the platform: kept under that flow, its status asked of the platform; nothing deposited.
+        $this->requests = [];
+        $this->answers = [$this->flow('Ok')];
+        $invoices->confirmDeposit($invoice, true, $this->flowId);
+        self::assertSame(['GET /flow-service/v1/flows/'.$this->flowId], $this->calls());
+        self::assertSame([false, $this->flowId, 'deposited'], [$row->isOutcomeUnknown(), $row->getReference(), $row->getStatus()]);
+        self::assertSame(Invoice::STATE_SENT, $invoice->getState());
+        self::assertFalse($invoices->awaitsConfirmation($invoice));
+
+        // Deposited once: a new submission is refused as for any invoice on the platform.
+        $this->requests = [];
+        try {
+            $invoices->send($invoice);
+            self::fail('A second deposit is refused.');
+        } catch (TransmissionException) {
+            self::assertSame([], $this->requests);
+        }
+    }
+
+    public function testADepositAPersonFindsAbsentIsDepositedAgainOnce(): void
+    {
+        $transmission = $this->transmission();
+        $invoices = $this->invoices($transmission);
+        $invoice = $this->invoice($invoices, self::company(), paid: false);
+
+        // The deposit's answer lost, and the lookup at once refused by the platform: left to a person.
+        $this->answers = [self::directory(), new MockResponse('upstream timed out', ['http_code' => 503]), new MockResponse('{"errorCode":"INVALID_FILTER"}', ['http_code' => 400])];
+        try {
+            $invoices->send($invoice);
+            self::fail('An outcome unknown is no success.');
+        } catch (TransmissionException) {
+        }
+        self::assertTrue($invoices->awaitsConfirmation($invoice));
+
+        // Asked again, the platform answers: none yet - an answer, the lookup settles it (SEARCH_DELAY after), not a person.
+        $this->answers = [self::search([])];
+        $invoices->refresh($invoice);
+        self::assertFalse($invoices->awaitsConfirmation($invoice));
+        self::assertFalse($transmission->flowOf($invoice)->isLookupInconclusive());
+        // Then its search refused again: back to the person.
+        $this->answers = [new MockResponse('{"errorCode":"INVALID_FILTER"}', ['http_code' => 400])];
+        try {
+            $invoices->refresh($invoice);
+            self::fail('A lookup refused is no answer.');
+        } catch (TransmissionException) {
+        }
+        self::assertTrue($invoices->awaitsConfirmation($invoice));
+
+        // Not on the platform, the person says: deposited again at once, once - no lookup first.
+        $this->requests = [];
+        $this->answers = [self::directory(), new MockResponse('{"flowId":"'.$this->flowId.'","submittedAt":"2026-11-11T10:00:00Z"}', ['http_code' => 202])];
+        $invoices->confirmDeposit($invoice, false);
+
+        self::assertSame(['POST /directory-service/v1/directory-line/search', 'POST /flow-service/v1/flows'], $this->calls());
+        self::assertSame($invoice->getNumber(), self::multipart($this->requests[1]['body'])['info']['trackingId']);
+        $row = $transmission->flowOf($invoice);
+        self::assertSame([false, $this->flowId], [$row->isOutcomeUnknown(), $row->getReference()]);
+        self::assertCount(1, $this->entityManager->getRepository(InvoiceFlow::class)->findBy(['invoice' => $invoice]), 'one row per invoice');
+
+        // Answered again: nothing waits for it, nothing deposited twice.
+        $this->requests = [];
+        try {
+            $invoices->confirmDeposit($invoice, false);
+            self::fail('Nothing to confirm any more.');
+        } catch (TransmissionException) {
+        }
+        self::assertSame([], $this->requests);
+    }
+
     public function testAStatusWhoseAnswerIsLostIsNotSentAgainByItself(): void
     {
         $this->writer = new class implements LifecycleMessageInterface {

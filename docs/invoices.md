@@ -226,9 +226,38 @@ as "Outcome unknown" (`InvoiceFlow::OUTCOME_UNKNOWN`) and the platform is asked 
 (`FindFlow`, the tracking id it was submitted with) at once, by "Refresh its status" and
 `marketplace:invoice:status`, and before any new send. Found, it is kept as if the answer had come
 back. It is deposited again only once the platform says it has none, `InvoiceTransmission::SEARCH_DELAY`
-(ten minutes) after - a flow just deposited may take a moment to show in its search. A gateway that
-cannot look it up leaves it to a person, on the platform. A declared status whose answer is lost is
-not sent again by itself either: the back office says so.
+(ten minutes) after - a flow just deposited may take a moment to show in its search.
+
+A gateway that cannot look it up (no `FindFlow`: Chorus Pro, e-mail), or a lookup whose answer is
+none to rely on (the platform refused its search, a `ProviderException`; kept on the row,
+`InvoiceFlow::isLookupInconclusive()`), leaves it to a person: the invoice's screen ("On the
+platform") says so and offers two answers, once they have looked on the platform
+(`Invoices::awaitsConfirmation()`, `InvoiceTransmission::confirmDeposit()`, the CRUD's
+`confirmDeposit`):
+
+- **Received by the platform** (« Reçue par la plateforme »), with the flow id the platform shows:
+  kept as if its answer had come back, under that reference - what refresh, the webhook and the
+  statuses follow it by -, its status asked of the gateway where it can say, deposited otherwise;
+- **Absent: deposit again** (« Absente : déposer de nouveau »): the transmission is forgotten and the
+  invoice deposited again at once, once.
+
+An unreachable platform, a key refused or a limit reached leave the lookup for later: those answers
+are not offered then; and a later lookup that does answer (found, or none) takes it back from the
+person.
+
+A declared status whose answer is lost (its message left: "Encaissée") is not sent again by itself
+either - `sendPending()` leaves it -, and no platform can be asked for a status message it took. The
+invoice's screen shows it as "outcome unknown" with two answers, as omnibase/ledger's suppliers'
+invoices do (`Invoices::confirmStatus()`, `InvoiceTransmission::confirmStatus()`, the CRUD's
+`confirmStatus`):
+
+- **Received by the platform** (« Reçu par la plateforme »): marked sent, and kept in the invoice's
+  history;
+- **Absent: send again** (« Absent : renvoyer »): sent again now, once; what the gateway answers is
+  kept on it, as for any status.
+
+Both are posts with the admin action's CSRF token, behind the invoices' screen's permission
+(`MARKETPLACE_VIEW`), as its other actions.
 
 ### Where it stands
 

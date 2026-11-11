@@ -509,6 +509,20 @@ invoice:
     reissued: "Avoir {credit} émis pour {invoice}, nouvelle facture {new} : à envoyer."
     lifecycle: "Sur la plateforme"
     invoices: "Factures"
+    # What a person answers about what the platform cannot settle (an answer lost after it left).
+    status_unknown: "issue inconnue : à vérifier sur la plateforme"
+    status_taken: "Reçu par la plateforme"
+    status_resend: "Absent : renvoyer"
+    status_confirmed: "« {status} » de la facture {number} marqué comme reçu par la plateforme."
+    status_resent: "« {status} » de la facture {number} transmis de nouveau."
+    status_not_sent: "« {status} » n'est pas parti : {error}"
+    status_nothing_to_confirm: "Aucun statut de la facture {number} n'attend de vérification."
+    flow_id: "Identifiant du flux sur la plateforme"
+    deposit_taken: "Reçue par la plateforme"
+    deposit_again: "Absente : déposer de nouveau"
+    deposit_again_confirm: "Déposer de nouveau cette facture ? Seulement si la plateforme ne montre aucun flux pour elle : une facture n'y est déposée qu'une fois."
+    deposit_confirmed: "Facture {number} gardée comme déposée sur la plateforme, flux {reference}."
+    deposited_again: "Facture {number} déposée de nouveau."
   # Where an invoice stands on the gateway it went through (omnisense/omnibill): the reform's lifecycle statuses.
   lifecycle:
     sent: "Envoyée"
@@ -531,6 +545,7 @@ invoice:
     pending_help: "« {status} » attend d'être déclaré à la plateforme : {error}"
     outcome_unknown: "Issue inconnue"
     outcome_unknown_help: "La facture {number} est partie vers la plateforme et sa réponse s'est perdue : la plateforme l'a peut-être reçue. Elle est recherchée par son numéro (« Actualiser l'état ») ; elle n'est renvoyée qu'une fois que la plateforme dit ne pas l'avoir."
+    outcome_unknown_confirm_help: "La facture {number} est partie vers la plateforme et sa réponse s'est perdue, et la passerelle {gateway} ne peut pas dire si la plateforme l'a ({reason}). Vérifiez sur la plateforme, puis répondez : « Reçue par la plateforme » avec l'identifiant du flux qu'elle montre, ou « Absente : déposer de nouveau »."
   # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
   platform:
     no_siren: "La facture {number} va à une entreprise établie en France : la plateforme l'adresse par son SIREN, que le client n'a pas. Ajoutez-le au client, puis faites un avoir et une nouvelle facture."
@@ -542,8 +557,10 @@ invoice:
     no_lifecycle_writer: "aucun rédacteur de message de cycle de vie (CDAR) n'est installé (Invoice\\Transmission\\LifecycleMessageInterface) : le statut reste en attente ici."
     outcome_unknown: "La facture {number} est partie et la réponse de la plateforme s'est perdue ({error}) : elle a peut-être été déposée. Elle sera recherchée par son numéro avant tout nouvel envoi."
     outcome_unknown_wait: "La plateforme ne montre pas encore la facture {number} : un dépôt peut mettre quelques minutes à apparaître. Actualisez son état plus tard avant de la renvoyer."
-    outcome_unknown_check: "L'issue du dépôt de la facture {number} est inconnue et la passerelle {gateway} ne sait pas la rechercher : vérifiez sur la plateforme."
-    status_outcome_unknown: "son message est parti et la réponse de la plateforme s'est perdue ({error}) : il a peut-être été pris en compte. Vérifiez sur la plateforme ; il n'est pas renvoyé de lui-même."
+    outcome_unknown_check: "L'issue du dépôt de la facture {number} est inconnue et la passerelle {gateway} ne sait pas la rechercher : vérifiez sur la plateforme, puis répondez sur la page de la facture (« Reçue par la plateforme » ou « Absente : déposer de nouveau »)."
+    status_outcome_unknown: "son message est parti et la réponse de la plateforme s'est perdue ({error}) : il a peut-être été pris en compte. Vérifiez sur la plateforme, puis répondez « Reçu par la plateforme » ou « Absent : renvoyer » ; il n'est pas renvoyé de lui-même."
+    nothing_to_confirm: "Le dépôt de la facture {number} n'attend pas de vérification : son issue est connue, ou la plateforme peut encore être interrogée (« Actualiser l'état »)."
+    flow_id_needed: "Indiquez l'identifiant du flux que la plateforme montre pour la facture {number} : elle est suivie par lui désormais."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:
