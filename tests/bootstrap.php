@@ -13,6 +13,9 @@ foreach ($candidates as $candidate) {
         // host application has an installed copy of the bundle too.
         $loader->addPsr4('Base\\Marketplace\\', __DIR__.'/../src', true);
 
+        // omnisense/omnibill, when the host has it not (tests/omnibill.php).
+        require __DIR__.'/omnibill.php';
+
         // Its own classes (prepended: this checkout's, whatever the host installs)
         // and those of the omnibase/* bundles it requires or suggests, read beside this checkout
         // (the workspace, the harness's vendor/omnibase/) after the host's own: the

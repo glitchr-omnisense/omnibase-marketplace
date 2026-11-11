@@ -163,7 +163,9 @@ final class InvoicesTest extends MarketplaceKernelTestCase
 
         $processes = [];
         foreach ($orders as $reference) {
-            $process = new Process(['php', 'bin/console', 'marketplace:invoice:issue', $reference, '--env=test'], self::$kernel->getProjectDir());
+            // The console sees what this suite registered by hand (tests/omnibill.php): the container it shares was compiled with it.
+            $prepend = \defined('MARKETPLACE_TESTS_OMNIBILL') ? ['-d', 'auto_prepend_file='.MARKETPLACE_TESTS_OMNIBILL] : [];
+            $process = new Process(['php', ...$prepend, 'bin/console', 'marketplace:invoice:issue', $reference, '--env=test'], self::$kernel->getProjectDir());
             $process->setTimeout(120);
             $process->start();
             $processes[] = $process;

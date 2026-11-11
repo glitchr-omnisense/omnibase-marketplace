@@ -25,6 +25,7 @@ use Tests\Base\Marketplace\ShopFixtureTrait;
 final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
 {
     use ShopFixtureTrait;
+    use TransmissionSchemaTrait;
 
     private Invoices $invoices;
 
@@ -37,6 +38,7 @@ final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
         if (!FacturX::available() || !class_exists(\Dompdf\Dompdf::class)) {
             self::markTestSkipped('Needs horstoeko/zugferd and dompdf/dompdf.');
         }
+        $this->createTransmissionSchema();
         $this->invoices = self::getContainer()->get(Invoices::class);
     }
 

@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Changed
+- The tests register omnisense/omnibill and omnisense/contracts when the host has them not (`tests/omnibill.php`, from
+  `OMNIBILL_PATH`, `~/Sites/omnibill` or `/srv/omnibill`), so that the invoices' transmission tests run in
+  omnisense/omnibase's harness: there the test container is compiled again with the family, its tables of the
+  transmission created by the tests (`TransmissionSchemaTrait`), and the console processes a test starts get the same
+  autoloading (`auto_prepend_file`); `memory_limit` 1536M.
+
+### Changed
 - `QuoteCrudController` numbers a new quote in `persistRecord()`, omnibase/admin's write hook on the persistence the site
   chose, in place of the former `persistEntity(EntityManagerInterface)` (deprecated since the admin's step B1a); its
   repository is given by `setQuotes()`. Needs omnibase/admin from its step B1a.
