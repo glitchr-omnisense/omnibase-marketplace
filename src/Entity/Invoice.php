@@ -294,6 +294,65 @@ class Invoice
         return $this->mentions;
     }
 
+    /**
+     * The period its services were rendered in (EN 16931 BT-73, BT-74): from
+     * the earliest start to the latest end of its lines' periods
+     * ('period' => ['start' => 'Y-m-d', 'end' => 'Y-m-d'] on a line); null
+     * when no line gives one.
+     *
+     * @return array{start: \DateTimeImmutable, end: \DateTimeImmutable}|null
+     */
+    public function getBillingPeriod(): ?array
+    {
+        $period = null;
+        foreach ($this->lines as $line) {
+            if (null === ($dates = self::period($line))) {
+                continue;
+            }
+            $period = null === $period ? $dates : ['start' => min($period['start'], $dates['start']), 'end' => max($period['end'], $dates['end'])];
+        }
+
+        return $period;
+    }
+
+    /** Whether every line is a service rendered over a period: its date is then when they were completed, not of a sale. */
+    public function isServices(): bool
+    {
+        if ([] === $this->lines) {
+            return false;
+        }
+        foreach ($this->lines as $line) {
+            if (null === self::period($line)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * A line's period, its dates read at midnight; null when it gives none, or none that reads.
+     *
+     * @param array<string, mixed> $line
+     *
+     * @return array{start: \DateTimeImmutable, end: \DateTimeImmutable}|null
+     */
+    public static function period(array $line): ?array
+    {
+        $start = $line['period']['start'] ?? null;
+        $end = $line['period']['end'] ?? $start;
+        if (!\is_string($start) || !\is_string($end)) {
+            return null;
+        }
+        $start = \DateTimeImmutable::createFromFormat('!Y-m-d', substr($start, 0, 10));
+        $end = \DateTimeImmutable::createFromFormat('!Y-m-d', substr($end, 0, 10));
+        if (false === $start || false === $end || $end < $start) {
+            return null;
+        }
+
+        return ['start' => $start, 'end' => $end];
+    }
+
     public function getState(): string
     {
         return $this->state;

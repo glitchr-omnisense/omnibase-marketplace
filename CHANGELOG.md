@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- The billing period of services: a line gives `'period' => ['start' => 'Y-m-d', 'end' => 'Y-m-d']`, the invoice's
+  period follows (`Invoice::getBillingPeriod()`, the earliest start to the latest end). The Factur-X carries it
+  (BT-73/BT-74) and each line's (BT-134/BT-135); the PDF prints « Période de facturation : du … au … », and when every
+  line is a service (`Invoice::isServices()`) its date reads « Date de réalisation des prestations » in place of
+  « Date de la vente ». Lines without a period (an order's) read as before. No schema change. `BillingPeriodTest`.
 - An invoice without an order: `Invoices::issueFor(InvoiceSource $source, ?\DateTimeImmutable $at, ?\Closure $issued)`
   issues what an application sells of its own (omnibase/forge's hours, a subscription) in the shop's series, under the
   same lock: `Model\InvoiceSource` gives the buyer, lines, totals, completion date, store, nature of the operations and

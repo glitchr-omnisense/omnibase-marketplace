@@ -16,6 +16,9 @@ use Base\Marketplace\Entity\Store;
  * The buyer, the lines and the totals are given in the shape Entity\Invoice
  * keeps them (Invoice\InvoiceComposer::buyerOf() writes the buyer from a customer;
  * the totals' "exemption" is Invoice\InvoiceComposer::exemption()'s array, or null).
+ * A line may give the period its service was rendered in
+ * ('period' => ['start' => 'Y-m-d', 'end' => 'Y-m-d']): the invoice's billing
+ * period follows (Entity\Invoice::getBillingPeriod()).
  */
 final readonly class InvoiceSource
 {

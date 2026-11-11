@@ -221,6 +221,10 @@ final class FacturX
         if ($soldAt = $invoice->getSoldAt()) {
             $document->setDocumentSupplyChainEvent($soldAt);
         }
+        // The period the services were rendered in (BT-73, BT-74): its lines' (BT-134, BT-135).
+        if ($period = $invoice->getBillingPeriod()) {
+            $document->setDocumentBillingPeriod($period['start'], $period['end'], null);
+        }
 
         // The lines.
         foreach ($invoice->getLines() as $line) {
@@ -229,6 +233,9 @@ final class FacturX
             $document->setDocumentPositionNetPrice($money($line['unit_price']));
             $document->setDocumentPositionQuantity(self::quantity($line), (string) ($line['unit'] ?? 'H87'));
             $document->addDocumentPositionTax((string) $line['category'], 'VAT', (float) $line['rate'], null, $exemption['reason'] ?? null, $exemption['code'] ?? null);
+            if ($period = Invoice::period($line)) {
+                $document->setDocumentPositionBillingPeriod($period['start'], $period['end']);
+            }
             $document->setDocumentPositionLineSummation($money($line['total']));
         }
 

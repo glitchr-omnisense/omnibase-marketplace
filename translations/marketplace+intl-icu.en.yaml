@@ -436,6 +436,8 @@ invoice:
   vat_number: "VAT number"
   issued_at: "Issued on {date}"
   sold_at: "Date of sale: {date}"
+  completed_at: "Services completed on: {date}"
+  billing_period: "Billing period: {from} to {to}"
   order: "Order {reference}"
   credits: "Cancels invoice {number} of {date}"
   buyer: "Billed to"

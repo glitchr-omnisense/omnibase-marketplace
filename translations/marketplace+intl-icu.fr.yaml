@@ -451,6 +451,8 @@ invoice:
   vat_number: "N° TVA intracommunautaire"
   issued_at: "Émise le {date}"
   sold_at: "Date de la vente : {date}"
+  completed_at: "Date de réalisation des prestations : {date}"
+  billing_period: "Période de facturation : du {from} au {to}"
   order: "Commande {reference}"
   credits: "Annule la facture {number} du {date}"
   buyer: "Facturé à"

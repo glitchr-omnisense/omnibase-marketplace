@@ -95,6 +95,20 @@ $invoice = $invoices->issueFor($source, null, fn (Invoice $invoice) => $hours->b
   bills is marked in the same flush, or not at all;
 - an invoice with no line, or that comes to nothing, is refused (`\LogicException`).
 
+### Services rendered over a period
+
+A line may give the period its service was rendered in: `'period' => ['start' => '2026-10-01', 'end' =>
+'2026-10-31']` (a single day: `start` alone). The invoice's billing period is then its lines' - from
+the earliest start to the latest end (`Invoice::getBillingPeriod()`):
+
+- the Factur-X carries it (BT-73, BT-74), and each line its own (BT-134, BT-135);
+- the PDF prints « Période de facturation : du 01/10/2026 au 31/10/2026 » under the dates;
+- when every line gives a period (`Invoice::isServices()`), the invoice's date (`soldAt`) reads
+  « Date de réalisation des prestations », no longer « Date de la vente ».
+
+An invoice whose lines give none - an order's - reads as before. No schema change: the period is kept
+in the line, as the rest of it.
+
 It is sent, paid, credited, printed and transmitted as any other invoice (`send()`, `markPaid()`,
 `credit()`, `pdf()`). `InvoiceComposer::buyerOf()`, `sellerFor()` and `mentionsFor()` are the pieces
 `issueFor()` uses, for an application that writes its own preview.
@@ -104,7 +118,8 @@ It is sent, paid, credited, printed and transmitted as any other invoice (`send(
 The invoice prints what the administration lists:
 
 - **Its number and date.**
-- **The date of the sale:** the order's payment.
+- **The date of the sale:** the order's payment; for services, the date they were completed, and their
+  period when the lines give one.
 - **The seller:** name, legal form, capital, address, SIREN, RCS, VAT number.
 - **The buyer:** their name, address, SIREN and VAT number when they are a business, and the delivery
   address when it differs.
