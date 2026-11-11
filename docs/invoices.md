@@ -109,6 +109,14 @@ Why EN 16931 rather than another profile:
 The XML is checked against the profile's schema (`FacturX::validate()`, the library's XSD
 validator). The Schematron rules of EN 16931 (KoSIT's validator, which needs Java) are not run here.
 
+Each line is self-consistent: its quantity (BT-129) times its net price (BT-146), rounded to the
+cent, is its net amount (BT-131), the amount billed - never changed to fit. Quantities and prices
+are written to two decimals, and to more when a line needs them (`FacturX::decimals()`: up to six
+for a quantity, four for a price): an hours line billed from the minutes, 4h25 at 90.00 an hour
+(397.50), carries 4.4167 hours - 4.42 would make 397.80 -; three items for 10.00 carry a price of
+3.3333. A line gives its unit (`unit`: `HUR` for hours, UN/ECE Recommendation 20; a piece, `H87`,
+by default) and, for hours, its `minutes`, which the quantity is counted from.
+
 Today's French reform requires the reception of electronic invoices from 2026-09-01, and their
 emission from 2027-09-01 for small and medium companies. Sending goes through `omnisense/omnibill`
 when it is installed (below); until the shop must use an approved platform, its `omnibill/email`

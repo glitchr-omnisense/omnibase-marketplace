@@ -8,6 +8,7 @@ use horstoeko\zugferd\ZugferdDocumentPdfBuilder;
 use horstoeko\zugferd\ZugferdDocumentPdfReader;
 use horstoeko\zugferd\ZugferdDocumentReader;
 use horstoeko\zugferd\ZugferdProfiles;
+use horstoeko\zugferd\ZugferdSettings;
 use horstoeko\zugferd\ZugferdXsdValidator;
 use Symfony\Component\Intl\Currencies;
 
@@ -24,10 +25,22 @@ use Symfony\Component\Intl\Currencies;
  *
  * Amounts are written in the currency's unit (19.90), from the invoice's
  * integers in its smallest unit (1990).
+ *
+ * Each line is self-consistent: its quantity (BT-129) times its net price
+ * (BT-146), rounded to the cent, is its net amount (BT-131), the amount
+ * billed. Quantities and prices go to two decimals, and to more - up to
+ * six and four, which EN 16931 allows - when a line needs them: an hours
+ * line billed from the minutes (4h25 at 90.00: 397.50) carries 4.4167
+ * hours, not 4.42, which would make 397.80. A line's unit is its own
+ * ("unit": HUR for hours, UN/ECE Recommendation 20), a piece (H87) by
+ * default; an hours line that gives its "minutes" is counted from them.
  */
 final class FacturX
 {
     public const PROFILE = ZugferdProfiles::PROFILE_EN16931;
+
+    private const QUANTITY_PATH = '/rsm:CrossIndustryInvoice/rsm:SupplyChainTradeTransaction/ram:IncludedSupplyChainTradeLineItem/ram:SpecifiedLineTradeDelivery/ram:BilledQuantity';
+    private const PRICE_PATH = '/rsm:CrossIndustryInvoice/rsm:SupplyChainTradeTransaction/ram:IncludedSupplyChainTradeLineItem/ram:SpecifiedLineTradeAgreement/ram:NetPriceProductTradePrice/ram:ChargeAmount';
 
     public static function available(): bool
     {
@@ -37,7 +50,7 @@ final class FacturX
     /** @param array<string, mixed> $routing see document() */
     public function xml(Invoice $invoice, array $routing = []): string
     {
-        return $this->document($invoice, $routing)->getContent();
+        return $this->written($invoice, fn (): string => $this->document($invoice, $routing)->getContent());
     }
 
     /**
@@ -47,10 +60,79 @@ final class FacturX
      */
     public function attach(Invoice $invoice, string $pdf, array $routing = []): string
     {
-        $builder = new ZugferdDocumentPdfBuilder($this->document($invoice, $routing), $pdf);
-        $builder->setDeterministicModeEnabled(true);
+        return $this->written($invoice, function () use ($invoice, $pdf, $routing): string {
+            $builder = new ZugferdDocumentPdfBuilder($this->document($invoice, $routing), $pdf);
+            $builder->setDeterministicModeEnabled(true);
 
-        return $builder->generateDocument()->downloadString();
+            return $builder->generateDocument()->downloadString();
+        });
+    }
+
+    /**
+     * The decimals the lines' quantities and net prices are written to: a
+     * price to the decimals it has (four at most), a quantity to the fewest
+     * from two that make every line's quantity times its price its amount,
+     * to the cent (six at most).
+     *
+     * @return array{quantity: int, price: int}
+     */
+    public static function decimals(Invoice $invoice): array
+    {
+        $unit = 10 ** Currencies::getFractionDigits($invoice->getCurrency());
+        $decimals = ['quantity' => 2, 'price' => 2];
+        foreach ($invoice->getLines() as $line) {
+            $price = (float) $line['unit_price'] / $unit;
+            $total = round((float) $line['total'] / $unit, 2);
+            $quantity = self::quantity($line);
+            $p = 2;
+            while ($p < 4 && abs(round($price, $p) - $price) > 1e-9) {
+                ++$p;
+            }
+            // A line that no quantity makes consistent (an amount of its own) keeps two.
+            $q = 2;
+            while ($q <= 6 && abs(round(round($quantity, $q) * round($price, $p), 2) - $total) > 1e-9) {
+                ++$q;
+            }
+            $q = $q > 6 ? 2 : $q;
+            $decimals = ['quantity' => max($decimals['quantity'], $q), 'price' => max($decimals['price'], $p)];
+        }
+
+        return $decimals;
+    }
+
+    /**
+     * What writes the XML, with the lines' decimals (decimals()) set in
+     * horstoeko/zugferd's settings - static, for every document - and those
+     * settings given back as they were.
+     *
+     * @template T
+     *
+     * @param callable(): T $write
+     *
+     * @return T
+     */
+    private function written(Invoice $invoice, callable $write): mixed
+    {
+        $maps = ZugferdSettings::getSpecialDecimalPlacesMaps();
+        $decimals = self::decimals($invoice);
+        ZugferdSettings::addSpecialDecimalPlacesMap(self::QUANTITY_PATH, $decimals['quantity']);
+        ZugferdSettings::addSpecialDecimalPlacesMap(self::PRICE_PATH, $decimals['price']);
+        try {
+            return $write();
+        } finally {
+            ZugferdSettings::setSpecialDecimalPlacesMaps($maps);
+        }
+    }
+
+    /**
+     * A line's quantity, from its minutes when it gives them (hours: 265
+     * minutes are 4.41666... hours), else as it is.
+     *
+     * @param array<string, mixed> $line
+     */
+    private static function quantity(array $line): float
+    {
+        return isset($line['minutes']) && 'HUR' === ($line['unit'] ?? null) ? (int) $line['minutes'] / 60 : (float) $line['quantity'];
     }
 
     /** @return list<string> what the schema finds wrong in this XML (EN 16931's XSD): none for a valid one */
@@ -145,7 +227,7 @@ final class FacturX
             $document->addNewPosition((string) $line['id']);
             $document->setDocumentPositionProductDetails((string) $line['label'], null, $line['reference'] ?? null);
             $document->setDocumentPositionNetPrice($money($line['unit_price']));
-            $document->setDocumentPositionQuantity((float) $line['quantity'], 'H87');
+            $document->setDocumentPositionQuantity(self::quantity($line), (string) ($line['unit'] ?? 'H87'));
             $document->addDocumentPositionTax((string) $line['category'], 'VAT', (float) $line['rate'], null, $exemption['reason'] ?? null, $exemption['code'] ?? null);
             $document->setDocumentPositionLineSummation($money($line['total']));
         }
