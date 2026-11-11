@@ -14,10 +14,13 @@ use Omnibill\Email\StatusStoreInterface;
 use Omnibill\Exception\InvalidConfigException;
 use Omnibill\Exception\InvalidNotificationException;
 use Omnibill\Exception\OmnibillException;
+use Omnibill\Exception\OutcomeUnknownException;
+use Omnibill\FlowLookupInterface;
 use Omnibill\GatewayInterface;
 use Omnibill\Model\Addressing;
 use Omnibill\Model\Direction;
 use Omnibill\Model\Flow;
+use Omnibill\Model\FlowKind;
 use Omnibill\Model\Invoice as BillInvoice;
 use Omnibill\Model\LifecycleStatus;
 use Omnibill\Model\Party;
@@ -25,6 +28,7 @@ use Omnibill\Model\StatusChange;
 use Omnibill\Model\Syntax;
 use Omnibill\Registry;
 use Omnibill\Request\FetchStatus;
+use Omnibill\Request\FindFlow;
 use Omnibill\Request\Lookup;
 use Omnibill\Request\Notify;
 use Omnibill\Request\Receive;
@@ -67,7 +71,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *   - the shop's own statuses ("Encaissée", 212) are declared as lifecycle
  *     messages (CDAR) the application writes (LifecycleMessageInterface):
  *     without a writer they stay pending on the invoice and are sent again
- *     by sendPending() (marketplace:invoice:status).
+ *     by sendPending() (marketplace:invoice:status);
+ *   - a submission whose answer was lost after it left (omnibill's
+ *     OutcomeUnknownException: a timeout, a 5xx) is never sent again
+ *     blindly: the platform is asked for the invoice's number (FindFlow, the
+ *     trackingId it was given), at once and before any new submission; the
+ *     invoice is deposited again only once the platform says it has none,
+ *     SEARCH_DELAY after. A status whose answer was lost is not sent again
+ *     by itself: a person checks on the platform.
  *
  * This folder is registered, and its entities mapped, only when
  * omnisense/omnibill is installed: without it, Service\Invoices sends its
@@ -76,6 +87,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class InvoiceTransmission
 {
+    /** How long a flow just deposited may take to show in the platform's search: before, "none" proves nothing. */
+    public const SEARCH_DELAY = 'PT10M';
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ?TranslatorInterface $translator = null,
@@ -171,6 +185,9 @@ class InvoiceTransmission
         if (\in_array($flow->getStatus(), ['rejected', 'refused'], true)) {
             return $this->trans('@marketplace.invoice.lifecycle.'.$flow->getStatus().'_help', ['{reason}' => $flow->getReason() ?? '-']);
         }
+        if ($flow->isOutcomeUnknown()) {
+            return $this->trans('@marketplace.invoice.lifecycle.outcome_unknown_help', ['{number}' => $invoice->getNumber()]);
+        }
         foreach ($flow->pending() as $pending) {
             return $this->trans('@marketplace.invoice.lifecycle.pending_help', ['{status}' => $this->trans('@marketplace.invoice.lifecycle.'.$pending['status']), '{error}' => $pending['error'] ?? '-']);
         }
@@ -255,7 +272,12 @@ class InvoiceTransmission
         $name = $this->channel($invoice) ?? (string) $this->gateway;
         $platform = $this->isPlatform($name);
         $row = $this->flowOf($invoice);
-        if ($platform) {
+        if (null !== $row && $row->isOutcomeUnknown()) {
+            // Submitted already, its answer lost: found again on the platform, or proved absent, before anything goes.
+            if ($this->findAgain($row)) {
+                return $row;
+            }
+        } elseif ($platform) {
             $this->once($invoice);
         }
         if ($platform && [] === $routing) {
@@ -264,41 +286,132 @@ class InvoiceTransmission
         $bill = $this->bill($invoice, $pdf, $filename, $to, $routing);
         try {
             $flow = $this->gatewayNamed($name, $invoice, $link)->submit($bill, $invoice->getNumber());
+        } catch (OutcomeUnknownException $e) {
+            // The invoice left and its answer did not come back: the platform may have it. Kept as such, then
+            // asked at once by its number; not found yet, it is asked again before any new submission.
+            if (null === $row) {
+                $row = new InvoiceFlow($invoice, $name, '');
+                $this->entityManager->persist($row);
+            }
+            $row->outcomeUnknown($name)->routed($platform ? ($routing['rule'] ?? null) : null, $platform ? ($routing['buyer_address']['id'] ?? null) : null, $bill->sha256());
+            $this->entityManager->flush();
+            try {
+                $flow = $this->lookUp($row);
+            } catch (TransmissionException) {
+                $flow = null;
+            }
+            if (null === $flow) {
+                throw new TransmissionException($this->trans('@marketplace.invoice.platform.outcome_unknown', ['{number}' => $invoice->getNumber(), '{error}' => $e->getMessage()]), 0, $e);
+            }
         } catch (OmnibillException $e) {
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
         if (null === $row) {
             $row = new InvoiceFlow($invoice, $name, $flow->reference);
             $this->entityManager->persist($row);
+        } elseif ($row->isOutcomeUnknown()) {
+            $row->found($flow->reference);
         } else {
             $row->restart($name, $flow->reference);
         }
         $row->routed($platform ? ($routing['rule'] ?? null) : null, $platform ? ($routing['buyer_address']['id'] ?? null) : null, $bill->sha256());
         $this->reflect($row, $flow);
         $this->entityManager->flush();
-        // An invoice "acquittée" (paid with the order): its payment declared to the platform too.
-        if ($platform && $invoice->isPaid() && !$invoice->isCreditNote()) {
-            $this->declare($invoice, LifecycleStatus::PAID, $invoice->getPaidAt());
-        }
+        $this->paidWithTheOrder($row);
 
         return $row;
+    }
+
+    /** An invoice "acquittée" (paid with the order), on an approved platform: its payment declared too. */
+    private function paidWithTheOrder(InvoiceFlow $row): void
+    {
+        $invoice = $row->getInvoice();
+        if ($this->isPlatform($row->getGateway()) && $invoice->isPaid() && !$invoice->isCreditNote()) {
+            $this->declare($invoice, LifecycleStatus::PAID, $invoice->getPaidAt());
+        }
+    }
+
+    /**
+     * A submission whose outcome is unknown, asked of the platform by the
+     * invoice's number: true when it has it - kept, as if its answer had
+     * come back -, false when it has none since SEARCH_DELAY - the invoice
+     * may be submitted again.
+     *
+     * @throws TransmissionException it cannot be told yet: the platform cannot be asked, or "none" came too soon
+     */
+    private function findAgain(InvoiceFlow $row): bool
+    {
+        $invoice = $row->getInvoice();
+        $flow = $this->lookUp($row);
+        if (null !== $flow) {
+            $this->adopt($row, $flow);
+            $this->paidWithTheOrder($row);
+
+            return true;
+        }
+        if ($row->getUpdatedAt() > (new \DateTimeImmutable())->sub(new \DateInterval(self::SEARCH_DELAY))) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.outcome_unknown_wait', ['{number}' => $invoice->getNumber()]));
+        }
+
+        return false;
+    }
+
+    /**
+     * The flow the row's gateway has under the invoice's number (the
+     * trackingId it was submitted with), null when it has none.
+     *
+     * @throws TransmissionException the gateway cannot look it up, or did not answer
+     */
+    private function lookUp(InvoiceFlow $row): ?Flow
+    {
+        $invoice = $row->getInvoice();
+        try {
+            $gateway = $this->gatewayNamed($row->getGateway(), $invoice);
+            if (!$gateway instanceof FlowLookupInterface || !$gateway->supports(FindFlow::class)) {
+                throw new TransmissionException($this->trans('@marketplace.invoice.platform.outcome_unknown_check', ['{number}' => $invoice->getNumber(), '{gateway}' => $row->getGateway()]));
+            }
+
+            return $gateway->findFlow($invoice->getNumber());
+        } catch (OmnibillException $e) {
+            throw new TransmissionException($e->getMessage(), 0, $e);
+        }
+    }
+
+    /** A submission whose outcome was unknown, found on the platform: kept under its reference. */
+    private function adopt(InvoiceFlow $row, Flow $flow): void
+    {
+        $row->found($flow->reference);
+        $this->reflect($row, $flow);
+        $this->entityManager->flush();
     }
 
     /** An invoice is deposited on an approved platform once: a correction is a credit note and a new invoice. */
     private function once(Invoice $invoice): void
     {
         $row = $this->flowOf($invoice);
-        if (null !== $row && $this->isPlatform($row->getGateway())) {
+        if (null !== $row && !$row->isOutcomeUnknown() && $this->isPlatform($row->getGateway())) {
             throw new TransmissionException($this->trans('@marketplace.invoice.platform.once', ['{number}' => $invoice->getNumber(), '{status}' => $this->describe($invoice) ?? '-']));
         }
     }
 
-    /** Asks the gateway where the invoice stands, and keeps it; null when it went through none. */
+    /**
+     * Asks the gateway where the invoice stands, and keeps it; null when it
+     * went through none. A submission whose outcome is unknown is looked up
+     * by the invoice's number: kept once the platform has it.
+     */
     public function refresh(Invoice $invoice): ?InvoiceFlow
     {
         $row = $this->flowOf($invoice);
         if (null === $row || !$this->available($row->getGateway())) {
             return null;
+        }
+        if ($row->isOutcomeUnknown()) {
+            if (null !== ($flow = $this->lookUp($row))) {
+                $this->adopt($row, $flow);
+                $this->paidWithTheOrder($row);
+            }
+
+            return $row;
         }
         try {
             $gateway = $this->gatewayNamed($row->getGateway(), $invoice);
@@ -359,10 +472,12 @@ class InvoiceTransmission
 
     /**
      * Reads the lifecycle flows a platform has for the shop since its cursor
-     * (Receive): a status a buyer declared about one of the shop's invoices -
-     * approved, refused and why, paid - is added to that invoice's history;
-     * the rest (the suppliers' invoices, omnibase/ledger's) is left. How many
-     * statuses were taken.
+     * (Receive, its kinds the lifecycle flows only: the suppliers' invoices,
+     * omnibase/ledger's, are neither downloaded nor answered): a status a
+     * buyer declared about one of the shop's invoices - approved, refused
+     * and why, paid - is added to that invoice's history; a status about
+     * another invoice is left. The cursor is the shop's own, given with
+     * those kinds only. How many statuses were taken.
      *
      * @param string|null $name the gateway; the configured one by default
      */
@@ -384,7 +499,7 @@ class InvoiceTransmission
         $taken = 0;
         try {
             for ($pages = 0; $pages < 20; ++$pages) {
-                $page = $gateway->receive($inbox->getCursor(), 50);
+                $page = $gateway->execute(new Receive($inbox->getCursor(), 50, [FlowKind::LIFECYCLE]))->getInbox() ?? throw new TransmissionException(sprintf('The "%s" gateway answered no inbox.', $name));
                 foreach ($page->items as $item) {
                     $change = $item->status;
                     if (null === $change || Direction::IN !== $item->flow->direction || null === $change->invoiceNumber) {
@@ -457,6 +572,10 @@ class InvoiceTransmission
         if (null === $row) {
             return null;
         }
+        if ($row->isOutcomeUnknown()) {
+            // The platform tells of the submission whose answer was lost: kept under its reference.
+            $row->found($flow->reference);
+        }
         $this->reflect($row, $flow);
         $this->entityManager->flush();
 
@@ -467,10 +586,16 @@ class InvoiceTransmission
     private function send(InvoiceFlow $row, int $index): bool
     {
         $declared = $row->getDeclared()[$index] ?? null;
-        if (null === $declared || $declared['sent']) {
+        if (null === $declared || $declared['sent'] || ($declared['unknown'] ?? false)) {
+            // Sent, or its outcome unknown: the platform may have it, a person checks before it goes again.
             return false;
         }
         $invoice = $row->getInvoice();
+        if ($row->isOutcomeUnknown()) {
+            $row->declaredFailed($index, $this->trans('@marketplace.invoice.lifecycle.outcome_unknown'));
+
+            return false;
+        }
         if ('rejected' === $row->getStatus() || $invoice->isCancelled()) {
             // Rejected by the platform, or cancelled: no status follows on that invoice.
             $row->declaredFailed($index, sprintf('The invoice %s is %s: no status follows.', $invoice->getNumber(), $invoice->isCancelled() ? 'cancelled' : 'rejected'));
@@ -495,14 +620,24 @@ class InvoiceTransmission
                     return false;
                 }
             }
-            $answer = $gateway->setStatus(new StatusChange(
-                $status, $invoice->getNumber(), $at, $declared['reason'] ?? null, $declared['amount'] ?? null,
-                file: $message['content'] ?? null, filename: $message['filename'] ?? null,
-            ), $this->flow($row));
+            $change = [
+                'status' => $status, 'invoiceNumber' => $invoice->getNumber(), 'at' => $at, 'reason' => $declared['reason'] ?? null, 'amount' => $declared['amount'] ?? null,
+                'file' => $message['content'] ?? null, 'filename' => $message['filename'] ?? null,
+            ];
+            // The amount received at each rate (omnibill 1.2), for "Encaissée".
+            if (LifecycleStatus::PAID === $status && property_exists(StatusChange::class, 'amounts')) {
+                $change['amounts'] = self::basisPoints($this->byRate($invoice));
+            }
+            $answer = $gateway->setStatus(new StatusChange(...$change), $this->flow($row));
             $this->reflect($row, $answer);
             $row->declaredSent($index, $answer->reference);
 
             return true;
+        } catch (OutcomeUnknownException $e) {
+            $row->declaredUnknown($index, $this->trans('@marketplace.invoice.platform.status_outcome_unknown', ['{error}' => $e->getMessage()]));
+            $this->logger?->warning('The status {status} of the invoice {number} may have been taken: {error}', ['status' => $declared['status'], 'number' => $invoice->getNumber(), 'error' => $e->getMessage()]);
+
+            return false;
         } catch (OmnibillException|\ValueError $e) {
             $row->declaredFailed($index, $e->getMessage());
             $this->logger?->warning('The status {status} of the invoice {number} was not sent: {error}', ['status' => $declared['status'], 'number' => $invoice->getNumber(), 'error' => $e->getMessage()]);
@@ -578,6 +713,24 @@ class InvoiceTransmission
         }
 
         return $rates;
+    }
+
+    /**
+     * The amounts by rate as omnibill's StatusChange::$amounts takes them: the
+     * rate in basis points (20 % is 2000, 5.5 % is 550) => the amount.
+     *
+     * @param list<array{rate: float, amount: string}> $rates byRate()
+     *
+     * @return array<int, string>
+     */
+    private static function basisPoints(array $rates): array
+    {
+        $amounts = [];
+        foreach ($rates as $rate) {
+            $amounts[(int) round($rate['rate'] * 100)] = $rate['amount'];
+        }
+
+        return $amounts;
     }
 
     /**

@@ -10,10 +10,15 @@ use Base\Marketplace\Invoice\Transmission\Entity\EReport;
 use Base\Marketplace\Pricing\ReverseCharge;
 use Doctrine\ORM\EntityManagerInterface;
 use Omnibill\Exception\OmnibillException;
+use Omnibill\Exception\OutcomeUnknownException;
 use Omnibill\Exception\UnreachableException;
+use Omnibill\FlowLookupInterface;
+use Omnibill\GatewayInterface;
 use Omnibill\Model\EReport as BillReport;
+use Omnibill\Model\Flow;
 use Omnibill\Model\Syntax;
 use Omnibill\Registry;
+use Omnibill\Request\FindFlow;
 use Omnibill\Request\Report;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -54,6 +59,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 class EReporting
 {
+    /** What starts the error of a period whose submission's answer was lost: the platform may have it. */
+    public const OUTCOME_UNKNOWN = 'Outcome unknown';
+
     public const REGIMES = ['normal_monthly', 'normal_quarterly', 'simplified', 'franchise'];
 
     public function __construct(
@@ -151,6 +159,11 @@ class EReporting
      * Sent to the approved platform, once: the application's writer makes the
      * file, the platform takes it. Without a writer or a platform it stays
      * collected, and says why.
+     *
+     * A submission whose answer was lost after it left (omnibill's
+     * OutcomeUnknownException) is looked up by its trackingId (FindFlow), at
+     * once and before the next attempt: found, the period is sent; until the
+     * platform says it has none, it is not deposited again.
      */
     public function send(EReport $report): EReport
     {
@@ -163,18 +176,51 @@ class EReporting
         } elseif (null === $this->writer || null === ($file = $this->writer->write($report))) {
             $report->notSent('No e-reporting file writer (Invoice\\Transmission\\EReportWriterInterface): the data is kept here.');
         } else {
+            $gateway = $this->registry->get($name);
+            $trackingId = sprintf('%s-%s', $report->getKind(), $report->getStartsOn()->format('Ymd'));
+            // Its last submission's answer lost: still so until the platform has said where it stands.
+            $unknown = str_starts_with((string) $report->getError(), self::OUTCOME_UNKNOWN) ? self::OUTCOME_UNKNOWN.': ' : '';
             try {
-                $flow = $this->registry->get($name)->report(new BillReport($file['content'], $file['filename'], Syntax::FRR, $file['rule'] ?? null), sprintf('%s-%s', $report->getKind(), $report->getStartsOn()->format('Ymd')));
-                $report->sent($name, $flow->reference);
+                $found = '' !== $unknown ? $this->findAgain($gateway, $trackingId) : null;
+                if (false === $found) {
+                    $report->notSent(sprintf('%s: %s cannot be looked up on "%s"; check on the platform before it is sent again.', self::OUTCOME_UNKNOWN, $trackingId, $name));
+                } else {
+                    $flow = $found ?? $gateway->report(new BillReport($file['content'], $file['filename'], Syntax::FRR, $file['rule'] ?? null), $trackingId);
+                    $report->sent($name, $flow->reference);
+                }
+            } catch (OutcomeUnknownException $e) {
+                try {
+                    $found = $this->findAgain($gateway, $trackingId);
+                } catch (OmnibillException) {
+                    $found = null;
+                }
+                if ($found instanceof Flow) {
+                    $report->sent($name, $found->reference);
+                } else {
+                    $report->notSent(sprintf('%s: %s', self::OUTCOME_UNKNOWN, $e->getMessage()));
+                }
             } catch (UnreachableException $e) {
-                $report->notSent($e->getMessage());
+                $report->notSent($unknown.$e->getMessage());
             } catch (OmnibillException $e) {
-                $report->notSent($e->getMessage(), true);
+                $report->notSent($unknown.$e->getMessage(), true);
             }
         }
         $this->entityManager->flush();
 
         return $report;
+    }
+
+    /**
+     * The flow the platform has under that trackingId; null when it has none,
+     * false when it cannot be asked.
+     */
+    private function findAgain(GatewayInterface $gateway, string $trackingId): Flow|false|null
+    {
+        if (!$gateway instanceof FlowLookupInterface || !$gateway->supports(FindFlow::class)) {
+            return false;
+        }
+
+        return $gateway->findFlow($trackingId);
     }
 
     /**

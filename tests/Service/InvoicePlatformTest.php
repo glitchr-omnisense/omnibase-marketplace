@@ -22,6 +22,7 @@ use Omnibill\Action\ActionInterface;
 use Omnibill\Afnor\AfnorGatewayFactory;
 use Omnibill\Config;
 use Omnibill\Email\EmailGatewayFactory;
+use Omnibill\Exception\OutcomeUnknownException;
 use Omnibill\GatewayFactory;
 use Omnibill\Model\Capabilities;
 use Omnibill\Model\Direction;
@@ -34,6 +35,8 @@ use Omnibill\Model\StatusChange;
 use Omnibill\Registry;
 use Omnibill\Request\Receive;
 use Omnibill\Request\Request;
+use Omnibill\Request\SetStatus;
+use Omnibill\Request\Submit;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -51,8 +54,11 @@ use Tests\Base\Marketplace\ShopFixtureTrait;
  * An e-invoice (a company established in France) is addressed through the
  * platform's directory, deposited once, followed (deposited, rejected and
  * why, refused by its buyer), corrected by a credit note and a new invoice;
- * "paid" waits without a lifecycle message writer and goes with one; a sale
- * to a private person goes by e-mail instead. Skipped without omnibill.
+ * "paid" waits without a lifecycle message writer and goes with one, with
+ * the amount received at each VAT rate; a sale to a private person goes by
+ * e-mail instead. A deposit or a status whose answer is lost after it left
+ * (omnibill's OutcomeUnknownException) is looked up, never sent twice; only
+ * the lifecycle flows are read from the inbox. Skipped without omnibill.
  */
 final class InvoicePlatformTest extends MarketplaceKernelTestCase
 {
@@ -218,6 +224,28 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
     private function flow(string $status, array $details = []): MockResponse
     {
         return new MockResponse(json_encode(['flowId' => $this->flowId, 'flowSyntax' => 'Factur-X', 'flowDirection' => 'Out', 'flowType' => 'CustomerInvoice', 'submittedAt' => '2026-11-11T09:00:00Z', 'updatedAt' => '2026-11-11T09:05:00Z', 'acknowledgement' => ['status' => $status, 'details' => $details]]));
+    }
+
+    /**
+     * The platform's answer to POST /v1/flows/search: these flows.
+     *
+     * @param list<array<string, mixed>> $flows
+     */
+    private static function search(array $flows): MockResponse
+    {
+        return new MockResponse(json_encode(['limit' => 100, 'results' => $flows]));
+    }
+
+    /** The deposit of this test's invoice, as the platform's search lists it. */
+    private function deposited(string $number): array
+    {
+        return ['flowId' => $this->flowId, 'trackingId' => $number, 'flowSyntax' => 'Factur-X', 'flowDirection' => 'Out', 'flowType' => 'CustomerInvoice', 'submittedAt' => '2026-11-11T09:00:00Z', 'updatedAt' => '2026-11-11T09:00:30Z', 'acknowledgement' => ['status' => 'Ok']];
+    }
+
+    /** @return list<string> "METHOD path" of each request recorded, after the hosts */
+    private function calls(): array
+    {
+        return array_map(static fn (array $r) => $r['method'].' '.parse_url($r['url'], \PHP_URL_PATH), $this->requests);
     }
 
     /** @return array{info: array<string, mixed>, file: string} what a multipart POST /v1/flows carried */
@@ -418,6 +446,7 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
                             \assert($request instanceof Receive);
                             $items = null === $request->cursor ? ($GLOBALS['__marketplace_inbox'] ?? []) : [];
                             $GLOBALS['__marketplace_cursors'][] = $request->cursor;
+                            $GLOBALS['__marketplace_kinds'][] = $request->kinds;
                             $request->setResult(new Inbox($items, 'c-1', false));
                         }
                     },
@@ -440,8 +469,184 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         self::assertSame(1, $transmission->receiveStatuses());
         self::assertSame(0, $transmission->receiveStatuses(), 'from the cursor kept: nothing twice');
         self::assertSame([null, 'c-1'], $GLOBALS['__marketplace_cursors']);
+        self::assertSame([[FlowKind::LIFECYCLE], [FlowKind::LIFECYCLE]], $GLOBALS['__marketplace_kinds'], 'the lifecycle flows only: the supplier\'s invoice is ledger\'s');
         self::assertSame(['refused', 'Commande non reçue'], [$row->getStatus(), $row->getReason()]);
         self::assertStringContainsString('Commande non reçue', (string) $invoices->guidance($invoice));
-        unset($GLOBALS['__marketplace_inbox'], $GLOBALS['__marketplace_cursors']);
+        unset($GLOBALS['__marketplace_inbox'], $GLOBALS['__marketplace_cursors'], $GLOBALS['__marketplace_kinds']);
+    }
+
+    public function testOnlyTheLifecycleFlowsAreAskedOfThePlatform(): void
+    {
+        $this->answers = [self::search([])];
+
+        self::assertSame(0, $this->transmission()->receiveStatuses());
+
+        self::assertSame(['POST /flow-service/v1/flows/search'], $this->calls());
+        self::assertSame(['flowDirection' => ['In'], 'flowType' => ['CustomerInvoiceLC', 'SupplierInvoiceLC']], json_decode($this->requests[0]['body'], true)['where'], 'the suppliers\' invoices are not even listed');
+    }
+
+    public function testADepositWhoseAnswerIsLostIsLookedUpNeverSentTwice(): void
+    {
+        $transmission = $this->transmission();
+        $invoices = $this->invoices($transmission);
+        $invoice = $this->invoice($invoices, self::company(), paid: false);
+        $number = $invoice->getNumber();
+
+        // The deposit leaves and the platform answers 503: it may have taken it. Asked at once by the
+        // invoice's number (its trackingId): not listed yet.
+        $this->answers = [self::directory(), new MockResponse('upstream timed out', ['http_code' => 503]), self::search([])];
+        try {
+            $invoices->send($invoice);
+            self::fail('An outcome unknown is no success.');
+        } catch (TransmissionException $e) {
+            self::assertStringContainsString($number, $e->getMessage());
+            self::assertInstanceOf(OutcomeUnknownException::class, $e->getPrevious());
+        }
+        self::assertSame(['POST /directory-service/v1/directory-line/search', 'POST /flow-service/v1/flows', 'POST /flow-service/v1/flows/search'], $this->calls());
+        self::assertSame(['trackingId' => $number, 'flowDirection' => ['Out']], json_decode($this->requests[2]['body'], true)['where']);
+        $row = $transmission->flowOf($invoice);
+        self::assertTrue($row->isOutcomeUnknown());
+        self::assertSame(InvoiceFlow::OUTCOME_UNKNOWN, $invoices->lifecycleStatus($invoice));
+        self::assertStringContainsString($number, (string) $invoices->guidance($invoice), 'the back office says what happened');
+        self::assertNull($invoice->getSentAt());
+
+        // Sent again at once: looked up first, still not listed - nothing deposited, "none" being too soon to trust.
+        $this->requests = [];
+        $this->answers = [self::directory(), self::search([])];
+        try {
+            $invoices->send($invoice);
+            self::fail('Not sent again while the platform may have it.');
+        } catch (TransmissionException $e) {
+            self::assertStringContainsString($number, $e->getMessage());
+        }
+        self::assertSame(['POST /directory-service/v1/directory-line/search', 'POST /flow-service/v1/flows/search'], $this->calls(), 'no second deposit');
+
+        // The catch-up finds it: kept as if its answer had come back.
+        $this->requests = [];
+        $this->answers = [self::search([$this->deposited($number)])];
+        $tester = new CommandTester(new InvoiceStatusCommand($transmission, $this->entityManager));
+        $tester->execute(['numbers' => [$number], '--no-receive' => true, '--no-send' => true]);
+        self::assertSame(['POST /flow-service/v1/flows/search'], $this->calls());
+        self::assertFalse($row->isOutcomeUnknown());
+        self::assertSame([$this->flowId, 'deposited'], [$row->getReference(), $row->getStatus()]);
+        self::assertSame(Invoice::STATE_SENT, $invoice->getState());
+
+        // Deposited once: a new submission is refused as for any invoice on the platform.
+        $this->requests = [];
+        try {
+            $invoices->send($invoice);
+            self::fail('A second deposit is refused.');
+        } catch (TransmissionException) {
+            self::assertSame([], $this->requests);
+        }
+    }
+
+    public function testADepositThePlatformNeverGotGoesAgainOnceItSaysSo(): void
+    {
+        $transmission = $this->transmission();
+        $invoices = $this->invoices($transmission);
+        $invoice = $this->invoice($invoices, self::company(), paid: false);
+        $this->answers = [self::directory(), new MockResponse('', ['error' => 'Idle timeout reached for "https://api.flow.pa.example/flow-service/v1/flows".']), self::search([])];
+        try {
+            $invoices->send($invoice);
+            self::fail('An outcome unknown is no success.');
+        } catch (TransmissionException) {
+        }
+        // Long enough ago for the platform's search to list what it took.
+        $row = $transmission->flowOf($invoice);
+        (new \ReflectionProperty(InvoiceFlow::class, 'updatedAt'))->setValue($row, (new \DateTimeImmutable())->modify('-1 hour'));
+
+        $this->requests = [];
+        $this->answers = [self::directory(), self::search([]), new MockResponse('{"flowId":"'.$this->flowId.'","submittedAt":"2026-11-11T10:00:00Z"}', ['http_code' => 202])];
+        $invoices->send($invoice);
+
+        self::assertSame(['POST /directory-service/v1/directory-line/search', 'POST /flow-service/v1/flows/search', 'POST /flow-service/v1/flows'], $this->calls(), 'looked up, then deposited: the platform said it had none');
+        self::assertSame($invoice->getNumber(), self::multipart($this->requests[2]['body'])['info']['trackingId']);
+        self::assertFalse($row->isOutcomeUnknown());
+        self::assertSame($this->flowId, $row->getReference());
+        self::assertSame($row, $transmission->flowOf($invoice), 'one row per invoice');
+    }
+
+    public function testAStatusWhoseAnswerIsLostIsNotSentAgainByItself(): void
+    {
+        $this->writer = new class implements LifecycleMessageInterface {
+            public function write(Invoice $invoice, string $status, \DateTimeImmutable $at, ?string $reason = null, ?string $amount = null, array $amountsByRate = [], ?string $recipientAddress = null): ?array
+            {
+                return ['content' => '<written-by-the-application/>', 'filename' => 'status-'.$invoice->getNumber().'.xml'];
+            }
+        };
+        $transmission = $this->transmission();
+        $invoices = $this->invoices($transmission);
+        $invoice = $this->invoice($invoices, self::company());
+
+        // Paid with the order: "Encaissée" declared on the deposit; its message leaves, the answer is a 502.
+        $this->answers = [self::directory(), new MockResponse('{"flowId":"'.$this->flowId.'"}', ['http_code' => 202]), new MockResponse('bad gateway', ['http_code' => 502])];
+        $invoices->send($invoice);
+
+        self::assertCount(3, $this->requests);
+        $row = $transmission->flowOf($invoice);
+        $pending = array_values($row->pending());
+        self::assertSame(['paid', true], [$pending[0]['status'], $pending[0]['unknown'] ?? false]);
+        self::assertStringContainsString('502', (string) $pending[0]['error']);
+        self::assertStringContainsString('502', (string) $invoices->guidance($invoice), 'the back office says it may have been taken');
+
+        self::assertSame(0, $transmission->sendPending(), 'the catch-up leaves it to a person');
+        self::assertCount(3, $this->requests, 'nothing sent twice');
+    }
+
+    public function testPaidIsDeclaredWithTheAmountReceivedAtEachRate(): void
+    {
+        // A platform that takes the deposit and records the statuses declared to it.
+        $factory = new class extends GatewayFactory {
+            protected function populateConfig(Config $config): void
+            {
+                $config->defaults([
+                    'omnibill.factory_name' => 'inbox',
+                    'omnibill.factory_title' => 'Recorder',
+                    'omnibill.capabilities' => new Capabilities(approved: true),
+                    'omnibill.action.submit' => new class implements ActionInterface {
+                        public function supports(Request $request): bool
+                        {
+                            return $request instanceof Submit;
+                        }
+
+                        public function execute(Request $request): void
+                        {
+                            $request->setResult(new Flow('FLW-R', state: \Omnibill\Model\FlowState::ACCEPTED, status: LifecycleStatus::DEPOSITED, history: [new StatusChange(LifecycleStatus::DEPOSITED)]));
+                        }
+                    },
+                    'omnibill.action.set_status' => new class implements ActionInterface {
+                        public function supports(Request $request): bool
+                        {
+                            return $request instanceof SetStatus;
+                        }
+
+                        public function execute(Request $request): void
+                        {
+                            \assert($request instanceof SetStatus);
+                            $GLOBALS['__marketplace_statuses'][] = $request->change;
+                            $request->setResult(new Flow('ST-1', FlowKind::LIFECYCLE, status: $request->change->status, history: [...($request->flow->history ?? []), $request->change]));
+                        }
+                    },
+                ]);
+            }
+        };
+        $this->writer = new class implements LifecycleMessageInterface {
+            public function write(Invoice $invoice, string $status, \DateTimeImmutable $at, ?string $reason = null, ?string $amount = null, array $amountsByRate = [], ?string $recipientAddress = null): ?array
+            {
+                return ['content' => '<written-by-the-application/>', 'filename' => 'status.xml'];
+            }
+        };
+        $transmission = $this->transmission($this->registry($factory));
+        $invoice = $this->invoice($this->invoices($transmission), self::company());
+        $GLOBALS['__marketplace_statuses'] = [];
+
+        $transmission->submit($invoice, '%PDF-1.7 the invoice', 'facture.pdf', null, null, ['rule' => 'B2B', 'buyer_address' => ['scheme' => '0225', 'id' => self::BUYER_SIREN]]);
+
+        [$paid] = $GLOBALS['__marketplace_statuses'];
+        $total = InvoiceTransmission::decimal($invoice->getTotal(), 'EUR');
+        self::assertSame([LifecycleStatus::PAID, $total, [2000 => $total]], [$paid->status, $paid->amount, $paid->amounts], 'the whole amount, received at 20 %');
+        self::assertSame('paid', $transmission->flowOf($invoice)->getStatus());
+        unset($GLOBALS['__marketplace_statuses']);
     }
 }

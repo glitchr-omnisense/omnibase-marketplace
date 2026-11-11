@@ -23,6 +23,14 @@
   application writes the file (`EReportWriterInterface`), kept collected otherwise. `marketplace:invoice:ereport`,
   `EReportCrudController`.
 
+- omnisense/omnibill 1.2 adopted. A deposit whose answer is lost after it left (`OutcomeUnknownException`) is kept as
+  `InvoiceFlow::OUTCOME_UNKNOWN` and looked up by the invoice's number (`FindFlow`) at once, on refresh, by the
+  webhook and before any new send: deposited again only once the platform says it has none, `SEARCH_DELAY` after. A
+  declared status whose answer is lost is not sent again by itself (`InvoiceFlow::declaredUnknown()`); an e-reporting
+  period is looked up by its trackingId the same way (`EReporting::OUTCOME_UNKNOWN`). `receiveStatuses()` asks for the
+  lifecycle flows only (`Receive`'s kinds): the suppliers' invoices are no longer downloaded. "Encaissée" carries the
+  amount received at each VAT rate (`StatusChange::$amounts`).
+
 ### Fixed
 - The Factur-X lines are self-consistent: quantity times net price is the line's amount. Quantities and prices take
   the decimals a line needs (`FacturX::decimals()`, up to six and four): an hours line of 4h25 at 90.00 (397.50)

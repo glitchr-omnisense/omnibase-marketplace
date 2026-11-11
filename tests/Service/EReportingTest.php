@@ -38,6 +38,9 @@ final class EReportingTest extends MarketplaceKernelTestCase
     /** @var list<array{string, string, string}> */
     private array $requests = [];
 
+    /** @var list<MockResponse> answered in order; then a deposit's 202 */
+    private array $answers = [];
+
     protected function setUp(): void
     {
         if (!class_exists(Registry::class) || !class_exists(AfnorGatewayFactory::class)) {
@@ -49,7 +52,7 @@ final class EReportingTest extends MarketplaceKernelTestCase
 
     protected function tearDown(): void
     {
-        $this->requests = [];
+        $this->requests = $this->answers = [];
         parent::tearDown();
     }
 
@@ -87,7 +90,7 @@ final class EReportingTest extends MarketplaceKernelTestCase
             }
             $this->requests[] = [$method, $url, \is_string($options['body'] ?? null) ? $options['body'] : ''];
 
-            return new MockResponse('{"flowId":"RPT-1"}', ['http_code' => 202]);
+            return array_shift($this->answers) ?? new MockResponse('{"flowId":"RPT-1"}', ['http_code' => 202]);
         });
         $registry = new Registry([new AfnorGatewayFactory($http)], ['platform' => ['factory' => 'afnor', 'options' => [
             'flow_url' => 'https://api.flow.pa.example/flow-service', 'token_url' => 'https://auth.pa.example/token', 'client_id' => 'shop', 'client_secret' => 'secret',
@@ -211,5 +214,37 @@ final class EReportingTest extends MarketplaceKernelTestCase
         } catch (\LogicException) {
             $this->addToAssertionCount(1);
         }
+    }
+
+    public function testAPeriodWhoseAnswerIsLostIsLookedUpNotDepositedTwice(): void
+    {
+        $day = new \DateTimeImmutable('2033-05-04 10:00:00');
+        $this->order($day, 1000);
+        $writer = new class implements EReportWriterInterface {
+            public function write(EReport $report): ?array
+            {
+                return ['content' => '<written-by-the-application/>', 'filename' => 'report.xml', 'rule' => 'B2C'];
+            }
+        };
+        $reporting = $this->reporting($writer);
+        $report = $reporting->collect(EReport::TRANSACTIONS, $day);
+        $trackingId = 'transactions-'.$report->getStartsOn()->format('Ymd');
+
+        // The file leaves, the platform answers 504: looked up at once by its trackingId, not listed yet.
+        $this->answers = [new MockResponse('gateway timeout', ['http_code' => 504]), new MockResponse('{"limit":100,"results":[]}')];
+        $reporting->send($report);
+
+        self::assertSame(EReport::COLLECTED, $report->getState());
+        self::assertStringStartsWith(EReporting::OUTCOME_UNKNOWN, (string) $report->getError());
+        self::assertSame(['https://api.flow.pa.example/flow-service/v1/flows', 'https://api.flow.pa.example/flow-service/v1/flows/search'], array_column($this->requests, 1));
+        self::assertSame(['trackingId' => $trackingId, 'flowDirection' => ['Out']], json_decode($this->requests[1][2], true)['where']);
+
+        // Sent again: looked up first, and found - sent, not deposited a second time.
+        $this->answers = [new MockResponse(json_encode(['results' => [['flowId' => 'RPT-9', 'trackingId' => $trackingId, 'flowSyntax' => 'FRR', 'flowDirection' => 'Out', 'acknowledgement' => ['status' => 'Ok']]]]))];
+        $reporting->send($report);
+
+        self::assertSame([EReport::SENT, 'RPT-9'], [$report->getState(), $report->getReference()]);
+        self::assertCount(3, $this->requests);
+        self::assertStringEndsWith('/v1/flows/search', $this->requests[2][1]);
     }
 }

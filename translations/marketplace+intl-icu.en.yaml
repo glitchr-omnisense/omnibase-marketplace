@@ -514,6 +514,8 @@ invoice:
     rejected_help: "Rejected by the platform: {reason}. An issued invoice does not change: correct the cause (the customer's SIREN or address, the order), then \"Correct: credit note and new invoice\", and send the new one."
     refused_help: "Refused by the buyer: {reason}. See with them; if the invoice is at fault, \"Correct: credit note and new invoice\", and send the new one."
     pending_help: "\"{status}\" waits to be declared to the platform: {error}"
+    outcome_unknown: "Outcome unknown"
+    outcome_unknown_help: "The invoice {number} left for the platform and its answer was lost: the platform may have it. It is looked up by its number (\"Refresh its status\"); it is sent again only once the platform says it does not have it."
   # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
   platform:
     no_siren: "The invoice {number} goes to a company established in France: the platform addresses it by its SIREN, which the customer has not. Add it to the customer, then issue a credit note and a new invoice."
@@ -523,6 +525,10 @@ invoice:
     not_in_directory: "The e-invoicing directory has no active address for the SIREN {siren}."
     once: "The invoice {number} was transmitted to the platform already ({status}): an invoice is deposited there once. To correct it: a credit note and a new invoice."
     no_lifecycle_writer: "no lifecycle message (CDAR) writer is installed (Invoice\\Transmission\\LifecycleMessageInterface): the status waits here."
+    outcome_unknown: "The invoice {number} left and the platform's answer was lost ({error}): it may have been deposited. It will be looked up by its number before anything is sent again."
+    outcome_unknown_wait: "The platform does not show the invoice {number} yet: a deposit may take a few minutes to appear. Refresh its status later before sending it again."
+    outcome_unknown_check: "The outcome of the invoice {number}'s deposit is unknown and the {gateway} gateway cannot look it up: check on the platform."
+    status_outcome_unknown: "its message left and the platform's answer was lost ({error}): it may have been taken. Check on the platform; it is not sent again by itself."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:

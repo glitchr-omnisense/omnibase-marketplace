@@ -529,6 +529,8 @@ invoice:
     rejected_help: "Rejetée par la plateforme : {reason}. Une facture émise ne se modifie pas : corrigez la cause (le SIREN ou l'adresse du client, la commande), puis « Corriger : avoir et nouvelle facture », et envoyez la nouvelle."
     refused_help: "Refusée par l'acheteur : {reason}. Voyez avec lui ; si la facture est en cause, « Corriger : avoir et nouvelle facture », et envoyez la nouvelle."
     pending_help: "« {status} » attend d'être déclaré à la plateforme : {error}"
+    outcome_unknown: "Issue inconnue"
+    outcome_unknown_help: "La facture {number} est partie vers la plateforme et sa réponse s'est perdue : la plateforme l'a peut-être reçue. Elle est recherchée par son numéro (« Actualiser l'état ») ; elle n'est renvoyée qu'une fois que la plateforme dit ne pas l'avoir."
   # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
   platform:
     no_siren: "La facture {number} va à une entreprise établie en France : la plateforme l'adresse par son SIREN, que le client n'a pas. Ajoutez-le au client, puis faites un avoir et une nouvelle facture."
@@ -538,6 +540,10 @@ invoice:
     not_in_directory: "L'annuaire de la facturation électronique n'a aucune adresse active pour le SIREN {siren}."
     once: "La facture {number} a déjà été transmise à la plateforme ({status}) : une facture n'y est déposée qu'une fois. Pour la corriger : un avoir et une nouvelle facture."
     no_lifecycle_writer: "aucun rédacteur de message de cycle de vie (CDAR) n'est installé (Invoice\\Transmission\\LifecycleMessageInterface) : le statut reste en attente ici."
+    outcome_unknown: "La facture {number} est partie et la réponse de la plateforme s'est perdue ({error}) : elle a peut-être été déposée. Elle sera recherchée par son numéro avant tout nouvel envoi."
+    outcome_unknown_wait: "La plateforme ne montre pas encore la facture {number} : un dépôt peut mettre quelques minutes à apparaître. Actualisez son état plus tard avant de la renvoyer."
+    outcome_unknown_check: "L'issue du dépôt de la facture {number} est inconnue et la passerelle {gateway} ne sait pas la rechercher : vérifiez sur la plateforme."
+    status_outcome_unknown: "son message est parti et la réponse de la plateforme s'est perdue ({error}) : il a peut-être été pris en compte. Vérifiez sur la plateforme ; il n'est pas renvoyé de lui-même."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:

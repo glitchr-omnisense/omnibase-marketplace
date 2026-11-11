@@ -218,6 +218,16 @@ refused. Refused before anything leaves: a buyer without a SIREN, a SIREN that i
 register does not know, a SIREN without an active line in the directory - the message says what to
 correct.
 
+A deposit whose answer is lost after it left - a timeout, a 5xx: omnibill's
+`OutcomeUnknownException` - may have been taken. It is never sent again blindly: the invoice is kept
+as "Outcome unknown" (`InvoiceFlow::OUTCOME_UNKNOWN`) and the platform is asked for its number
+(`FindFlow`, the tracking id it was submitted with) at once, by "Refresh its status" and
+`marketplace:invoice:status`, and before any new send. Found, it is kept as if the answer had come
+back. It is deposited again only once the platform says it has none, `InvoiceTransmission::SEARCH_DELAY`
+(ten minutes) after - a flow just deposited may take a moment to show in its search. A gateway that
+cannot look it up leaves it to a person, on the platform. A declared status whose answer is lost is
+not sent again by itself either: the back office says so.
+
 ### Where it stands
 
 - **Deposited (200) or rejected (213)**: the platform's acknowledgement, asked by "Refresh its
@@ -227,7 +237,9 @@ correct.
 - **Refused (210), approved (205), paid (212) by the buyer**: the platform gives them as lifecycle
   flows coming in. `InvoiceTransmission::receiveStatuses()` reads them from the shop's own cursor
   (`InvoiceInbox`, beside omnibase/ledger's for the suppliers' invoices), from the status command or
-  when the webhook announces a flow coming in, and adds each to its invoice's history.
+  when the webhook announces a flow coming in, and adds each to its invoice's history. It asks for
+  the lifecycle flows only (`Receive`'s kinds, omnibill 1.2): the suppliers' invoices are neither
+  listed nor downloaded.
 - **The back office** shows it on the invoice's screen ("On the platform": the status, the reason,
   what to do) and on its order's ("Invoices").
 
@@ -241,7 +253,8 @@ is sent by itself: correct the cause first (the customer's SIREN, the address), 
 
 When omnitrade confirms the payment of an order whose invoice already went through a gateway
 (`OrderPaidEvent`, `Invoice\Transmission\InvoicePaidListener`), the invoice is marked paid and
-"Encaissée" (212) is declared, with the amount and its split by VAT rate. An invoice already paid
+"Encaissée" (212) is declared, with the amount and its split by VAT rate (`StatusChange::$amounts`,
+the rate in basis points, and the writer's `$amountsByRate`). An invoice already paid
 when it is submitted has it declared at once. A platform takes a status as a lifecycle message
 (CDAR) only, which neither omnisense/omnibill nor this bundle writes: the application registers an
 `Invoice\Transmission\LifecycleMessageInterface`. Without one the status is kept pending on the

@@ -20,6 +20,13 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'marketplace_invoice_flow_reference', columns: ['reference'])]
 class InvoiceFlow
 {
+    /**
+     * The status of a submission whose outcome is unknown: the request left and its answer
+     * failed (omnibill's OutcomeUnknownException), the platform may have taken the invoice.
+     * No reference yet; looked up by the invoice's number before anything is sent again.
+     */
+    public const OUTCOME_UNKNOWN = 'outcome_unknown';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -65,7 +72,7 @@ class InvoiceFlow
      * gateway, or waiting to be - an approved platform takes a status as a lifecycle message
      * (CDAR) only, which the application writes (Invoice\Transmission\LifecycleMessageInterface).
      *
-     * @var list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}>
+     * @var list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}> unknown: its outcome is unknown (declaredUnknown())
      */
     #[ORM\Column(type: 'json')]
     protected array $declared = [];
@@ -111,6 +118,32 @@ class InvoiceFlow
         return $this;
     }
 
+    /** Submitted, and the answer lost: the platform may have it, under no reference known yet. */
+    public function outcomeUnknown(string $gateway): static
+    {
+        $this->restart($gateway, '');
+        $this->status = self::OUTCOME_UNKNOWN;
+
+        return $this;
+    }
+
+    /** Its submission found again on the platform, under this reference: what was declared meanwhile kept. */
+    public function found(string $reference): static
+    {
+        $this->reference = $reference;
+        $this->status = null;
+        $this->history = [];
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    /** Whether its submission's outcome is unknown: to be looked up, never sent again blindly. */
+    public function isOutcomeUnknown(): bool
+    {
+        return self::OUTCOME_UNKNOWN === $this->status;
+    }
+
     /** How it went to an approved platform: the rule, the buyer's address, the file's fingerprint. */
     public function routed(?string $rule, ?string $recipientAddress, ?string $fileSha256): static
     {
@@ -136,7 +169,7 @@ class InvoiceFlow
         return $this->fileSha256;
     }
 
-    /** @return list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}> */
+    /** @return list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}> */
     public function getDeclared(): array
     {
         return $this->declared;
@@ -173,7 +206,18 @@ class InvoiceFlow
         return $this;
     }
 
-    /** @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}> the statuses declared and not sent yet, by index */
+    /**
+     * The status's message left and its answer was lost: the platform may have it. It is not
+     * sent again by itself (sendPending() leaves it): a person checks on the platform.
+     */
+    public function declaredUnknown(int $index, string $error): static
+    {
+        $this->declared[$index]['unknown'] = true;
+
+        return $this->declaredFailed($index, $error);
+    }
+
+    /** @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string, unknown?: bool}> the statuses declared and not sent yet, by index */
     public function pending(): array
     {
         return array_filter($this->declared, static fn (array $d) => !$d['sent']);
