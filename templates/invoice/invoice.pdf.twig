@@ -115,7 +115,7 @@
         <tr>
             <td><span class="text-inverse">{{ line.label }}</span>{% if line.reference %}<br><small>#{{ line.reference }}</small>{% endif %}</td>
             <td class="text-right">{{ line.unit_price|round|invoice_money(money) }}</td>
-            <td class="text-center">{{ line.quantity }}</td>
+            <td class="text-center">{{ line|invoice_quantity }}</td>
             <td class="text-center">{{ line.rate|invoice_rate }}</td>
             <td class="text-right">{{ line.total|invoice_money(money) }}</td>
             <td class="text-right">{{ line.total_with_vat|invoice_money(money) }}</td>

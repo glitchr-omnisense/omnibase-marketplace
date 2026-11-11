@@ -35,6 +35,8 @@
 - The Factur-X lines are self-consistent: quantity times net price is the line's amount. Quantities and prices take
   the decimals a line needs (`FacturX::decimals()`, up to six and four): an hours line of 4h25 at 90.00 (397.50)
   carries 4.4167 hours, no longer 4.42 (397.80); a line's `unit` (`HUR`) is written, a piece (`H87`) by default.
+- The invoice's PDF printed an hours line's quantity as the raw decimal (4.4167): a line that gives its `minutes`
+  (unit `HUR`) now reads « 4 h 25 » there (`invoice_quantity`); the Factur-X XML keeps 4.4167 `HUR`.
 - `marketplace:invoice:status` without arguments queried fields the invoice does not have (`flowReference`,
   `lifecycleStatus`): it now reads the transmissions not final, then receives the buyers' statuses and sends the
   pending ones.

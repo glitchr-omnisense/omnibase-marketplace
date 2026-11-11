@@ -235,6 +235,37 @@ final class InvoicesTest extends MarketplaceKernelTestCase
         self::assertStringContainsString('>Avoir<', $this->invoices->html($creditNote));
     }
 
+    public function testAnHoursLineReadsInHoursAndMinutesOnThePdfOnly(): void
+    {
+        $issued = $this->invoices->issue($this->order(0));
+        // An hours line as omnibase/forge writes one: 4h25 at 90.00 an hour, the hours to four decimals.
+        $hours = ['id' => 1, 'label' => 'Temps passé', 'reference' => null, 'category' => 'S', 'quantity' => round(265 / 60, 4), 'unit' => 'HUR', 'minutes' => 265, 'unit_price' => 9000, 'rate' => 20, 'total' => 39750, 'total_with_vat' => 47700];
+        $round = ['id' => 2, 'minutes' => 300, 'quantity' => 5.0, 'total' => 45000, 'total_with_vat' => 54000] + $hours;
+        $goods = ['id' => 3, 'label' => 'Vase', 'reference' => null, 'category' => 'S', 'quantity' => 2, 'unit_price' => 1900, 'rate' => 20, 'total' => 3800, 'total_with_vat' => 4560];
+        // Read, never kept: no order of its own, nothing the entity manager would write.
+        $invoice = new Invoice(Invoice::TYPE_INVOICE, 'F', (int) $issued->getIssuedAt()->format('Y'), $issued->getSequence(), $issued->getNumber(), $issued->getIssuedAt(), null, 'EUR', $issued->getSeller(), $issued->getBuyer(), [$hours, $round, $goods], $issued->getTotals());
+
+        $quantities = self::quantities($this->invoices->html($invoice));
+        self::assertSame(['4 h 25', '5 h', '2'], $quantities, 'hours and minutes, as a person reads them; a piece as it was');
+
+        if (!FacturX::available()) {
+            return;
+        }
+        $xml = $this->invoices->xml($invoice);
+        self::assertStringContainsString('<ram:BilledQuantity unitCode="HUR">4.4167</ram:BilledQuantity>', $xml, 'the XML keeps the decimal hours');
+        self::assertStringNotContainsString('4 h 25', $xml);
+    }
+
+    /** @return list<string> the quantity column of the invoice's lines, as the PDF prints it */
+    private static function quantities(string $html): array
+    {
+        preg_match('~<table class="table table-invoice">.*?<tbody>(.*?)</tbody>~s', $html, $body);
+        $cell = '(?:(?!</td>).)*';
+        preg_match_all('~<tr>\s*<td>'.$cell.'</td>\s*<td[^>]*>'.$cell.'</td>\s*<td class="text-center">('.$cell.')</td>~s', $body[1] ?? '', $cells);
+
+        return array_map(static fn (string $cell) => trim(html_entity_decode($cell)), $cells[1]);
+    }
+
     public function testTheBuyersOrderPageLinksItsInvoices(): void
     {
         $order = $this->order(0);

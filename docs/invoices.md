@@ -115,7 +115,9 @@ are written to two decimals, and to more when a line needs them (`FacturX::decim
 for a quantity, four for a price): an hours line billed from the minutes, 4h25 at 90.00 an hour
 (397.50), carries 4.4167 hours - 4.42 would make 397.80 -; three items for 10.00 carry a price of
 3.3333. A line gives its unit (`unit`: `HUR` for hours, UN/ECE Recommendation 20; a piece, `H87`,
-by default) and, for hours, its `minutes`, which the quantity is counted from.
+by default) and, for hours, its `minutes`, which the quantity is counted from. The PDF prints
+such a line's quantity in hours and minutes, « 4 h 25 » (the `invoice_quantity` filter), where
+the XML keeps 4.4167 `HUR`.
 
 Today's French reform requires the reception of electronic invoices from 2026-09-01, and their
 emission from 2027-09-01 for small and medium companies. Sending goes through `omnisense/omnibill`

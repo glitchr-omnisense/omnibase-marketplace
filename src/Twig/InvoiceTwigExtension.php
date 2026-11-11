@@ -16,6 +16,7 @@ use Twig\TwigFunction;
  *
  *   {{ invoice.total|invoice_money(invoice.currency) }}            1 234,56 €
  *   {{ line.rate|invoice_rate }}                                   20 % / 5,5 %
+ *   {{ line|invoice_quantity }}                                    2 / 4 h 25 (an hours line from its minutes)
  *
  * And an order's invoices and credit notes, oldest first, for its page:
  *
@@ -47,7 +48,29 @@ final class InvoiceTwigExtension extends AbstractExtension
         return [
             new TwigFilter('invoice_money', $this->money(...)),
             new TwigFilter('invoice_rate', $this->rate(...)),
+            new TwigFilter('invoice_quantity', $this->quantity(...)),
         ];
+    }
+
+    /**
+     * A line's quantity as a person reads it: an hours line that gives its
+     * minutes (unit HUR, as FacturX counts it) in hours and minutes - 265
+     * minutes are "4 h 25", not the 4.4167 the Factur-X carries -, any
+     * other as it is.
+     *
+     * @param array<string, mixed> $line one of Invoice::getLines()
+     */
+    public function quantity(array $line): string
+    {
+        if ('HUR' === ($line['unit'] ?? null) && isset($line['minutes'])) {
+            $minutes = (int) $line['minutes'];
+            $sign = $minutes < 0 ? '-' : '';
+            $minutes = abs($minutes);
+
+            return $sign.intdiv($minutes, 60).' h'.(0 === $minutes % 60 ? '' : sprintf(' %02d', $minutes % 60));
+        }
+
+        return (string) ($line['quantity'] ?? '');
     }
 
     public function money(int|float|null $amount, string $currency, string $locale = 'fr_FR'): string
