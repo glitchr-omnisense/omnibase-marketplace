@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- An invoice without an order: `Invoices::issueFor(InvoiceSource $source, ?\DateTimeImmutable $at, ?\Closure $issued)`
+  issues what an application sells of its own (omnibase/forge's hours, a subscription) in the shop's series, under the
+  same lock: `Model\InvoiceSource` gives the buyer, lines, totals, completion date, store, nature of the operations and
+  mentions of its own; marketplace writes the seller and every mention from its settings, as for an order's invoice.
+  `Invoices::compose()` shows what it would issue. `InvoiceComposer::sellerFor()`, `buyerOf()`, `mentionsFor()` and
+  `creditMention()` are the order-free pieces `seller()`, `buyer()` and `mentions()` now call; their output for an
+  order is unchanged, but for a blank VAT number (`VatCustomerInterface`), read as none. `InvoiceSourceTest`.
 - Invoices issued through an approved platform (plan 0, chantier I, the emission side; mandatory for small and medium
   companies on 2027-09-01), with omnisense/omnibill only: `marketplace.invoice.gateway` names an approved platform
   (omnibill/afnor) and `email_gateway` where the invoices that are no e-invoice go. `Enum\InvoiceRoute` tells an

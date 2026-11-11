@@ -5,6 +5,7 @@ namespace Base\Marketplace\Invoice;
 use Base\Marketplace\Entity\Invoice;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\OrderItem;
+use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Model\VatCustomerInterface;
 use Base\Marketplace\Pricing\ExportExemption;
 use Base\Marketplace\Pricing\ReverseCharge;
@@ -30,6 +31,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class InvoiceComposer
 {
+    /** The natures of operations an invoice states (CGI ann. II art. 242 nonies A). */
+    public const OPERATIONS = ['goods', 'services', 'mixed'];
+
     /** @param array<string, mixed> $seller marketplace.invoice.seller */
     public function __construct(
         private readonly Pricing $pricing,
@@ -46,12 +50,27 @@ final class InvoiceComposer
     /** @return array<string, mixed> the seller that day */
     public function seller(Order $order): array
     {
+        $seller = $this->sellerFor($order->getStore(), $order->getManager()?->getCompanyName());
+        $seller['store'] = (string) $order->getStore();
+
+        return $seller;
+    }
+
+    /**
+     * The seller that day without an order (an invoice of hours, of a
+     * subscription): marketplace.invoice.seller, the store's VAT number over
+     * it, its name - when the setting gives none - $name, else the store's.
+     *
+     * @return array<string, mixed>
+     */
+    public function sellerFor(?Store $store = null, ?string $name = null): array
+    {
         $seller = $this->seller + ['name' => '', 'street' => [], 'postcode' => '', 'city' => '', 'country' => 'FR'];
         $seller['street'] = array_values(array_filter((array) $seller['street']));
-        $seller['vat_number'] = $order->getStore()?->getVatNumber() ?? ($seller['vat_number'] ?? null);
-        $seller['store'] = (string) $order->getStore();
+        $seller['vat_number'] = $store?->getVatNumber() ?? ($seller['vat_number'] ?? null);
+        $seller['store'] = null !== $store ? (string) $store : null;
         if ('' === trim((string) $seller['name'])) {
-            $seller['name'] = (string) ($order->getManager()?->getCompanyName() ?? $order->getStore());
+            $seller['name'] = (string) (self::blank($name) ?? $store);
         }
 
         return $seller;
@@ -60,19 +79,28 @@ final class InvoiceComposer
     /** @return array<string, mixed> the buyer that day */
     public function buyer(Order $order): array
     {
-        $customer = $order->getCustomer();
-        $billing = $order->getBillingAddress() ?? $order->getShippingAddress();
-        $delivery = $order->getShippingAddress();
+        return $this->buyerOf($order->getCustomer(), $order->getBillingAddress() ?? $order->getShippingAddress(), $order->getShippingAddress());
+    }
+
+    /**
+     * The buyer that day without an order: a customer (its company name,
+     * SIREN, SIRET, VAT number, e-mail - read where it has them), its billing
+     * address, and the delivery address when it is another.
+     *
+     * @return array<string, mixed>
+     */
+    public function buyerOf(?object $customer, ?object $billing = null, ?object $delivery = null): array
+    {
         $company = self::call($customer, 'getCompanyName');
 
         $buyer = [
             'name' => $company ?? self::call($billing, 'getName') ?? self::person($customer),
             'company' => null !== $company,
-            'email' => $customer?->getEmail(),
+            'email' => self::call($customer, 'getEmail'),
             'address' => self::address($billing),
             'siren' => self::call($customer, 'getSiren'),
             'siret' => self::call($customer, 'getSiret'),
-            'vat_number' => $customer instanceof VatCustomerInterface ? $customer->getVatNumber() : self::call($customer, 'getVatNumber'),
+            'vat_number' => $customer instanceof VatCustomerInterface ? self::blank($customer->getVatNumber()) : self::call($customer, 'getVatNumber'),
             'delivery' => null,
         ];
         $buyer['business'] = $buyer['company'] || null !== $buyer['siren'] || null !== $buyer['siret'] || null !== $buyer['vat_number'];
@@ -182,24 +210,56 @@ final class InvoiceComposer
      */
     public function mentions(Order $order, array $buyer, array $totals, \DateTimeImmutable $issuedAt, ?\DateTimeImmutable $dueAt, ?Invoice $credited = null, ?string $reason = null): array
     {
+        return $this->mentionsFor($buyer, ['exemption' => self::exemption($order->getVatExemption())] + $totals, $dueAt,
+            paidAt: null !== $order->getPaidAt() ? \DateTimeImmutable::createFromInterface($order->getPaidAt()) : null,
+            credited: $credited, reason: $reason);
+    }
+
+    /**
+     * The same mentions, without an order: the VAT exemption read from the
+     * totals (their "exemption", as amounts() writes it), the nature of the
+     * operations given ($operation: goods, services, mixed; else
+     * marketplace.invoice.operation), the invoice's own mentions after it (a
+     * period of services), the payment made ($paidAt, the totals' due nothing)
+     * or its date ($dueAt). A credit note ($credited) names the invoice it
+     * cancels, then gives its reason - a reason that already names it, as
+     * "Avoir annulant la facture F-2026-000042 du 02/11/2026. Taux erroné.",
+     * is written as it is, once.
+     *
+     * @param array<string, mixed> $buyer
+     * @param array<string, mixed> $totals
+     * @param list<string>         $own
+     *
+     * @return list<string>
+     */
+    public function mentionsFor(array $buyer, array $totals, ?\DateTimeImmutable $dueAt = null, ?string $operation = null, array $own = [], ?\DateTimeImmutable $paidAt = null, ?Invoice $credited = null, ?string $reason = null): array
+    {
         $locale = $this->locale();
         $mentions = [];
         if (null !== $credited) {
-            $mentions[] = $this->trans('@marketplace.invoice.mention.credit', ['{number}' => $credited->getNumber(), '{date}' => $credited->getIssuedAt()->format('d/m/Y')], $locale);
-            if (null !== $reason && '' !== trim($reason)) {
-                $mentions[] = trim($reason);
+            $mention = $this->creditMention($credited);
+            $reason = null !== $reason ? trim($reason) : '';
+            if (!str_starts_with($reason, $mention)) {
+                $mentions[] = $mention;
+            }
+            if ('' !== $reason) {
+                $mentions[] = $reason;
             }
         }
-        if (null !== $order->getVatExemption()) {
-            $mentions[] = $order->getVatExemption();
+        if (null !== ($totals['exemption']['reason'] ?? null)) {
+            $mentions[] = (string) $totals['exemption']['reason'];
         }
-        $mentions[] = $this->trans('@marketplace.invoice.mention.operation.'.(\in_array($this->operation, ['goods', 'services', 'mixed'], true) ? $this->operation : 'goods'), [], $locale);
+        $operation ??= $this->operation;
+        $mentions[] = $this->trans('@marketplace.invoice.mention.operation.'.(\in_array($operation, self::OPERATIONS, true) ? $operation : 'goods'), [], $locale);
+        foreach ($own as $mention) {
+            $mentions[] = $this->trans((string) $mention, [], $locale);
+        }
         if ($this->vatOnDebits) {
             $mentions[] = $this->trans('@marketplace.invoice.mention.vat_on_debits', [], $locale);
         }
         if (null === $credited) {
-            if (($totals['due'] ?? 0) <= 0 && null !== $order->getPaidAt()) {
-                $mentions[] = $this->trans('@marketplace.invoice.mention.paid', ['{date}' => \DateTimeImmutable::createFromInterface($order->getPaidAt())->format('d/m/Y')], $locale);
+            if (($totals['due'] ?? 0) <= 0 && null !== $paidAt) {
+                $mentions[] = $this->trans('@marketplace.invoice.mention.paid', ['{date}' => $paidAt->format('d/m/Y')], $locale);
             } elseif (null !== $dueAt) {
                 $mentions[] = $this->trans('@marketplace.invoice.mention.due', ['{date}' => $dueAt->format('d/m/Y')], $locale);
             }
@@ -219,10 +279,16 @@ final class InvoiceComposer
         return array_values(array_filter($mentions, fn ($m) => '' !== trim((string) $m)));
     }
 
+    /** "Avoir annulant la facture F-2026-000042 du 02/11/2026.": what a credit note says of the invoice it cancels. */
+    public function creditMention(Invoice $credited): string
+    {
+        return $this->trans('@marketplace.invoice.mention.credit', ['{number}' => $credited->getNumber(), '{date}' => $credited->getIssuedAt()->format('d/m/Y')], $this->locale());
+    }
+
     /** An invoice is written in its seller's language: French for a French seller. */
     private function locale(): ?string
     {
-        return 'FR' === strtoupper((string) ($this->seller['country'] ?? 'FR')) ? 'fr' : null;
+        return 'FR' === strtoupper((string) (($this->seller['country'] ?? '') ?: 'FR')) ? 'fr' : null;
     }
 
     private function trans(string $text, array $parameters, ?string $locale): string
@@ -340,6 +406,11 @@ final class InvoiceComposer
         $name = trim(((string) self::call($customer, 'getFirstname')).' '.((string) self::call($customer, 'getLastname')));
 
         return '' !== $name ? $name : (self::call($customer, 'getUsername') ?? $customer->getEmail());
+    }
+
+    private static function blank(?string $value): ?string
+    {
+        return null === $value || '' === trim($value) ? null : trim($value);
     }
 
     private static function call(?object $object, string $method): ?string

@@ -7,6 +7,7 @@ use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Invoice\FacturX;
 use Base\Marketplace\Invoice\InvoiceComposer;
 use Base\Marketplace\Invoice\InvoiceNumbering;
+use Base\Marketplace\Model\InvoiceSource;
 use Base\Marketplace\Invoice\Transmission\InvoiceTransmission;
 use Base\Marketplace\Repository\InvoiceRepository;
 use Omnibridge\Symfony\Omnibase\Response\PdfResponse;
@@ -104,6 +105,66 @@ class Invoices
             }
 
             return $invoice;
+        });
+    }
+
+    /**
+     * What an invoice made without an order would say if issued now - its
+     * seller, buyer, lines, totals, mentions and dates - for a person to
+     * review it before issueFor().
+     *
+     * @return array{seller: array<string, mixed>, buyer: array<string, mixed>, lines: list<array<string, mixed>>, totals: array<string, mixed>, mentions: list<string>, sold_at: ?\DateTimeImmutable, due_at: \DateTimeImmutable}
+     */
+    public function compose(InvoiceSource $source, ?\DateTimeImmutable $at = null): array
+    {
+        $at ??= new \DateTimeImmutable();
+        $totals = $source->totals + ['paid' => 0, 'exemption' => null];
+        $totals['due'] ??= ($totals['total'] ?? 0) - $totals['paid'];
+        $dueAt = $totals['due'] > 0 ? $at->modify(sprintf('+%d days', $this->paymentDays)) : $at;
+
+        return [
+            'seller' => $this->composer->sellerFor($source->store, $source->sellerName),
+            'buyer' => $source->buyer,
+            'lines' => $source->lines,
+            'totals' => $totals,
+            'mentions' => $this->composer->mentionsFor($source->buyer, $totals, $dueAt, $source->operation, $source->mentions, $source->paidAt),
+            'sold_at' => $source->soldAt,
+            'due_at' => $dueAt,
+        ];
+    }
+
+    /**
+     * An invoice made without an order (InvoiceSource: an invoice of hours, of
+     * a subscription), issued as issue() issues an order's: numbered in the
+     * same series without a gap, its seller and mentions written here, frozen.
+     * $issued is told the invoice inside the numbering's transaction, before
+     * it is stored - to mark what it bills, in the same flush.
+     *
+     * @param (\Closure(Invoice): void)|null $issued
+     *
+     * @throws \LogicException an invoice that comes to nothing
+     */
+    public function issueFor(InvoiceSource $source, ?\DateTimeImmutable $at = null, ?\Closure $issued = null): Invoice
+    {
+        $at ??= new \DateTimeImmutable();
+        $invoice = $this->compose($source, $at);
+        if ([] === $invoice['lines'] || ($invoice['totals']['total'] ?? 0) <= 0) {
+            throw new \LogicException('Nothing to invoice: the invoice has no line, or comes to nothing.');
+        }
+
+        return $this->numbering->issue($this->prefix, $at, function (int $sequence, string $number, int $year) use ($source, $invoice, $at, $issued) {
+            $document = new Invoice(
+                Invoice::TYPE_INVOICE, $this->prefix, $year, $sequence, $number, $at, null, $source->currency,
+                $invoice['seller'], $invoice['buyer'], $invoice['lines'], $invoice['totals'], $invoice['mentions'], $invoice['sold_at'], $invoice['due_at'],
+            );
+            if ($invoice['totals']['due'] <= 0 && null !== $source->paidAt) {
+                $document->markPaid($source->paidAt);
+            }
+            if (null !== $issued) {
+                $issued($document);
+            }
+
+            return $document;
         });
     }
 

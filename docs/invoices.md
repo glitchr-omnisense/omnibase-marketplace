@@ -60,6 +60,42 @@ $creditNote = $invoices->credit($invoice, 'Colis retourné');   // A-2026-000003
 
 The order may then be invoiced again. Partial credit notes do not exist yet.
 
+## An invoice without an order
+
+An application that sells something of its own - omnibase/forge's hours, a subscription - issues its
+invoices as the shop does, without an order: `Invoices::issueFor()` takes a `Model\InvoiceSource`
+(the buyer, the lines and the totals, in the shape `Invoice` keeps them) and writes the rest from the
+same settings as an order's invoice.
+
+```php
+$composer = $container->get(InvoiceComposer::class);
+$source = new InvoiceSource(
+    buyer: $composer->buyerOf($client, $client->getAddress(0)), // its company, SIREN, VAT number, address
+    lines: $lines,                                                // ['id', 'label', 'quantity', 'unit_price', 'rate', 'category', 'total', 'vat', ...]
+    totals: $totals,                                              // ['lines', 'vat_breakdown', 'total_without_vat', 'vat', 'total', 'exemption', ...]
+    soldAt: $periodEnd,                                           // the date the services were completed
+    store: $supportStore,                                         // its VAT number over marketplace.invoice.seller's
+    operation: 'services',                                        // else marketplace.invoice.operation
+    mentions: ['Prestations réalisées du 01/10/2026 au 31/10/2026.'],
+);
+$preview = $invoices->compose($source);                           // seller, buyer, lines, totals, mentions, sold_at, due_at
+$invoice = $invoices->issueFor($source, null, fn (Invoice $invoice) => $hours->billedBy($invoice));
+```
+
+- the number is the next of the shop's series (`marketplace.invoice.prefix`), under the same lock;
+- the seller is `marketplace.invoice.seller`, the store's VAT number over it (`sellerFor()`);
+- the mentions are the order's invoice's, in the same order: the exemption (the totals'
+  `exemption`, `InvoiceComposer::exemption()`'s array), the nature of the operations, the source's
+  own mentions, VAT on debits, "acquittée le…" (`paidAt`, nothing due) or the due date
+  (`payment_days`), the discount, the late penalties to a business, the seller's own;
+- the closure is told the invoice inside the numbering's transaction, before it is stored: what it
+  bills is marked in the same flush, or not at all;
+- an invoice with no line, or that comes to nothing, is refused (`\LogicException`).
+
+It is sent, paid, credited, printed and transmitted as any other invoice (`send()`, `markPaid()`,
+`credit()`, `pdf()`). `InvoiceComposer::buyerOf()`, `sellerFor()` and `mentionsFor()` are the pieces
+`issueFor()` uses, for an application that writes its own preview.
+
 ## The mentions the law asks for, and where they come from
 
 The invoice prints what the administration lists:
