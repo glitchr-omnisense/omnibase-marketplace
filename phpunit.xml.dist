@@ -5,10 +5,11 @@
      itself - the same dual-runner pattern as base-bundle and base-bundle-forum. -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" beStrictAboutOutputDuringTests="true" bootstrap="tests/bootstrap.php">
   <!-- Each kernel test boots the host application whole (a hundred and more),
-       and the invoices' tests render PDFs: past 512 MB by the end, past 1 GB
-       with the transmission's tests (omnisense/omnibill loaded). -->
+       each released at its tearDown (MarketplaceKernelTestCase): the suite peaks
+       near 245 MB, 285 MB with the transmission's tests (omnisense/omnibill
+       loaded), in omnisense/omnibase's harness. -->
   <php>
-    <ini name="memory_limit" value="1536M"/>
+    <ini name="memory_limit" value="512M"/>
   </php>
   <testsuites>
     <testsuite name="unit">

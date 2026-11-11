@@ -25,6 +25,28 @@ abstract class MarketplaceKernelTestCase extends KernelTestCase
         $this->entityManager = self::getContainer()->get('doctrine')->getManager();
     }
 
+    /**
+     * PHPUnit keeps every test case to the end of the run: what a case holds
+     * - its entity manager, the services and entities it took from the
+     * container - would keep each kernel it booted alive with it (10 to 15 MB
+     * a test, a gigabyte by the end). Once the kernel is shut down, the
+     * properties of the case and of this class go.
+     */
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        for ($class = new \ReflectionClass($this); $class->getName() !== KernelTestCase::class; $class = $class->getParentClass()) {
+            foreach ($class->getProperties() as $property) {
+                if ($property->getDeclaringClass()->getName() !== $class->getName() || $property->isStatic() || $property->isReadOnly() || !$property->isInitialized($this)) {
+                    continue;
+                }
+                $name = $property->getName();
+                \Closure::bind(function () use ($name): void { unset($this->{$name}); }, $this, $class->getName())();
+            }
+        }
+    }
+
     /** A member, stored: the application's User. */
     protected function user(string $name = 'member'): \Base\Entity\User
     {
