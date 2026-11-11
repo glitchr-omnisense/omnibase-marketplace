@@ -148,8 +148,126 @@ marketplace:
   none); `send()` mails the invoice itself. A site that installs the family creates the table:
   `make:migration`, then `doctrine:migrations:migrate`.
 - **Not done here**: receiving the suppliers' invoices (`omnibase/ledger`), writing a lifecycle
-  message (CDAR) for a platform that wants one to declare a payment - the status is then kept on
-  the shop's side only.
+  message (CDAR) or an e-reporting file - the application does, through an interface (below).
+
+## Issuing through an approved platform
+
+In France an invoice between two companies established there is an e-invoice: from 2027-09-01 a
+small or medium company issues it through an approved platform (plateforme agréée), and receives
+them that way since 2026-09-01. The shop changes gateway in its configuration:
+
+```yaml
+# config/packages/omnibill.yaml (OmnibillBundle registered, omnibill/afnor installed)
+omnibill:
+    gateways:
+        platform:
+            factory: afnor
+            options:
+                flow_url: '%env(PA_FLOW_URL)%'
+                directory_url: '%env(PA_DIRECTORY_URL)%'
+                token_url: '%env(PA_TOKEN_URL)%'
+                client_id: '%env(PA_CLIENT_ID)%'
+                client_secret: '%env(PA_CLIENT_SECRET)%'
+                webhook_key: '%env(default::PA_WEBHOOK_KEY)%'
+        email:
+            factory: email
+            options: { from: 'factures@example.org' }
+
+# config/packages/marketplace.yaml
+marketplace:
+    invoice:
+        gateway: platform        # an approved platform: its Capabilities say "approved"
+        email_gateway: email     # where the invoices that are no e-invoice go
+        seller:
+            electronic_address: ~    # its addressing identifier in the directory; its SIREN by default
+```
+
+### Which invoices go to the platform
+
+`Enum\InvoiceRoute` tells it from the seller and buyer frozen on the invoice:
+
+| Route | The buyer | Goes |
+|---|---|---|
+| `b2b` | a company established in France: a SIREN or SIRET, a company name or a VAT number, a French address or none | to the platform, an e-invoice (rule `B2B`) |
+| `b2b_int` | a company abroad: a VAT number or a company name, an address outside France | by the e-mail gateway (to be e-reported, invoice by invoice) |
+| `b2c` | anyone else | by the e-mail gateway (to be e-reported, aggregated by day) |
+
+A company is known by what the customer carries: `getSiren()`, `getSiret()`, `getCompanyName()`,
+the VAT number of `VatCustomerInterface` (confirmed through VIES when the customer types it). When
+the invoice leaves, its SIREN is checked for its form (Luhn) and against the company register
+(omnistate's annuaire-entreprises, `Service\CompanyRegistry`) when the register answers. A seller
+outside France is outside the French reform: no route.
+
+### Sent once
+
+`Invoices::send()` asks the platform's directory where the buyer receives
+(`InvoiceTransmission::addressing()`, `Lookup`: its SIRET's line, else its legal unit's), writes
+that electronic address in the Factur-X (BT-49, scheme 0225) with the seller's (BT-34) and the
+invoicing frame (BT-23: B1 goods, S1 services, M1 both; B2, S2, M2 already paid), and submits it
+(`POST /v1/flows`, its number as the tracking id). The flow's reference, the rule, the address and
+the file's SHA-256 are kept on `InvoiceFlow`. An invoice goes to the platform once: a second send is
+refused. Refused before anything leaves: a buyer without a SIREN, a SIREN that is not one or that the
+register does not know, a SIREN without an active line in the directory - the message says what to
+correct.
+
+### Where it stands
+
+- **Deposited (200) or rejected (213)**: the platform's acknowledgement, asked by "Refresh its
+  status", `marketplace:invoice:status`, or told by its webhook (`POST
+  /marketplace/omnibill/{gateway}/webhook`, the `Afnor-Signature` checked). A rejection keeps the
+  platform's reasons (`REJ_SEMAN: … (BT-49)`).
+- **Refused (210), approved (205), paid (212) by the buyer**: the platform gives them as lifecycle
+  flows coming in. `InvoiceTransmission::receiveStatuses()` reads them from the shop's own cursor
+  (`InvoiceInbox`, beside omnibase/ledger's for the suppliers' invoices), from the status command or
+  when the webhook announces a flow coming in, and adds each to its invoice's history.
+- **The back office** shows it on the invoice's screen ("On the platform": the status, the reason,
+  what to do) and on its order's ("Invoices").
+
+### A rejected or refused invoice
+
+It is not edited. "Correct: credit note and new invoice" (`Invoices::reissue()`) cancels it with a
+credit note and issues the order's invoice again, as the order and its customer stand now. Neither
+is sent by itself: correct the cause first (the customer's SIREN, the address), then send them.
+
+### "Encaissée", declared by the shop
+
+When omnitrade confirms the payment of an order whose invoice already went through a gateway
+(`OrderPaidEvent`, `Invoice\Transmission\InvoicePaidListener`), the invoice is marked paid and
+"Encaissée" (212) is declared, with the amount and its split by VAT rate. An invoice already paid
+when it is submitted has it declared at once. A platform takes a status as a lifecycle message
+(CDAR) only, which neither omnisense/omnibill nor this bundle writes: the application registers an
+`Invoice\Transmission\LifecycleMessageInterface`. Without one the status is kept pending on the
+invoice (`InvoiceFlow::$declared`), the back office says why, and `marketplace:invoice:status` sends
+it once there is one. omnibill/email needs none.
+
+## What the law says, and what to confirm
+
+- **Numbering**: "un numéro unique basé sur une séquence chronologique et continue", in distinct
+  series "lorsque les conditions d'exercice de l'activité de l'assujetti le justifient", two
+  invoices of the same year never sharing a number (CGI ann. II art. 242 nonies A, I-7°; BOFiP
+  BOI-TVA-DECLA-30-20-20-10 §70-130, in force since 2013-10-18, read on 2026-11-11). The bundle
+  numbers per series and year under a `symfony/lock` lock and the unique key `(series, year,
+  sequence)`, in one transaction (tested with six processes at once). The lock needs a store shared
+  by every server that issues (a single host's `flock` store otherwise). To confirm with an
+  accountant: a series of its own for credit notes (`A-`), and the yearly restart.
+- **The e-invoice's data** (impots.gouv.fr, "Données de facture", August 2026): the SIRENs, the
+  countries, the category of the operation, the totals by rate, the option for the debits, the
+  invoice corrected; from 2027-09-01 the lines, the charges and discounts, the delivery address.
+- **To confirm with the platform**: the invoicing frame's codes (BT-23), the scheme of the
+  addresses (0225), its profile (EN 16931 or EXTENDED-CTC-FR), and whether a rejected invoice
+  (213), deemed not received, needs a credit note at all or may be deposited again under its
+  number.
+
+### Is the Factur-X a French B2B e-invoice?
+
+It is Factur-X 1.0's profile EN 16931 (written by horstoeko/zugferd 1.0.133), valid against the
+profile's XSD (`FacturX::validate()`). With an approved platform it carries the electronic addresses
+and the invoicing frame. What is not checked here: the Schematron rules of EN 16931 and the French
+rules on top of them - horstoeko's `ZugferdKositValidator` runs KoSIT's Java validator with the
+German XRechnung scenarios by default, not the French ones. What it may lack for a platform: the
+notes' subject codes for the penalties, the indemnity and the discount (the bundle prints them as
+plain notes), the option for the debits as a code rather than a note. The platform's validation
+report, on the first real deposit, says it.
 
 ## Configuration
 
@@ -207,5 +325,11 @@ Everything it prints comes from the invoice itself, never from today's order or 
 ## For a site
 
 The bundle brings the entity; the site creates its table: `bin/console make:migration`, then
-`doctrine:migrations:migrate`. It requires `dompdf/dompdf`, `horstoeko/zugferd` and `symfony/lock`
+`doctrine:migrations:migrate`. With omnisense/omnibill installed, two more tables are mapped -
+`marketplace_invoice_flow`, `marketplace_invoice_inbox` -, which the same migration creates; without the family none exists, and none is needed.
+
+A shop of several sellers is not covered yet: the invoices name one seller
+(`marketplace.invoice.seller`), number in one sequence per series and go through one platform
+account. Each seller issuing its own would need a sequence of its own, its own platform account (or
+the shop's under its delegation: `organization_id`), and its own reporting. It requires `dompdf/dompdf`, `horstoeko/zugferd` and `symfony/lock`
 (`composer update omnibase/marketplace` installs them).

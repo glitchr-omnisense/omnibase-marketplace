@@ -137,5 +137,8 @@ class OrderCrudController extends AbstractMarketplaceCrudController
         // The buyers' files for its lines (the artwork of a printed item): downloads.
         yield TextField::new('attachments', '@marketplace.attachment.line')->hideOnIndex()->hideOnForm()
             ->setTemplatePath('@Marketplace/admin/field/attachments.html.twig');
+        // Its invoices, each where it stands - on its gateway too (omnisense/omnibill): "F-2026-000041 · sent · Déposée (afnor)".
+        yield TextField::new('invoices', '@marketplace.invoice.admin.invoices')->hideOnIndex()->hideOnForm()
+            ->formatValue(fn ($value, Order $order) => implode("\n", array_map(fn ($invoice) => implode(' · ', array_filter([$invoice->getNumber(), $invoice->getState(), $this->invoices->lifecycle($invoice), $this->invoices->guidance($invoice)])), $this->invoices->repository()->ofOrder($order))) ?: '—');
     }
 }

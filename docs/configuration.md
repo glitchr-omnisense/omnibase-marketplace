@@ -82,6 +82,9 @@ marketplace:
         # With omnisense/omnibill: the gateway invoices are sent through (omnibill.gateways.<name>; "email" works unconfigured with omnibill/email, from seller.email), their lifecycle statuses kept on them. Null, or without omnibill: the bundle's own e-mail.
         gateway:              email
 
+        # With an approved platform as "gateway": the omnibill gateway the invoices that are not e-invoices go through - to a private person, to a company abroad (e-reported instead). Null: the bundle's own e-mail.
+        email_gateway:        email
+
         # The invoices' series: F-2026-000001. One sequence per series and year, without a gap.
         prefix:               F
 
@@ -132,6 +135,12 @@ marketplace:
             vat_number:           null
             email:                null
             phone:                null
+
+            # Where it receives e-invoices, as the national directory has it (its addressing identifier, the SIREN by default): written in the Factur-X sent to an approved platform (BT-34).
+            electronic_address:   null
+
+            # The scheme of that address (BT-34-1): 0225, the French directory's.
+            electronic_address_scheme: '0225'
     shipping:
         sender:
             name:                 ''

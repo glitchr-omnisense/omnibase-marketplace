@@ -45,7 +45,8 @@ order: 45
 
 The back office's screens follow `marketplace.admin_role` (`ROLE_SUPERADMIN`
 by default) through the `MARKETPLACE_VIEW` voter attribute. Their own actions:
-the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid` and
+the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid`,
+`reissue` (a credit note and a new invoice, for one rejected or refused) and
 `credit`; an order's `invoice`; a quote's `send`.
 
 ## Twig functions and filters
@@ -71,7 +72,7 @@ the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid` and
 | `marketplace:stripe:webhook` | `--url`, `--recreate`, `--dry-run` | creates the Stripe webhook endpoint if missing |
 | `marketplace:catalogue:sync` | `[gateway]`, `--full`, `--since`, `--query`, `--inventory`, `--dry-run` | reads a platform's catalogue into the shop ([a catalogue kept on a platform](platform-catalogue.md)) |
 | `marketplace:invoice:issue` | `[orders...]`, `--paid-without-invoice` | issues the invoices of paid orders ([invoices](invoices.md)) |
-| `marketplace:invoice:status` | `[numbers...]` | asks the invoicing gateway where the invoices sent stand |
+| `marketplace:invoice:status` | `[numbers...]`, `--no-receive`, `--no-send` | the catch-up: asks the gateway where the invoices not final stand, reads the buyers' statuses from the platform, sends the shop's statuses waiting ([invoices](invoices.md)) |
 | `marketplace:subscriptions` | `--sync` | ends the rights that ran out, announces those about to ([plans](plans.md)) |
 | `marketplace:referrals` | | rewards the referrers whose referee's first order held ([referrals](referrals.md)) |
 | `marketplace:wishlist:refresh-prices` | `--limit=200` | reads the lists' prices again, expires lapsed reservations ([lists of wishes](wishlists.md)) |
@@ -103,3 +104,4 @@ All are in `Base\Marketplace\Event\`.
 | `marketplace.trial_gateway_factory` | a trial's gateway ([plans](plans.md)) |
 | the VAT regimes (`StoreVatRegime`, `ExportExemption`, `ReverseCharge`, by priority) | how a line's VAT is decided |
 | `PaymentKeysSection` | the payment keys on omnibase/admin's API keys page ([the dev gateway and the keys](dev-gateway-and-keys.md)) |
+| `Invoice\Transmission\LifecycleMessageInterface` (a service of the application's) | the lifecycle message (CDAR) an approved platform takes a status as: "Encaissée" ([invoices](invoices.md)) |

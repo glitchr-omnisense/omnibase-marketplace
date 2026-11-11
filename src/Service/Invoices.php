@@ -138,6 +138,28 @@ class Invoices
         });
     }
 
+    /**
+     * An invoice rejected by the platform or refused by its buyer, corrected
+     * the only way an issued invoice is: cancelled by a credit note, and the
+     * order invoiced again - as it stands now (its customer's SIREN, its
+     * address corrected). Neither is sent: the back office sends them.
+     *
+     * @return array{credit_note: Invoice, invoice: Invoice|null} the new invoice null when the invoice had no order left
+     */
+    public function reissue(Invoice $invoice, ?string $reason = null, ?\DateTimeImmutable $at = null): array
+    {
+        $creditNote = $this->credit($invoice, $reason, $at);
+        $order = $invoice->getOrder();
+
+        return ['credit_note' => $creditNote, 'invoice' => null !== $order ? $this->issue($order, $at) : null];
+    }
+
+    /** What the seller is to do about the invoice on its gateway (a rejection, a refusal, a status waiting), null when nothing. */
+    public function guidance(Invoice $invoice): ?string
+    {
+        return $this->transmission?->guidance($invoice);
+    }
+
     public function markPaid(Invoice $invoice, ?\DateTimeImmutable $at = null): void
     {
         $at ??= new \DateTimeImmutable();
@@ -159,6 +181,20 @@ class Invoices
         return $this->transmission?->describe($invoice);
     }
 
+    /** Its latest lifecycle status on its gateway (Omnibill\Model\LifecycleStatus's value), null when it went through none. */
+    public function lifecycleStatus(Invoice $invoice): ?string
+    {
+        return $this->transmission?->flowOf($invoice)?->getStatus();
+    }
+
+    /** Whether it goes to an approved platform as an e-invoice (a company established in France): sent without the buyer's e-mail. */
+    public function isEInvoice(Invoice $invoice): bool
+    {
+        $channel = $this->transmission?->channel($invoice);
+
+        return null !== $channel && $this->transmission->isPlatform($channel);
+    }
+
     /** Asks the gateway where the invoice stands; false when it went through none. */
     public function refresh(Invoice $invoice): bool
     {
@@ -171,12 +207,16 @@ class Invoices
         return $this->twig->render('@Marketplace/invoice/invoice.pdf.twig', ['invoice' => $invoice]);
     }
 
-    /** The invoice as a PDF, its Factur-X XML attached when horstoeko/zugferd is installed. */
-    public function pdf(Invoice $invoice): string
+    /**
+     * The invoice as a PDF, its Factur-X XML attached when horstoeko/zugferd is installed.
+     *
+     * @param array<string, mixed> $routing what an approved platform routes it by (InvoiceTransmission::addressing())
+     */
+    public function pdf(Invoice $invoice, array $routing = []): string
     {
         $pdf = PdfResponse::render($this->html($invoice));
 
-        return FacturX::available() ? $this->facturX->attach($invoice, $pdf) : $pdf;
+        return FacturX::available() ? $this->facturX->attach($invoice, $pdf, $routing) : $pdf;
     }
 
     public function xml(Invoice $invoice): string
@@ -204,8 +244,10 @@ class Invoices
      */
     public function send(Invoice $invoice, ?string $to = null): void
     {
-        if (null !== $this->transmission && $this->transmission->isEnabled()) {
-            $this->transmission->submit($invoice, $this->pdf($invoice), $this->filename($invoice), $this->signedUrl($invoice), $to);
+        if (null !== $this->transmission && null !== $this->transmission->channel($invoice)) {
+            // To an approved platform: where the buyer receives, asked of its directory, written in the Factur-X.
+            $routing = $this->transmission->addressing($invoice);
+            $this->transmission->submit($invoice, $this->pdf($invoice, $routing), $this->filename($invoice), $this->signedUrl($invoice), $to, $routing);
 
             return;
         }

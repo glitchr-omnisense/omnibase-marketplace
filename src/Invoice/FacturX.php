@@ -34,15 +34,20 @@ final class FacturX
         return class_exists(ZugferdDocumentBuilder::class);
     }
 
-    public function xml(Invoice $invoice): string
+    /** @param array<string, mixed> $routing see document() */
+    public function xml(Invoice $invoice, array $routing = []): string
     {
-        return $this->document($invoice)->getContent();
+        return $this->document($invoice, $routing)->getContent();
     }
 
-    /** The invoice's PDF, the XML attached: what is sent and kept. */
-    public function attach(Invoice $invoice, string $pdf): string
+    /**
+     * The invoice's PDF, the XML attached: what is sent and kept.
+     *
+     * @param array<string, mixed> $routing see document()
+     */
+    public function attach(Invoice $invoice, string $pdf, array $routing = []): string
     {
-        $builder = new ZugferdDocumentPdfBuilder($this->document($invoice), $pdf);
+        $builder = new ZugferdDocumentPdfBuilder($this->document($invoice, $routing), $pdf);
         $builder->setDeterministicModeEnabled(true);
 
         return $builder->generateDocument()->downloadString();
@@ -66,7 +71,16 @@ final class FacturX
         }
     }
 
-    private function document(Invoice $invoice): ZugferdDocumentBuilder
+    /**
+     * @param array{seller_address?: array{scheme: string, id: string}|null, buyer_address?: array{scheme: string, id: string}|null, business_process?: string|null} $routing
+     *        what an approved platform routes the invoice by, given when it goes to one
+     *        (Invoice\Transmission\InvoiceTransmission::addressing()): the seller's and the
+     *        buyer's electronic addresses (BT-34, BT-49: the national directory's addressing
+     *        identifiers, in place of the e-mails) and the business process (BT-23: the
+     *        invoicing frame). Not frozen on the invoice: the directory says where the buyer
+     *        receives the day it is sent.
+     */
+    private function document(Invoice $invoice, array $routing = []): ZugferdDocumentBuilder
     {
         $money = fn (int|float $amount): float => round($amount / 10 ** Currencies::getFractionDigits($invoice->getCurrency()), 4);
         $seller = $invoice->getSeller();
@@ -76,6 +90,9 @@ final class FacturX
 
         $document = ZugferdDocumentBuilder::createNew(self::PROFILE);
         $document->setDocumentInformation($invoice->getNumber(), $invoice->isCreditNote() ? '381' : '380', $invoice->getIssuedAt(), $invoice->getCurrency());
+        if (!empty($routing['business_process'])) {
+            $document->setDocumentBusinessProcess((string) $routing['business_process']);
+        }
         foreach ($invoice->getMentions() as $mention) {
             $document->addDocumentNote($mention);
         }
@@ -95,7 +112,9 @@ final class FacturX
         if (!empty($seller['vat_number'])) {
             $document->addDocumentSellerVATRegistrationNumber((string) $seller['vat_number']);
         }
-        if (!empty($seller['email'])) {
+        if (!empty($routing['seller_address']['id'])) {
+            $document->setDocumentSellerCommunication((string) $routing['seller_address']['scheme'], (string) $routing['seller_address']['id']);
+        } elseif (!empty($seller['email'])) {
             $document->setDocumentSellerCommunication('EM', (string) $seller['email']);
         }
 
@@ -108,7 +127,9 @@ final class FacturX
         if (!empty($buyer['vat_number'])) {
             $document->addDocumentBuyerVATRegistrationNumber((string) $buyer['vat_number']);
         }
-        if (!empty($buyer['email'])) {
+        if (!empty($routing['buyer_address']['id'])) {
+            $document->setDocumentBuyerCommunication((string) $routing['buyer_address']['scheme'], (string) $routing['buyer_address']['id']);
+        } elseif (!empty($buyer['email'])) {
             $document->setDocumentBuyerCommunication('EM', (string) $buyer['email']);
         }
         if (!empty($buyer['delivery'])) {

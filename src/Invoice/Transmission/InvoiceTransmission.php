@@ -3,7 +3,10 @@
 namespace Base\Marketplace\Invoice\Transmission;
 
 use Base\Marketplace\Entity\Invoice;
+use Base\Marketplace\Enum\InvoiceRoute;
 use Base\Marketplace\Invoice\Transmission\Entity\InvoiceFlow;
+use Base\Marketplace\Invoice\Transmission\Entity\InvoiceInbox;
+use Base\Marketplace\Service\CompanyRegistry;
 use Base\Marketplace\Twig\InvoiceTwigExtension;
 use Doctrine\ORM\EntityManagerInterface;
 use Omnibill\Email\EmailGatewayFactory;
@@ -12,6 +15,8 @@ use Omnibill\Exception\InvalidConfigException;
 use Omnibill\Exception\InvalidNotificationException;
 use Omnibill\Exception\OmnibillException;
 use Omnibill\GatewayInterface;
+use Omnibill\Model\Addressing;
+use Omnibill\Model\Direction;
 use Omnibill\Model\Flow;
 use Omnibill\Model\Invoice as BillInvoice;
 use Omnibill\Model\LifecycleStatus;
@@ -20,8 +25,11 @@ use Omnibill\Model\StatusChange;
 use Omnibill\Model\Syntax;
 use Omnibill\Registry;
 use Omnibill\Request\FetchStatus;
+use Omnibill\Request\Lookup;
 use Omnibill\Request\Notify;
+use Omnibill\Request\Receive;
 use Omnibill\Request\SetStatus;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Intl\Currencies;
 use Symfony\Component\Mailer\MailerInterface;
@@ -31,19 +39,40 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * The shop's invoices through omnisense/omnibill: an invoice sent is
  * submitted to a gateway - omnibill/email by default, an approved platform
  * (omnibill/afnor) the day the shop must issue through one -, and where it
- * stands there (sent, deposited, refused, paid...) is kept beside it
- * (Entity\InvoiceFlow).
+ * stands there (sent, deposited, rejected, refused, approved, paid...) is
+ * kept beside it (Entity\InvoiceFlow).
  *
  *     marketplace:
  *         invoice:
  *             gateway: email        # an omnibill gateway's name (omnibill.gateways.<name>); null: the bundle's own e-mail
+ *             email_gateway: email  # with a platform as "gateway": where the invoices that are no e-invoice go
  *
  * "email" needs no configuration: with omnibill/email installed and no
  * omnibill gateway of that name, the invoice goes from the seller's address
- * (marketplace.invoice.seller.email). This folder is registered, and its
- * entity mapped, only when omnisense/omnibill is installed: without it,
- * Service\Invoices sends its own e-mail and nothing here exists. What
- * omnibill throws leaves as a TransmissionException (a LogicException).
+ * (marketplace.invoice.seller.email).
+ *
+ * With an approved platform (a gateway whose Capabilities say "approved"):
+ *
+ *   - only an e-invoice goes to it - a buyer that is a company established in
+ *     France (Enum\InvoiceRoute::DOMESTIC_B2B) -, submitted once, routed to
+ *     the electronic address the platform's directory gives for the buyer's
+ *     SIREN (Lookup), under the processing rule B2B; the flow's reference,
+ *     the rule, the address and the file's fingerprint are kept. A sale to a
+ *     private person or to a company abroad is no e-invoice: it goes by the
+ *     e-mail gateway, and is e-reported (EReporting);
+ *   - its lifecycle follows from the platform: deposited or rejected (its
+ *     reasons) by refresh() and the webhook, refused, approved or paid by the
+ *     buyer from the lifecycle flows coming in (receiveStatuses(), the
+ *     shop's own cursor);
+ *   - the shop's own statuses ("Encaissée", 212) are declared as lifecycle
+ *     messages (CDAR) the application writes (LifecycleMessageInterface):
+ *     without a writer they stay pending on the invoice and are sent again
+ *     by sendPending() (marketplace:invoice:status).
+ *
+ * This folder is registered, and its entities mapped, only when
+ * omnisense/omnibill is installed: without it, Service\Invoices sends its
+ * own e-mail and nothing here exists. What omnibill throws leaves as a
+ * TransmissionException (a LogicException).
  */
 class InvoiceTransmission
 {
@@ -54,22 +83,60 @@ class InvoiceTransmission
         private readonly ?MailerInterface $mailer = null,
         private readonly ?StatusStoreInterface $store = null,
         #[Autowire('%marketplace.invoice.gateway%')] private readonly ?string $gateway = 'email',
+        private readonly ?LifecycleMessageInterface $messages = null,
+        private readonly ?CompanyRegistry $companies = null,
+        #[Autowire('%marketplace.invoice.email_gateway%')] private readonly ?string $emailGateway = 'email',
+        #[Autowire('%marketplace.invoice.operation%')] private readonly string $operation = 'goods',
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
     /** Whether invoices go through a gateway: one is named, and it can be built. */
     public function isEnabled(): bool
     {
-        if (null === $this->gateway || '' === $this->gateway) {
-            return false;
-        }
-
-        return ($this->registry?->has($this->gateway) ?? false) || ('email' === $this->gateway && $this->canMail());
+        return $this->available($this->gateway);
     }
 
     public function name(): ?string
     {
         return $this->isEnabled() ? $this->gateway : null;
+    }
+
+    /** Whether that gateway (the configured one by default) is an approved platform's channel. */
+    public function isPlatform(?string $name = null): bool
+    {
+        $name ??= $this->gateway;
+        if (null === $name || !($this->registry?->has($name) ?? false)) {
+            return false;
+        }
+        try {
+            return $this->registry->get($name)->capabilities()->approved;
+        } catch (OmnibillException) {
+            return false;
+        }
+    }
+
+    /** The reform's channel of the invoice: an e-invoice, or a sale e-reported; null for a seller outside France. */
+    public function routeOf(Invoice $invoice): ?InvoiceRoute
+    {
+        return InvoiceRoute::of($invoice->getSeller(), $invoice->getBuyer());
+    }
+
+    /**
+     * The gateway this invoice goes through: the configured one, unless it is
+     * an approved platform and the invoice is no e-invoice - then the e-mail
+     * gateway; null when none (the bundle's own e-mail).
+     */
+    public function channel(Invoice $invoice): ?string
+    {
+        if (!$this->isEnabled()) {
+            return null;
+        }
+        if (!$this->isPlatform() || (bool) $this->routeOf($invoice)?->isEInvoice()) {
+            return $this->gateway;
+        }
+
+        return $this->available($this->emailGateway) && !$this->isPlatform($this->emailGateway) ? $this->emailGateway : null;
     }
 
     /** Where the invoice stands on the gateway, if it went through one. */
@@ -78,53 +145,163 @@ class InvoiceTransmission
         return null === $invoice->getId() ? null : $this->entityManager->getRepository(InvoiceFlow::class)->findOneBy(['invoice' => $invoice]);
     }
 
-    /** Its latest lifecycle status, in words ("Encaissée"), with the gateway; null when it went through none. */
+    /** Its latest lifecycle status, in words ("Rejetée : ..."), with the gateway; null when it went through none. */
     public function describe(Invoice $invoice): ?string
     {
         $flow = $this->flowOf($invoice);
         if (null === $flow || null === $flow->getStatus()) {
             return null;
         }
+        $reason = \in_array($flow->getStatus(), ['rejected', 'refused'], true) ? $flow->getReason() : null;
 
-        return ($this->translator?->trans('@marketplace.invoice.lifecycle.'.$flow->getStatus()) ?? $flow->getStatus()).' ('.$flow->getGateway().')';
+        return $this->trans('@marketplace.invoice.lifecycle.'.$flow->getStatus()).(null !== $reason ? ' : '.$reason : '').' ('.$flow->getGateway().')';
     }
 
     /**
-     * The invoice, its PDF (Factur-X) given, submitted to the gateway: what it
-     * answers is kept beside the invoice, and an invoice handed over is sent.
-     *
-     * @param string $pdf  the invoice's PDF: Service\Invoices::pdf()
-     * @param string $link the invoice's signed address, for the e-mail's text
+     * What the seller is to do about it, in words, or null when nothing:
+     * a rejected or refused invoice is corrected by a credit note and a new
+     * invoice, never edited; a status waiting to be declared says why.
      */
-    public function submit(Invoice $invoice, string $pdf, string $filename, ?string $link = null, ?string $to = null): InvoiceFlow
+    public function guidance(Invoice $invoice): ?string
     {
+        $flow = $this->flowOf($invoice);
+        if (null === $flow || $invoice->isCancelled()) {
+            return null;
+        }
+        if (\in_array($flow->getStatus(), ['rejected', 'refused'], true)) {
+            return $this->trans('@marketplace.invoice.lifecycle.'.$flow->getStatus().'_help', ['{reason}' => $flow->getReason() ?? '-']);
+        }
+        foreach ($flow->pending() as $pending) {
+            return $this->trans('@marketplace.invoice.lifecycle.pending_help', ['{status}' => $this->trans('@marketplace.invoice.lifecycle.'.$pending['status']), '{error}' => $pending['error'] ?? '-']);
+        }
+
+        return null;
+    }
+
+    /**
+     * What an approved platform routes the invoice by, written into its
+     * Factur-X (FacturX::document()): the buyer's electronic address, which
+     * the platform's directory gives for its SIREN - its SIRET's line first
+     * -, the seller's own (marketplace.invoice.seller.electronic_address,
+     * else its SIREN), the business process (BT-23), the rule. Empty for
+     * an invoice that does not go to a platform.
+     *
+     * @return array{seller_address?: array{scheme: string, id: string}, buyer_address?: array{scheme: string, id: string}, business_process?: string, rule?: string, routing_code?: string|null}
+     *
+     * @throws TransmissionException the buyer has no SIREN, a SIREN the register does not know, or none the directory has
+     */
+    public function addressing(Invoice $invoice): array
+    {
+        $name = $this->channel($invoice);
+        if (null === $name || !$this->isPlatform($name)) {
+            return [];
+        }
+        $this->once($invoice);
+        $buyer = $invoice->getBuyer();
+        $siret = CompanyRegistry::normalize($buyer['siret'] ?? null) ?: null;
+        $siren = CompanyRegistry::normalize($buyer['siren'] ?? null) ?: (null !== $siret ? substr($siret, 0, 9) : null);
+        if (null === $siren) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.no_siren', ['{number}' => $invoice->getNumber()]));
+        }
+        if (!CompanyRegistry::isWellFormed($siren) || (null !== $siret && !CompanyRegistry::isWellFormed($siret))) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.invalid_siren', ['{siren}' => $siret ?? $siren]));
+        }
+        // The company register (omnistate's annuaire-entreprises), when it answers: a SIREN it does not know is refused.
+        if (CompanyRegistry::NOT_FOUND === ($this->companies?->lookup($siret ?? $siren)['status'] ?? null)) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.unknown_siren', ['{siren}' => $siret ?? $siren]));
+        }
+
         try {
-            $flow = $this->gatewayFor($invoice, $link)->submit($this->bill($invoice, $pdf, $filename, $to), $invoice->getNumber());
+            $gateway = $this->registry->get($name);
+            if (!$gateway->supports(Lookup::class)) {
+                throw new TransmissionException($this->trans('@marketplace.invoice.platform.no_directory', ['{gateway}' => $name]));
+            }
+            $lines = $gateway->lookup($siret ?? $siren);
+            if ([] === $lines && null !== $siret) {
+                $lines = $gateway->lookup($siren);
+            }
         } catch (OmnibillException $e) {
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
+        $line = self::line($lines, $siret);
+        if (null === $line) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.not_in_directory', ['{siren}' => $siren]));
+        }
+        $seller = $invoice->getSeller();
+        $sellerAddress = ($seller['electronic_address'] ?? null) ?: (CompanyRegistry::normalize($seller['siren'] ?? null) ?: null);
+
+        return array_filter([
+            'seller_address' => null !== $sellerAddress ? ['scheme' => (string) (($seller['electronic_address_scheme'] ?? null) ?: '0225'), 'id' => (string) $sellerAddress] : null,
+            'buyer_address' => ['scheme' => '0225', 'id' => (string) ($line->electronicAddress ?? $line->siren)],
+            'business_process' => $this->businessProcess($invoice),
+            'rule' => InvoiceRoute::DOMESTIC_B2B->rule(),
+            'routing_code' => $line->routingCode,
+        ], static fn ($v) => null !== $v);
+    }
+
+    /**
+     * The invoice, its PDF (Factur-X) given, submitted to its gateway (channel()):
+     * what it answers is kept beside the invoice, and an invoice handed over is
+     * sent. An invoice goes to an approved platform once: a second submission is
+     * refused - a rejected or refused one is corrected by a credit note and a new
+     * invoice. An invoice already paid has "Encaissée" declared at once.
+     *
+     * @param string               $pdf     the invoice's PDF: Service\Invoices::pdf(), with $routing
+     * @param string|null          $link    the invoice's signed address, for the e-mail's text
+     * @param array<string, mixed> $routing addressing()
+     */
+    public function submit(Invoice $invoice, string $pdf, string $filename, ?string $link = null, ?string $to = null, array $routing = []): InvoiceFlow
+    {
+        $name = $this->channel($invoice) ?? (string) $this->gateway;
+        $platform = $this->isPlatform($name);
         $row = $this->flowOf($invoice);
+        if ($platform) {
+            $this->once($invoice);
+        }
+        if ($platform && [] === $routing) {
+            $routing = $this->addressing($invoice);
+        }
+        $bill = $this->bill($invoice, $pdf, $filename, $to, $routing);
+        try {
+            $flow = $this->gatewayNamed($name, $invoice, $link)->submit($bill, $invoice->getNumber());
+        } catch (OmnibillException $e) {
+            throw new TransmissionException($e->getMessage(), 0, $e);
+        }
         if (null === $row) {
-            $row = new InvoiceFlow($invoice, (string) $this->gateway, $flow->reference);
+            $row = new InvoiceFlow($invoice, $name, $flow->reference);
             $this->entityManager->persist($row);
         } else {
-            $row->restart((string) $this->gateway, $flow->reference);
+            $row->restart($name, $flow->reference);
         }
+        $row->routed($platform ? ($routing['rule'] ?? null) : null, $platform ? ($routing['buyer_address']['id'] ?? null) : null, $bill->sha256());
         $this->reflect($row, $flow);
         $this->entityManager->flush();
+        // An invoice "acquittée" (paid with the order): its payment declared to the platform too.
+        if ($platform && $invoice->isPaid() && !$invoice->isCreditNote()) {
+            $this->declare($invoice, LifecycleStatus::PAID, $invoice->getPaidAt());
+        }
 
         return $row;
+    }
+
+    /** An invoice is deposited on an approved platform once: a correction is a credit note and a new invoice. */
+    private function once(Invoice $invoice): void
+    {
+        $row = $this->flowOf($invoice);
+        if (null !== $row && $this->isPlatform($row->getGateway())) {
+            throw new TransmissionException($this->trans('@marketplace.invoice.platform.once', ['{number}' => $invoice->getNumber(), '{status}' => $this->describe($invoice) ?? '-']));
+        }
     }
 
     /** Asks the gateway where the invoice stands, and keeps it; null when it went through none. */
     public function refresh(Invoice $invoice): ?InvoiceFlow
     {
         $row = $this->flowOf($invoice);
-        if (null === $row || !$this->isEnabled()) {
+        if (null === $row || !$this->available($row->getGateway())) {
             return null;
         }
         try {
-            $gateway = $this->gatewayFor($invoice);
+            $gateway = $this->gatewayNamed($row->getGateway(), $invoice);
             if (!$gateway->supports(FetchStatus::class)) {
                 return $row;
             }
@@ -143,29 +320,100 @@ class InvoiceTransmission
         $this->declare($invoice, LifecycleStatus::PAID, $at);
     }
 
-    /** Declares a status of one's own invoice to the gateway when it takes it; kept beside the invoice either way. */
+    /**
+     * Declares a status of one's own invoice to the gateway it went through,
+     * once: kept on the invoice (InvoiceFlow::$declared), sent at once when the
+     * gateway takes it, left pending otherwise - an approved platform without
+     * the application's lifecycle message writer, a platform unreachable - and
+     * sent again by sendPending(). Never throws for what the gateway answers:
+     * a payment confirmed is not undone by a platform that fails.
+     */
     public function declare(Invoice $invoice, LifecycleStatus $status, ?\DateTimeImmutable $at = null, ?string $reason = null): void
     {
         $row = $this->flowOf($invoice);
-        if (null === $row || !$this->isEnabled()) {
+        if (null === $row || $row->hasDeclared($status->value) || !$this->available($row->getGateway())) {
             return;
         }
-        $change = new StatusChange($status, $invoice->getNumber(), $at ?? new \DateTimeImmutable(), $reason, LifecycleStatus::PAID === $status ? self::decimal($invoice->getTotal(), $invoice->getCurrency()) : null);
-        try {
-            $gateway = $this->gatewayFor($invoice);
-            if ($gateway->supports(SetStatus::class)) {
-                $this->reflect($row, $gateway->setStatus($change, $this->flow($row)));
-                $this->entityManager->flush();
+        $amount = LifecycleStatus::PAID === $status ? self::decimal($invoice->getTotal(), $invoice->getCurrency()) : null;
+        $index = $row->declare($status->value, $at ?? new \DateTimeImmutable(), $amount, $reason);
+        $this->send($row, $index);
+        $this->entityManager->flush();
+    }
 
-                return;
+    /** Sends again the statuses declared and not taken: how many went. */
+    public function sendPending(): int
+    {
+        $sent = 0;
+        $rows = $this->entityManager->getRepository(InvoiceFlow::class)->createQueryBuilder('f')
+            ->where('f.declared LIKE :unsent')->setParameter('unsent', '%false%')
+            ->getQuery()->getResult();
+        foreach ($rows as $row) {
+            foreach (array_keys($row->pending()) as $index) {
+                $sent += (int) $this->send($row, $index);
             }
-        } catch (InvalidConfigException) {
-            // A platform that carries statuses as lifecycle files (CDAR) wants one: kept here only.
+        }
+        $this->entityManager->flush();
+
+        return $sent;
+    }
+
+    /**
+     * Reads the lifecycle flows a platform has for the shop since its cursor
+     * (Receive): a status a buyer declared about one of the shop's invoices -
+     * approved, refused and why, paid - is added to that invoice's history;
+     * the rest (the suppliers' invoices, omnibase/ledger's) is left. How many
+     * statuses were taken.
+     *
+     * @param string|null $name the gateway; the configured one by default
+     */
+    public function receiveStatuses(?string $name = null): int
+    {
+        $name ??= $this->gateway;
+        if (null === $name || !$this->isPlatform($name)) {
+            return 0;
+        }
+        $gateway = $this->registry->get($name);
+        if (!$gateway->supports(Receive::class)) {
+            return 0;
+        }
+        $inbox = $this->entityManager->getRepository(InvoiceInbox::class)->findOneBy(['gateway' => $name]);
+        if (null === $inbox) {
+            $inbox = new InvoiceInbox($name);
+            $this->entityManager->persist($inbox);
+        }
+        $taken = 0;
+        try {
+            for ($pages = 0; $pages < 20; ++$pages) {
+                $page = $gateway->receive($inbox->getCursor(), 50);
+                foreach ($page->items as $item) {
+                    $change = $item->status;
+                    if (null === $change || Direction::IN !== $item->flow->direction || null === $change->invoiceNumber) {
+                        continue;
+                    }
+                    $invoice = $this->entityManager->getRepository(Invoice::class)->findOneBy(['number' => $change->invoiceNumber]);
+                    $row = null !== $invoice ? $this->flowOf($invoice) : null;
+                    if (null === $row || $row->getGateway() !== $name) {
+                        continue;
+                    }
+                    $entry = self::row($change);
+                    if (!\in_array($entry, $row->getHistory(), true)) {
+                        $row->setHistory([...$row->getHistory(), $entry]);
+                        $this->settle($row);
+                        ++$taken;
+                    }
+                }
+                $inbox->advance($page->cursor);
+                $this->entityManager->flush();
+                if (!$page->more) {
+                    break;
+                }
+            }
         } catch (OmnibillException $e) {
+            $this->entityManager->flush();
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
-        $row->setHistory([...$row->getHistory(), self::row($change)]);
-        $this->entityManager->flush();
+
+        return $taken;
     }
 
     public function supportsNotify(string $gateway): bool
@@ -175,7 +423,8 @@ class InvoiceTransmission
 
     /**
      * A gateway's callback (an approved platform's webhook): its signature
-     * checked by the gateway, the invoice it is about updated.
+     * checked by the gateway, the invoice it is about updated. A flow coming
+     * in (a buyer's lifecycle message) has its statuses received.
      *
      * @param array<string, string|list<string>> $headers
      *
@@ -196,6 +445,11 @@ class InvoiceTransmission
         if (null === $flow) {
             return null;
         }
+        if (Direction::IN === $flow->direction) {
+            $this->receiveStatuses($gateway);
+
+            return null;
+        }
         $row = $this->entityManager->getRepository(InvoiceFlow::class)->findOneBy(['reference' => $flow->reference]);
         if (null === $row && null !== $flow->invoiceNumber && null !== ($invoice = $this->entityManager->getRepository(Invoice::class)->findOneBy(['number' => $flow->invoiceNumber]))) {
             $row = $this->flowOf($invoice);
@@ -209,6 +463,54 @@ class InvoiceTransmission
         return $row->getInvoice();
     }
 
+    /** Sends one declared status; whether it went. */
+    private function send(InvoiceFlow $row, int $index): bool
+    {
+        $declared = $row->getDeclared()[$index] ?? null;
+        if (null === $declared || $declared['sent']) {
+            return false;
+        }
+        $invoice = $row->getInvoice();
+        if ('rejected' === $row->getStatus() || $invoice->isCancelled()) {
+            // Rejected by the platform, or cancelled: no status follows on that invoice.
+            $row->declaredFailed($index, sprintf('The invoice %s is %s: no status follows.', $invoice->getNumber(), $invoice->isCancelled() ? 'cancelled' : 'rejected'));
+
+            return false;
+        }
+        try {
+            $gateway = $this->gatewayNamed($row->getGateway(), $invoice);
+            if (!$gateway->supports(SetStatus::class)) {
+                $row->declaredFailed($index, sprintf('The "%s" gateway declares no status.', $row->getGateway()));
+
+                return false;
+            }
+            $status = LifecycleStatus::from($declared['status']);
+            $at = new \DateTimeImmutable($declared['at']);
+            $message = null;
+            if ($this->isPlatform($row->getGateway())) {
+                $message = $this->messages?->write($invoice, $status->value, $at, $declared['reason'] ?? null, $declared['amount'] ?? null, $this->byRate($invoice), $row->getRecipientAddress());
+                if (null === $message) {
+                    $row->declaredFailed($index, $this->trans('@marketplace.invoice.platform.no_lifecycle_writer'));
+
+                    return false;
+                }
+            }
+            $answer = $gateway->setStatus(new StatusChange(
+                $status, $invoice->getNumber(), $at, $declared['reason'] ?? null, $declared['amount'] ?? null,
+                file: $message['content'] ?? null, filename: $message['filename'] ?? null,
+            ), $this->flow($row));
+            $this->reflect($row, $answer);
+            $row->declaredSent($index, $answer->reference);
+
+            return true;
+        } catch (OmnibillException|\ValueError $e) {
+            $row->declaredFailed($index, $e->getMessage());
+            $this->logger?->warning('The status {status} of the invoice {number} was not sent: {error}', ['status' => $declared['status'], 'number' => $invoice->getNumber(), 'error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
     /** What the gateway said, beside the invoice; the invoice sent once handed over, paid once paid. */
     private function reflect(InvoiceFlow $row, Flow $flow): void
     {
@@ -217,6 +519,8 @@ class InvoiceTransmission
         if ([] === $history && null !== $flow->status) {
             $history = [self::row(new StatusChange($flow->status, $invoice->getNumber(), $flow->updatedAt))];
         }
+        // The gateway answers the whole history: the one it was given (flow(), the buyer's statuses received
+        // included) and what it adds.
         if ([] !== $history) {
             $row->setHistory($history);
         }
@@ -224,7 +528,14 @@ class InvoiceTransmission
         if (null !== $status && !\in_array($status, [LifecycleStatus::REJECTED, LifecycleStatus::REFUSED], true)) {
             $invoice->markSent($flow->submittedAt ?? new \DateTimeImmutable());
         }
-        if (LifecycleStatus::PAID === $status && !$invoice->isPaid() && !$invoice->isCancelled()) {
+        $this->settle($row);
+    }
+
+    /** A buyer's or platform's "paid" makes the invoice paid. */
+    private function settle(InvoiceFlow $row): void
+    {
+        $invoice = $row->getInvoice();
+        if ('paid' === $row->getStatus() && !$invoice->isPaid() && !$invoice->isCancelled() && !$invoice->isCreditNote()) {
             $last = $row->getHistory()[array_key_last($row->getHistory())];
             $invoice->markPaid(null !== $last['at'] ? new \DateTimeImmutable($last['at']) : new \DateTimeImmutable());
         }
@@ -236,16 +547,82 @@ class InvoiceTransmission
         return ['status' => $change->status->value, 'code' => $change->status->code(), 'at' => $change->at?->format(\DATE_ATOM), 'reason' => $change->reason];
     }
 
+    /**
+     * The invoicing frame of the French reform (BT-23), from the nature of the
+     * operations (marketplace.invoice.operation): B1 goods, S1 services, M1
+     * both; B2, S2, M2 for an invoice already paid. As the public summaries of
+     * the DGFiP's external specifications give it - to be confirmed with the
+     * platform.
+     */
+    private function businessProcess(Invoice $invoice): string
+    {
+        $letter = match ($this->operation) {
+            'services' => 'S',
+            'mixed' => 'M',
+            default => 'B',
+        };
+
+        return $letter.($invoice->isPaid() && !$invoice->isCreditNote() ? '2' : '1');
+    }
+
+    /**
+     * The invoice's total by VAT rate, as the payment data asks it.
+     *
+     * @return list<array{rate: float, amount: string}>
+     */
+    private function byRate(Invoice $invoice): array
+    {
+        $rates = [];
+        foreach ($invoice->getTotals()['vat_breakdown'] ?? [] as $vat) {
+            $rates[] = ['rate' => (float) $vat['rate'], 'amount' => self::decimal((int) $vat['base'] + (int) $vat['vat'], $invoice->getCurrency())];
+        }
+
+        return $rates;
+    }
+
+    /**
+     * The directory's line to send to: the establishment's when a SIRET is
+     * known, else the legal unit's (no SIRET, no routing code), else the
+     * first that receives.
+     *
+     * @param list<Addressing> $lines
+     */
+    private static function line(array $lines, ?string $siret): ?Addressing
+    {
+        $enabled = array_values(array_filter($lines, static fn (Addressing $a) => $a->isEnabled()));
+        foreach ($enabled as $line) {
+            if (null !== $siret && $line->siret === $siret && null === $line->routingCode) {
+                return $line;
+            }
+        }
+        foreach ($enabled as $line) {
+            if (null === $line->siret && null === $line->routingCode) {
+                return $line;
+            }
+        }
+
+        return $enabled[0] ?? null;
+    }
+
     private function flow(InvoiceFlow $row): Flow
     {
         $number = $row->getInvoice()->getNumber();
 
-        return new Flow($row->getReference(), trackingId: $number, invoiceNumber: $number, status: null !== $row->getStatus() ? LifecycleStatus::tryFrom($row->getStatus()) : null);
+        return new Flow($row->getReference(), trackingId: $number, invoiceNumber: $number, status: null !== $row->getStatus() ? LifecycleStatus::tryFrom($row->getStatus()) : null, history: array_values(array_filter(array_map(static fn (array $r) => null === ($s = LifecycleStatus::tryFrom($r['status'])) ? null : new StatusChange($s, $number, null !== $r['at'] ? new \DateTimeImmutable($r['at']) : null, $r['reason'] ?? null), $row->getHistory()))));
     }
 
-    private function gatewayFor(Invoice $invoice, ?string $link = null): GatewayInterface
+    /** Whether that gateway can be used: configured in omnibill, or "email" with omnibill/email and a mailer. */
+    private function available(?string $name): bool
     {
-        $name = (string) $this->gateway;
+        if (null === $name || '' === $name) {
+            return false;
+        }
+
+        return ($this->registry?->has($name) ?? false) || ('email' === $name && $this->canMail());
+    }
+
+    private function gatewayNamed(string $name, Invoice $invoice, ?string $link = null): GatewayInterface
+    {
         if ($this->registry?->has($name)) {
             $gateway = $this->registry->get($name);
             if ('email' !== $gateway->getName()) {
@@ -274,17 +651,23 @@ class InvoiceTransmission
     /** @return array{subject: string, body: string} the bundle's own words for the e-mail */
     private function message(Invoice $invoice, ?string $link): array
     {
-        $t = fn (string $key, array $parameters = []): string => $this->translator?->trans($key, $parameters) ?? $key;
-        $subject = $t($invoice->isCreditNote() ? '@marketplace.invoice.mail.credit_subject' : '@marketplace.invoice.mail.subject', ['{number}' => $invoice->getNumber()]);
-        $body = $t('@marketplace.invoice.mail.hello', ['{name}' => $invoice->getBuyer()['name'] ?? ''])."\n\n"
-            .$t($invoice->isCreditNote() ? '@marketplace.invoice.mail.credit_text' : '@marketplace.invoice.mail.text', ['{number}' => $invoice->getNumber(), '{total}' => (new InvoiceTwigExtension())->money($invoice->getTotal(), $invoice->getCurrency()), '{seller}' => $invoice->getSeller()['name'] ?? ''])
-            .(null !== $link ? "\n\n".$t('@marketplace.invoice.mail.action').' : '.$link : '')
+        $subject = $this->trans($invoice->isCreditNote() ? '@marketplace.invoice.mail.credit_subject' : '@marketplace.invoice.mail.subject', ['{number}' => $invoice->getNumber()]);
+        $body = $this->trans('@marketplace.invoice.mail.hello', ['{name}' => $invoice->getBuyer()['name'] ?? ''])."\n\n"
+            .$this->trans($invoice->isCreditNote() ? '@marketplace.invoice.mail.credit_text' : '@marketplace.invoice.mail.text', ['{number}' => $invoice->getNumber(), '{total}' => (new InvoiceTwigExtension())->money($invoice->getTotal(), $invoice->getCurrency()), '{seller}' => $invoice->getSeller()['name'] ?? ''])
+            .(null !== $link ? "\n\n".$this->trans('@marketplace.invoice.mail.action').' : '.$link : '')
             ."\n\n".($invoice->getSeller()['name'] ?? '');
 
         return ['subject' => $subject, 'body' => $body];
     }
 
-    private function bill(Invoice $invoice, string $pdf, string $filename, ?string $to): BillInvoice
+    /** @param array<string, mixed> $parameters */
+    private function trans(string $key, array $parameters = []): string
+    {
+        return $this->translator?->trans($key, $parameters) ?? strtr($key, $parameters);
+    }
+
+    /** @param array<string, mixed> $routing addressing() */
+    private function bill(Invoice $invoice, string $pdf, string $filename, ?string $to, array $routing = []): BillInvoice
     {
         $seller = $invoice->getSeller();
         $buyer = $invoice->getBuyer();
@@ -294,16 +677,17 @@ class InvoiceTransmission
             $filename,
             Syntax::FACTURX,
             $invoice->getNumber(),
-            new Party($seller['name'] ?? null, $seller['siren'] ?? null, $seller['siret'] ?? null, email: $seller['email'] ?? null, country: $seller['country'] ?? 'FR'),
-            new Party($buyer['name'] ?? null, $buyer['siren'] ?? null, $buyer['siret'] ?? null, email: $to ?? $buyer['email'] ?? null, country: $buyer['country'] ?? 'FR'),
+            new Party($seller['name'] ?? null, $seller['siren'] ?? null, $seller['siret'] ?? null, $routing['seller_address']['id'] ?? null, email: $seller['email'] ?? null, country: $seller['country'] ?? 'FR'),
+            new Party($buyer['name'] ?? null, $buyer['siren'] ?? null, $buyer['siret'] ?? null, $routing['buyer_address']['id'] ?? null, $routing['routing_code'] ?? null, email: $to ?? $buyer['email'] ?? null, country: $buyer['country'] ?? 'FR'),
             $invoice->getIssuedAt(),
             self::decimal($invoice->getTotal(), $invoice->getCurrency()),
             $invoice->getCurrency(),
+            rule: $routing['rule'] ?? null,
         );
     }
 
     /** An amount in the currency's smallest unit, as a decimal string: "1234.50". */
-    private static function decimal(int $amount, string $currency): string
+    public static function decimal(int $amount, string $currency): string
     {
         $digits = Currencies::getFractionDigits($currency);
 

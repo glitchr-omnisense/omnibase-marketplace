@@ -48,6 +48,28 @@ class InvoiceFlow
     #[ORM\Column(type: 'datetime_immutable')]
     protected \DateTimeImmutable $updatedAt;
 
+    /** The platform's processing rule it went under (B2B), when it went to an approved platform. */
+    #[ORM\Column(type: 'string', length: 16, nullable: true)]
+    protected ?string $rule = null;
+
+    /** The buyer's electronic address the directory gave (Omnibill\Model\Addressing), the file was routed to. */
+    #[ORM\Column(type: 'string', length: 128, nullable: true)]
+    protected ?string $recipientAddress = null;
+
+    /** The SHA-256 of the file transmitted: the one the platform keeps. */
+    #[ORM\Column(type: 'string', length: 64, nullable: true)]
+    protected ?string $fileSha256 = null;
+
+    /**
+     * The statuses the shop declares about its own invoice (paid...), oldest first: sent to the
+     * gateway, or waiting to be - an approved platform takes a status as a lifecycle message
+     * (CDAR) only, which the application writes (Invoice\Transmission\LifecycleMessageInterface).
+     *
+     * @var list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}>
+     */
+    #[ORM\Column(type: 'json')]
+    protected array $declared = [];
+
     public function __construct(Invoice $invoice, string $gateway, string $reference)
     {
         $this->invoice = $invoice;
@@ -83,9 +105,90 @@ class InvoiceFlow
         $this->reference = $reference;
         $this->status = null;
         $this->history = [];
+        $this->declared = [];
         $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
+    }
+
+    /** How it went to an approved platform: the rule, the buyer's address, the file's fingerprint. */
+    public function routed(?string $rule, ?string $recipientAddress, ?string $fileSha256): static
+    {
+        $this->rule = $rule;
+        $this->recipientAddress = $recipientAddress;
+        $this->fileSha256 = $fileSha256;
+
+        return $this;
+    }
+
+    public function getRule(): ?string
+    {
+        return $this->rule;
+    }
+
+    public function getRecipientAddress(): ?string
+    {
+        return $this->recipientAddress;
+    }
+
+    public function getFileSha256(): ?string
+    {
+        return $this->fileSha256;
+    }
+
+    /** @return list<array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}> */
+    public function getDeclared(): array
+    {
+        return $this->declared;
+    }
+
+    /** Whether that status was declared already, sent or waiting. */
+    public function hasDeclared(string $status): bool
+    {
+        return [] !== array_filter($this->declared, static fn (array $d) => $d['status'] === $status);
+    }
+
+    /** A status declared, waiting to be sent: its index. */
+    public function declare(string $status, \DateTimeImmutable $at, ?string $amount = null, ?string $reason = null): int
+    {
+        $this->declared[] = ['status' => $status, 'at' => $at->format(\DATE_ATOM), 'sent' => false, 'amount' => $amount, 'reason' => $reason, 'flow' => null, 'error' => null];
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return \count($this->declared) - 1;
+    }
+
+    public function declaredSent(int $index, ?string $flow): static
+    {
+        $this->declared[$index] = ['sent' => true, 'flow' => $flow, 'error' => null] + $this->declared[$index];
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function declaredFailed(int $index, string $error): static
+    {
+        $this->declared[$index]['error'] = mb_substr($error, 0, 255);
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    /** @return array<int, array{status: string, at: string, sent: bool, amount?: ?string, reason?: ?string, flow?: ?string, error?: ?string}> the statuses declared and not sent yet, by index */
+    public function pending(): array
+    {
+        return array_filter($this->declared, static fn (array $d) => !$d['sent']);
+    }
+
+    /** The latest status's reason: why the platform rejected it, why the buyer refused it. */
+    public function getReason(): ?string
+    {
+        return [] === $this->history ? null : ($this->history[array_key_last($this->history)]['reason'] ?? null);
+    }
+
+    /** Whether nothing follows its status: paid, refused, rejected. */
+    public function isFinal(): bool
+    {
+        return \in_array($this->status, ['paid', 'refused', 'rejected'], true);
     }
 
     public function getStatus(): ?string

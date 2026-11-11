@@ -66,13 +66,18 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
             ->linkToUrl(fn (Invoice $invoice) => $this->generateUrl('marketplace_invoice', ['number' => $invoice->getNumber()]));
         $send = Action::new('send', '@marketplace.invoice.admin.send', 'fa-solid fa-paper-plane')
             ->linkToCrudAction('send')
-            ->displayIf(fn (Invoice $invoice) => null !== ($invoice->getBuyer()['email'] ?? null));
+            ->displayIf(fn (Invoice $invoice) => !$invoice->isCancelled() && (null !== ($invoice->getBuyer()['email'] ?? null) || $this->invoices->isEInvoice($invoice)));
         $paid = Action::new('markPaid', '@marketplace.invoice.admin.paid', 'fa-solid fa-check')
             ->linkToCrudAction('markPaid')
             ->displayIf(fn (Invoice $invoice) => !$invoice->isCreditNote() && !$invoice->isPaid() && !$invoice->isCancelled());
         $refresh = Action::new('refresh', '@marketplace.invoice.admin.refresh', 'fa-solid fa-arrows-rotate')
             ->linkToCrudAction('refresh')
             ->displayIf(fn (Invoice $invoice) => null !== $this->invoices->gateway() && null !== $this->invoices->lifecycle($invoice));
+        // Rejected by the platform, refused by the buyer: corrected by a credit note and a new invoice, never edited.
+        $reissue = Action::new('reissue', '@marketplace.invoice.admin.reissue', 'fa-solid fa-file-circle-exclamation')
+            ->linkToCrudAction('reissue')
+            ->askConfirmation('@marketplace.invoice.admin.reissue_confirm')
+            ->displayIf(fn (Invoice $invoice) => !$invoice->isCreditNote() && !$invoice->isCancelled() && null !== $this->invoices->guidance($invoice) && \in_array($this->invoices->lifecycleStatus($invoice), ['rejected', 'refused'], true));
         $credit = Action::new('credit', '@marketplace.invoice.admin.credit', 'fa-solid fa-rotate-left')
             ->linkToCrudAction('credit')
             ->askConfirmation('@marketplace.invoice.admin.credit_confirm')
@@ -80,7 +85,7 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
 
         $actions = parent::configureActions($actions)->disable(Action::NEW, Action::EDIT);
         foreach ([Actions::PAGE_INDEX, Actions::PAGE_DETAIL] as $page) {
-            $actions->add($page, $pdf)->add($page, $send)->add($page, $refresh)->add($page, $paid)->add($page, $credit);
+            $actions->add($page, $pdf)->add($page, $send)->add($page, $refresh)->add($page, $paid)->add($page, $reissue)->add($page, $credit);
         }
 
         return $actions;
@@ -114,6 +119,9 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
         yield DateTimeField::new('sentAt', '@marketplace.admin.field.sent_at')->setRequired(false)->hideOnIndex();
         yield DateTimeField::new('paidAt', '@marketplace.admin.field.paid_at')->setRequired(false)->hideOnIndex();
         yield DateTimeField::new('cancelledAt', '@marketplace.admin.field.cancelled_at')->setRequired(false)->hideOnIndex();
+        // Where it stands on its gateway and what to do about it: a rejection's reasons, a status waiting to be declared.
+        yield TextField::new('lifecycle', '@marketplace.invoice.admin.lifecycle')->hideOnIndex()->hideOnForm()
+            ->formatValue(fn ($value, Invoice $invoice) => implode(' — ', array_filter([$this->invoices->lifecycle($invoice), $this->invoices->guidance($invoice)])) ?: '—');
     }
 
     #[AdminAction('/{entityId}/send')]
@@ -152,6 +160,20 @@ class InvoiceCrudController extends AbstractMarketplaceCrudController
             $this->invoices->markPaid($invoice);
 
             return $this->translator->trans('@marketplace.invoice.admin.marked_paid', ['{number}' => $invoice->getNumber()]);
+        });
+    }
+
+    #[AdminAction('/{entityId}/reissue')]
+    public function reissue(string $entityId): Response
+    {
+        /** @var Invoice $invoice */
+        $invoice = $this->findEntity($entityId);
+
+        return $this->attempt(function () use ($invoice) {
+            $reason = $this->invoices->lifecycle($invoice);
+            ['credit_note' => $creditNote, 'invoice' => $new] = $this->invoices->reissue($invoice, $reason);
+
+            return $this->translator->trans('@marketplace.invoice.admin.reissued', ['{credit}' => $creditNote->getNumber(), '{invoice}' => $invoice->getNumber(), '{new}' => $new?->getNumber() ?? '-']);
         });
     }
 

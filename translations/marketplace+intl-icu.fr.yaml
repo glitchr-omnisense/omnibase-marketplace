@@ -504,6 +504,11 @@ invoice:
     credit_confirm: "Annuler cette facture par un avoir ? Une facture émise ne se modifie pas : l'avoir l'annule entièrement."
     refresh: "Actualiser l'état"
     refreshed: "Facture {number} : {status}."
+    reissue: "Corriger : avoir et nouvelle facture"
+    reissue_confirm: "Annuler cette facture par un avoir et en émettre une nouvelle pour la commande, telle qu'elle est maintenant ? Corrigez d'abord ce que la plateforme ou l'acheteur reproche (SIREN, adresse, montants)."
+    reissued: "Avoir {credit} émis pour {invoice}, nouvelle facture {new} : à envoyer."
+    lifecycle: "Sur la plateforme"
+    invoices: "Factures"
   # Where an invoice stands on the gateway it went through (omnisense/omnibill): the reform's lifecycle statuses.
   lifecycle:
     sent: "Envoyée"
@@ -521,6 +526,18 @@ invoice:
     payment_sent: "Paiement transmis"
     paid: "Encaissée"
     rejected: "Rejetée"
+    rejected_help: "Rejetée par la plateforme : {reason}. Une facture émise ne se modifie pas : corrigez la cause (le SIREN ou l'adresse du client, la commande), puis « Corriger : avoir et nouvelle facture », et envoyez la nouvelle."
+    refused_help: "Refusée par l'acheteur : {reason}. Voyez avec lui ; si la facture est en cause, « Corriger : avoir et nouvelle facture », et envoyez la nouvelle."
+    pending_help: "« {status} » attend d'être déclaré à la plateforme : {error}"
+  # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
+  platform:
+    no_siren: "La facture {number} va à une entreprise établie en France : la plateforme l'adresse par son SIREN, que le client n'a pas. Ajoutez-le au client, puis faites un avoir et une nouvelle facture."
+    invalid_siren: "{siren} n'est pas un SIREN ni un SIRET valable."
+    unknown_siren: "Le registre des entreprises ne connaît pas {siren}."
+    no_directory: "La passerelle {gateway} n'a pas d'annuaire (directory_url) : impossible de savoir où l'acheteur reçoit ses factures."
+    not_in_directory: "L'annuaire de la facturation électronique n'a aucune adresse active pour le SIREN {siren}."
+    once: "La facture {number} a déjà été transmise à la plateforme ({status}) : une facture n'y est déposée qu'une fois. Pour la corriger : un avoir et une nouvelle facture."
+    no_lifecycle_writer: "aucun rédacteur de message de cycle de vie (CDAR) n'est installé (Invoice\\Transmission\\LifecycleMessageInterface) : le statut reste en attente ici."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:

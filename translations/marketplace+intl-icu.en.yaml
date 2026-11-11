@@ -489,6 +489,11 @@ invoice:
     credit_confirm: "Cancel this invoice with a credit note? An issued invoice does not change: the credit note cancels it whole."
     refresh: "Refresh its status"
     refreshed: "Invoice {number}: {status}."
+    reissue: "Correct: credit note and new invoice"
+    reissue_confirm: "Cancel this invoice by a credit note and issue a new one for the order as it stands now? Correct first what the platform or the buyer objects to (SIREN, address, amounts)."
+    reissued: "Credit note {credit} issued for {invoice}, new invoice {new}: to send."
+    lifecycle: "On the platform"
+    invoices: "Invoices"
   # Where an invoice stands on the gateway it went through (omnisense/omnibill): the reform's lifecycle statuses.
   lifecycle:
     sent: "Sent"
@@ -506,6 +511,18 @@ invoice:
     payment_sent: "Payment sent"
     paid: "Paid"
     rejected: "Rejected"
+    rejected_help: "Rejected by the platform: {reason}. An issued invoice does not change: correct the cause (the customer's SIREN or address, the order), then \"Correct: credit note and new invoice\", and send the new one."
+    refused_help: "Refused by the buyer: {reason}. See with them; if the invoice is at fault, \"Correct: credit note and new invoice\", and send the new one."
+    pending_help: "\"{status}\" waits to be declared to the platform: {error}"
+  # Sending to an approved platform (omnibill/afnor): what refuses an e-invoice before it leaves.
+  platform:
+    no_siren: "The invoice {number} goes to a company established in France: the platform addresses it by its SIREN, which the customer has not. Add it to the customer, then issue a credit note and a new invoice."
+    invalid_siren: "{siren} is no valid SIREN nor SIRET."
+    unknown_siren: "The company register does not know {siren}."
+    no_directory: "The {gateway} gateway has no directory (directory_url): where the buyer receives its invoices cannot be known."
+    not_in_directory: "The e-invoicing directory has no active address for the SIREN {siren}."
+    once: "The invoice {number} was transmitted to the platform already ({status}): an invoice is deposited there once. To correct it: a credit note and a new invoice."
+    no_lifecycle_writer: "no lifecycle message (CDAR) writer is installed (Invoice\\Transmission\\LifecycleMessageInterface): the status waits here."
 
 # The back office's column and field labels (the CRUD controllers name them: @marketplace.admin.field.*).
 admin:

@@ -84,6 +84,8 @@ return function (ContainerConfigurator $configurator) {
             ...(class_exists('Omnibill\\Registry') ? [] : [$src . '/Invoice/Transmission/']),
             // Not a service itself: it makes omnibill/email's store (below).
             $src . '/Invoice/Transmission/InvoiceStatusStore.php',
+            // What an application implements: the lifecycle messages (CDAR) and the e-reporting files it writes.
+            $src . '/Invoice/Transmission/LifecycleMessageInterface.php',
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),
@@ -116,6 +118,7 @@ return function (ContainerConfigurator $configurator) {
             ->arg('$registry', service('Omnibill\\Registry')->nullOnInvalid())
             ->arg('$mailer', service('mailer.mailer')->nullOnInvalid())
             ->arg('$store', $email ? service('marketplace.invoice.status_store') : null)
+            ->arg('$messages', service('Base\\Marketplace\\Invoice\\Transmission\\LifecycleMessageInterface')->nullOnInvalid())
             ->public();
     }
 
