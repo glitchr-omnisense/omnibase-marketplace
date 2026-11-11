@@ -47,7 +47,8 @@ The back office's screens follow `marketplace.admin_role` (`ROLE_SUPERADMIN`
 by default) through the `MARKETPLACE_VIEW` voter attribute. Their own actions:
 the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid`,
 `reissue` (a credit note and a new invoice, for one rejected or refused) and
-`credit`; an order's `invoice`; a quote's `send`.
+`credit`; an order's `invoice`; a quote's `send`; with omnisense/omnibill, an
+e-reporting period's `collect` and `send` (`EReportCrudController`).
 
 ## Twig functions and filters
 
@@ -73,6 +74,7 @@ the exchange rates' `refresh`; an invoice's `send`, `refresh`, `paid`,
 | `marketplace:catalogue:sync` | `[gateway]`, `--full`, `--since`, `--query`, `--inventory`, `--dry-run` | reads a platform's catalogue into the shop ([a catalogue kept on a platform](platform-catalogue.md)) |
 | `marketplace:invoice:issue` | `[orders...]`, `--paid-without-invoice` | issues the invoices of paid orders ([invoices](invoices.md)) |
 | `marketplace:invoice:status` | `[numbers...]`, `--no-receive`, `--no-send` | the catch-up: asks the gateway where the invoices not final stand, reads the buyers' statuses from the platform, sends the shop's statuses waiting ([invoices](invoices.md)) |
+| `marketplace:invoice:ereport` | `--date`, `--kind`, `--send` | collects (and sends) the e-reporting of the last period ended, or of the one containing `--date` |
 | `marketplace:subscriptions` | `--sync` | ends the rights that ran out, announces those about to ([plans](plans.md)) |
 | `marketplace:referrals` | | rewards the referrers whose referee's first order held ([referrals](referrals.md)) |
 | `marketplace:wishlist:refresh-prices` | `--limit=200` | reads the lists' prices again, expires lapsed reservations ([lists of wishes](wishlists.md)) |
@@ -105,3 +107,4 @@ All are in `Base\Marketplace\Event\`.
 | the VAT regimes (`StoreVatRegime`, `ExportExemption`, `ReverseCharge`, by priority) | how a line's VAT is decided |
 | `PaymentKeysSection` | the payment keys on omnibase/admin's API keys page ([the dev gateway and the keys](dev-gateway-and-keys.md)) |
 | `Invoice\Transmission\LifecycleMessageInterface` (a service of the application's) | the lifecycle message (CDAR) an approved platform takes a status as: "Encaissée" ([invoices](invoices.md)) |
+| `Invoice\Transmission\EReportWriterInterface` (a service of the application's) | the e-reporting file of a period ([invoices](invoices.md)) |

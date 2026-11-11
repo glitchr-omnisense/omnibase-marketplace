@@ -86,6 +86,7 @@ return function (ContainerConfigurator $configurator) {
             $src . '/Invoice/Transmission/InvoiceStatusStore.php',
             // What an application implements: the lifecycle messages (CDAR) and the e-reporting files it writes.
             $src . '/Invoice/Transmission/LifecycleMessageInterface.php',
+            $src . '/Invoice/Transmission/EReportWriterInterface.php',
             $src . '/MarketplaceBundle.php',
             // A section of omnibase/admin's API keys page: only with that bundle.
             ...(interface_exists('Base\\Admin\\Settings\\SettingsSectionInterface') ? [] : [$src . '/Settings/']),
@@ -120,6 +121,11 @@ return function (ContainerConfigurator $configurator) {
             ->arg('$store', $email ? service('marketplace.invoice.status_store') : null)
             ->arg('$messages', service('Base\\Marketplace\\Invoice\\Transmission\\LifecycleMessageInterface')->nullOnInvalid())
             ->public();
+        // The e-reporting (marketplace.invoice.vat_regime): the application's file writer, when it has one.
+        $services->get('Base\\Marketplace\\Invoice\\Transmission\\EReporting')
+            ->arg('$registry', service('Omnibill\\Registry')->nullOnInvalid())
+            ->arg('$writer', service('Base\\Marketplace\\Invoice\\Transmission\\EReportWriterInterface')->nullOnInvalid())
+            ->public();
     }
 
     // A priced quote accepted by signing it in the page (marketplace.quotes.signature): only with omnisense/omnisign
@@ -130,6 +136,8 @@ return function (ContainerConfigurator $configurator) {
 
     if (class_exists('Base\\Admin\\Controller\\AbstractCrudController') && is_dir($src . '/Controller/Admin')) {
         $services->load('Base\\Marketplace\\Controller\\Admin\\', $src . '/Controller/Admin/')
+            // The e-reporting's screen: only with omnisense/omnibill, whose entity it shows.
+            ->exclude(class_exists('Omnibill\\Registry') ? [] : [$src . '/Controller/Admin/Crud/EReportCrudController.php'])
             ->tag('controller.service_arguments');
     }
 };

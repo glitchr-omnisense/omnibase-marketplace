@@ -85,6 +85,9 @@ marketplace:
         # With an approved platform as "gateway": the omnibill gateway the invoices that are not e-invoices go through - to a private person, to a company abroad (e-reported instead). Null: the bundle's own e-mail.
         email_gateway:        email
 
+        # The seller's VAT regime, which sets the e-reporting's periods (impots.gouv.fr, "Fréquences et délais de transmission", August 2026): normal_monthly (by ten days), normal_quarterly (the option, monthly), simplified (monthly), franchise (two calendar months). Null: no e-reporting collected.
+        vat_regime:           null
+
         # The invoices' series: F-2026-000001. One sequence per series and year, without a gap.
         prefix:               F
 

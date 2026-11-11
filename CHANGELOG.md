@@ -17,6 +17,11 @@
   pending until the application writes the lifecycle message (`LifecycleMessageInterface`: the CDAR is written
   nowhere here) and sent again by `marketplace:invoice:status`.
 - `marketplace.invoice.email_gateway`, `marketplace.invoice.seller.electronic_address`, `electronic_address_scheme`.
+- E-reporting (`marketplace.invoice.vat_regime`): `Invoice\Transmission\EReporting` collects, period by period as the
+  regime sets them, the sales to private persons by day, category and rate, the sales to companies abroad invoice by
+  invoice, and the payments of services, into `Entity\EReport`; submitted to the platform (`Report`) when the
+  application writes the file (`EReportWriterInterface`), kept collected otherwise. `marketplace:invoice:ereport`,
+  `EReportCrudController`.
 
 ### Fixed
 - `marketplace:invoice:status` without arguments queried fields the invoice does not have (`flowReference`,
@@ -25,8 +30,8 @@
 
 ### Changed
 - `InvoiceFlow` (mapped only with omnisense/omnibill; no site has its table yet) gains `rule`, `recipientAddress`,
-  `fileSha256`, `declared`; `marketplace_invoice_inbox` joins it. A site that installs the family creates both with
-  `make:migration`.
+  `fileSha256`, `declared`; `marketplace_invoice_inbox` and `marketplace_ereport` join it. A site that installs the
+  family creates the three with `make:migration`.
 - The tests register omnisense/omnibill and omnisense/contracts when the host has them not (`tests/omnibill.php`, from
   `OMNIBILL_PATH`, `~/Sites/omnibill` or `/srv/omnibill`), so that the invoices' transmission tests run in
   omnisense/omnibase's harness: there the test container is compiled again with the family, its tables of the

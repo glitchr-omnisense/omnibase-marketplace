@@ -625,3 +625,18 @@ admin:
     updated_at: "Modifié le"
     valid_at: "Valable à partir du"
     vat_number: "N° de TVA intracommunautaire"
+
+# The e-reporting periods' screen (omnisense/omnibill: Invoice\Transmission\EReporting).
+ereport:
+  admin:
+    kind: "Données"
+    starts_on: "Du"
+    ends_on: "Au"
+    due_on: "À transmettre avant le"
+    reference: "Référence de la plateforme"
+    data: "Données collectées"
+    collect: "Collecter à nouveau"
+    collected: "Période {period} collectée."
+    send: "Transmettre"
+    sent: "Période {period} transmise : {reference}."
+    not_sent: "Période {period} non transmise : {error}"

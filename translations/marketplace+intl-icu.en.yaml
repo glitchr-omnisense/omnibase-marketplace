@@ -610,3 +610,18 @@ admin:
     updated_at: "Updated"
     valid_at: "Valid from"
     vat_number: "EU VAT number"
+
+# The e-reporting periods' screen (omnisense/omnibill: Invoice\Transmission\EReporting).
+ereport:
+  admin:
+    kind: "Data"
+    starts_on: "From"
+    ends_on: "To"
+    due_on: "Due by"
+    reference: "Platform's reference"
+    data: "Data collected"
+    collect: "Collect again"
+    collected: "Period {period} collected."
+    send: "Transmit"
+    sent: "Period {period} transmitted: {reference}."
+    not_sent: "Period {period} not transmitted: {error}"

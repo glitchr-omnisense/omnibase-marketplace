@@ -189,8 +189,8 @@ marketplace:
 | Route | The buyer | Goes |
 |---|---|---|
 | `b2b` | a company established in France: a SIREN or SIRET, a company name or a VAT number, a French address or none | to the platform, an e-invoice (rule `B2B`) |
-| `b2b_int` | a company abroad: a VAT number or a company name, an address outside France | by the e-mail gateway (to be e-reported, invoice by invoice) |
-| `b2c` | anyone else | by the e-mail gateway (to be e-reported, aggregated by day) |
+| `b2b_int` | a company abroad: a VAT number or a company name, an address outside France | by the e-mail gateway; e-reported invoice by invoice |
+| `b2c` | anyone else | by the e-mail gateway; e-reported, aggregated by day |
 
 A company is known by what the customer carries: `getSiren()`, `getSiret()`, `getCompanyName()`,
 the VAT number of `VatCustomerInterface` (confirmed through VIES when the customer types it). When
@@ -240,6 +240,41 @@ when it is submitted has it declared at once. A platform takes a status as a lif
 invoice (`InvoiceFlow::$declared`), the back office says why, and `marketplace:invoice:status` sends
 it once there is one. omnibill/email needs none.
 
+## E-reporting
+
+The sales that are no e-invoice are reported to the platform, period by period
+(`Invoice\Transmission\EReporting`, `Entity\EReport`), once `marketplace.invoice.vat_regime` is set:
+
+| `vat_regime` | Transactions | Payments |
+|---|---|---|
+| `normal_monthly` | by ten days, due the 20th, the 30th (February: its last day), the 10th of the next month | monthly, before the 10th of the next |
+| `normal_quarterly` (the option, under 4 000 € of VAT a year) | monthly, before the 10th of the next | monthly, before the 10th of the next |
+| `simplified` | monthly, by the 25th of the next (the table says "between the 25th and the 30th") | monthly, the same |
+| `franchise` | two calendar months, by the 25th of the month after | two calendar months, the same |
+
+What is collected:
+
+- **To private persons**, aggregated by day (the order's payment): for each category - `goods`,
+  `services` (from `marketplace.invoice.operation`), `intra_eu` (a distance sale to another EU
+  country), `export` (outside the EU, flagged) - and each VAT rate, the base before VAT and the VAT,
+  in euros. A credit note takes its amounts off the day it is issued.
+- **To companies abroad**, invoice by invoice: the number, the type (380, 381), the dates, the
+  invoice corrected, the seller's SIREN and VAT number, the buyer's identifier and country, the
+  category (LB, PS, LBPS), the currency, the totals by rate, the exemption, the option for the
+  debits; the lines, charges, discounts and delivery address (due from 2027-09-01).
+- **Payments**, only for operations whose VAT is due on payment (services, without the option for
+  the debits): the amount received by rate, by day for private persons, by invoice for companies
+  abroad. An e-invoice's payment is its "Encaissée" status.
+- **Warnings**: an amount in another currency (not converted), mixed goods and services, a sale
+  abroad not invoiced yet.
+
+The file is the DGFiP's format (its external specifications), which was not read for this bundle:
+the application registers an `Invoice\Transmission\EReportWriterInterface`, and the period is
+submitted to the platform (`Report`, syntax FRR). Without a writer each period stays collected, its
+data on its `EReport` for whoever transmits it. `marketplace:invoice:ereport [--date] [--kind]
+[--send]` collects the last period ended (from a cron); the screen `EReportCrudController`
+(`MenuItem::linkToCrud(EReport::class, ...)`) shows them, collects again, sends.
+
 ## What the law says, and what to confirm
 
 - **Numbering**: "un numéro unique basé sur une séquence chronologique et continue", in distinct
@@ -253,6 +288,9 @@ it once there is one. omnibill/email needs none.
 - **The e-invoice's data** (impots.gouv.fr, "Données de facture", August 2026): the SIRENs, the
   countries, the category of the operation, the totals by rate, the option for the debits, the
   invoice corrected; from 2027-09-01 the lines, the charges and discounts, the delivery address.
+- **The e-reporting's data and periods**: impots.gouv.fr, "Données de transaction", "Données de
+  paiement", "Fréquences et délais de transmission" (August 2026; CGI art. 290, 290 A; ann. II art.
+  242 nonies M and P).
 - **To confirm with the platform**: the invoicing frame's codes (BT-23), the scheme of the
   addresses (0225), its profile (EN 16931 or EXTENDED-CTC-FR), and whether a rejected invoice
   (213), deemed not received, needs a credit note at all or may be deposited again under its
@@ -325,11 +363,12 @@ Everything it prints comes from the invoice itself, never from today's order or 
 ## For a site
 
 The bundle brings the entity; the site creates its table: `bin/console make:migration`, then
-`doctrine:migrations:migrate`. With omnisense/omnibill installed, two more tables are mapped -
-`marketplace_invoice_flow`, `marketplace_invoice_inbox` -, which the same migration creates; without the family none exists, and none is needed.
+`doctrine:migrations:migrate`. With omnisense/omnibill installed, three more tables are mapped -
+`marketplace_invoice_flow`, `marketplace_invoice_inbox`, `marketplace_ereport` -, which the same
+migration creates; without the family none exists, and none is needed.
 
 A shop of several sellers is not covered yet: the invoices name one seller
 (`marketplace.invoice.seller`), number in one sequence per series and go through one platform
 account. Each seller issuing its own would need a sequence of its own, its own platform account (or
-the shop's under its delegation: `organization_id`), and its own reporting. It requires `dompdf/dompdf`, `horstoeko/zugferd` and `symfony/lock`
+the shop's under its delegation: `organization_id`), and its own e-reporting. It requires `dompdf/dompdf`, `horstoeko/zugferd` and `symfony/lock`
 (`composer update omnibase/marketplace` installs them).
