@@ -216,7 +216,7 @@ Omnistate\Bridge\Symfony\OmnistateBundle::class => ['all' => true],
 ```yaml
 # config/packages/omnistate.yaml
 omnistate:
-    requester: FR53901821074   # your VAT number: VIES then answers a consultation number, the proof of each check
+    requester: FR27552032534   # your VAT number: VIES then answers a consultation number, the proof of each check
 ```
 
 **Reverse charge.** Implement `Base\Marketplace\Model\VatCustomerInterface` on your User, usually with `VatCustomerTrait` (three columns: the number, when VIES confirmed it, its consultation number). `Service\VatNumbers::confirm($user, $typed)` checks a number with VIES and keeps it when VIES knows it. It accepts a SIREN or a SIRET for a French business. It flushes nothing and returns a status (`confirmed`, `removed`, `not_a_number`, `unknown`, `unavailable`). `VatNumbers::check($typed)` checks any number, a store's for instance.

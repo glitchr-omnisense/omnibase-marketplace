@@ -52,7 +52,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
     private function send(array $fields, array $files = [], ?string $captcha = 'omnishield-fixed-token'): Response
     {
         [$html, $token, $cookies] = $this->form();
-        $fields += ['contactName' => 'Félix Morvan', 'email' => 'felix@example.org', 'title' => 'Enseigne drapeau', 'request' => 'Une enseigne drapeau lumineuse pour la boutique, pose comprise.'];
+        $fields += ['contactName' => 'Camille Durand', 'email' => 'camille@example.org', 'title' => 'Enseigne drapeau', 'request' => 'Une enseigne drapeau lumineuse pour la boutique, pose comprise.'];
         $fields += $token;
         // The guard's stamp, signed by the application, as if the page had been open ten seconds.
         $fields += ['guard_website' => '', 'guard_opened' => self::getContainer()->get(FormGuard::class)->stamp(time() - 10)];
@@ -96,12 +96,12 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
 
     public function testARequestWithItsFilesReachesTheBackOfficeOnly(): void
     {
-        $response = $this->send(['phone' => '03 55 40 13 81', 'companyName' => 'Soif de Pub'], [$this->upload('logo.pdf', '%PDF-1.4 logo'), $this->upload('façade.png', 'png')]);
+        $response = $this->send(['phone' => '03 00 00 00 00', 'companyName' => 'Atelier Exemple'], [$this->upload('logo.pdf', '%PDF-1.4 logo'), $this->upload('façade.png', 'png')]);
         self::assertSame(200, $response->getStatusCode(), substr(strip_tags((string) $response->getContent()), 0, 3000));
 
-        $quote = $this->entityManager->getRepository(Quote::class)->findOneBy(['email' => 'felix@example.org'], ['id' => 'DESC']);
+        $quote = $this->entityManager->getRepository(Quote::class)->findOneBy(['email' => 'camille@example.org'], ['id' => 'DESC']);
         self::assertInstanceOf(Quote::class, $quote);
-        self::assertSame('03 55 40 13 81', $quote->getPhone());
+        self::assertSame('03 00 00 00 00', $quote->getPhone());
         $this->entityManager->refresh($quote);
         self::assertCount(2, $quote->getAttachments());
 
@@ -138,7 +138,7 @@ final class QuoteRequestTest extends MarketplaceKernelTestCase
             'csrf_protection' => false, 'attachments' => false, 'guard' => ['action' => 'quote', 'name' => 'contactName', 'min_delay' => 5, 'challenge' => false],
         ]);
         $form->submit([
-            'contactName' => 'Félix Morvan', 'email' => 'fast@example.org', 'title' => 'Enseigne drapeau',
+            'contactName' => 'Camille Durand', 'email' => 'fast@example.org', 'title' => 'Enseigne drapeau',
             'request' => 'Une enseigne drapeau lumineuse pour la boutique, pose comprise.',
             'guard_website' => '', 'guard_opened' => self::getContainer()->get(FormGuard::class)->stamp(time() - 1),
         ]);
