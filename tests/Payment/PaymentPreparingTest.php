@@ -112,6 +112,32 @@ final class PaymentPreparingTest extends TestCase
         self::assertSame('fr', $payment->locale);
     }
 
+    public function testAListenerChargesASavedMethodWithNoPage(): void
+    {
+        if (!property_exists(Payment::class, 'savedMethod')) {
+            self::markTestSkipped('Needs omnisense/omnitrade 1.1 (saved methods).');
+        }
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addListener(PaymentPreparingEvent::class, static function (PaymentPreparingEvent $event): void {
+            $event->savedMethod = 'pm_1';
+            $event->customer = 'cus_1';
+            $event->returnUrl = 'https://forge.test/hub/purchases/9/done';
+        });
+        $result = $this->bridge($dispatcher)->pay($this->order($this->product(ProductKind::GOODS)), new Transaction(), $this->method());
+
+        self::assertTrue($result->isRedirect(), 'the stub answers PENDING with a page: the bank\'s check');
+        $payment = $this->requests[0]->payment;
+        self::assertSame('pm_1', $payment->savedMethod);
+        self::assertSame('cus_1', $payment->customer->reference);
+        self::assertSame('https://forge.test/hub/purchases/9/done', $payment->returnUrl);
+        self::assertSame('CMD-7-', substr((string) $payment->idempotencyKey, 0, 6), 'one key per transaction');
+
+        $this->bridge()->pay($this->order($this->product(ProductKind::GOODS)), new Transaction(), $this->method());
+        self::assertNull($this->requests[1]->payment->savedMethod, 'none unless a listener says');
+        self::assertNull($this->requests[1]->payment->customer->reference);
+        self::assertSame('https://shop.test/return', $this->requests[1]->payment->returnUrl);
+    }
+
     public function testWithoutAListenerThePaymentIsThePlatformsOwn(): void
     {
         $this->bridge()->pay($this->order($this->product(ProductKind::GOODS)), new Transaction(), $this->method());

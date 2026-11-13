@@ -19,7 +19,12 @@ use Symfony\Contracts\EventDispatcher\Event;
  *     $customer (the provider's customer when the buyer already is one) -
  *     the bridge sets these itself for an order of one recurring plan;
  *   - add metadata the provider keeps and gives back on its webhooks, change
- *     the description shown on its page, its language.
+ *     the description shown on its page, its language;
+ *   - charge a method the provider keeps for the buyer, with no page
+ *     (omnisense/omnitrade 1.1's Payment::$savedMethod): $savedMethod, and
+ *     $customer, the provider's customer it belongs to; $returnUrl is then
+ *     where the bank sends its buyer back after its own check (3-D Secure),
+ *     the marketplace's return page when null.
  */
 final class PaymentPreparingEvent extends Event
 {
@@ -31,6 +36,11 @@ final class PaymentPreparingEvent extends Event
     public ?string $price = null;
     public ?int $trialDays = null;
     public ?string $customer = null;
+
+    /** A method the provider keeps for $customer (SavedMethod::$reference), charged off-session. */
+    public ?string $savedMethod = null;
+    /** Where the buyer comes back from the provider's page; null: the marketplace's return page. */
+    public ?string $returnUrl = null;
 
     /** @param array<string, scalar> $metadata */
     public function __construct(

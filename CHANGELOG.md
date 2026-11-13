@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- A saved method charged with no page (omnisense/omnitrade 1.1's `Payment::$savedMethod`): a
+  `PaymentPreparingEvent` listener sets `$savedMethod` and `$customer` (the provider's customer it
+  belongs to), and may set `$returnUrl`, where the bank sends its buyer back after its own check
+  (3-D Secure), in place of the marketplace's return page. The bridge passes them only to an
+  omnitrade that knows saved methods; the rest of the payment is built as before, and
+  `Checkout::settle()` takes the answer as for any payment (paid, refused, or a redirect to the
+  bank's page, the webhook then confirming the order). `PaymentPreparingTest`.
 - The billing period of services: a line gives `'period' => ['start' => 'Y-m-d', 'end' => 'Y-m-d']`, the invoice's
   period follows (`Invoice::getBillingPeriod()`, the earliest start to the latest end). The Factur-X carries it
   (BT-73/BT-74) and each line's (BT-134/BT-135); the PDF prints « Période de facturation : du … au … », and when every

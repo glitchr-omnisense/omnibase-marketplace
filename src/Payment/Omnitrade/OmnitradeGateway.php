@@ -179,6 +179,8 @@ final class OmnitradeGateway implements PaymentGatewayInterface
         $connect = null !== $event->destination && property_exists(Payment::class, 'destination')
             ? ['destination' => $event->destination, 'applicationFee' => null !== $event->applicationFee && $event->applicationFee > 0 ? Money::of($event->applicationFee, strtoupper((string) $order->getCurrency())) : null]
             : [];
+        // A saved method, charged with no page, only where omnisense/omnitrade knows it (1.1).
+        $saved = null !== $event->savedMethod && property_exists(Payment::class, 'savedMethod') ? ['savedMethod' => $event->savedMethod] : [];
         $currency = strtoupper((string) $order->getCurrency());
         $return = fn (array $query) => $this->urls->generate('marketplace_payment_return', ['order' => $order->getId(), 'gateway' => $this->gatewayName] + $query, UrlGeneratorInterface::ABSOLUTE_URL);
         $customer = $order->getCustomer();
@@ -191,7 +193,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
             new Customer(
                 $customer?->getEmail(),
                 $address?->getName() ?: ($customer ? (string) $customer : null),
-                null,
+                [] !== $saved ? $event->customer : null,
                 $address?->getPhone(),
                 array_values(array_filter([$address?->getStreetAddress(), $address?->getAffix()])),
                 $address?->getZipCode(),
@@ -200,14 +202,14 @@ final class OmnitradeGateway implements PaymentGatewayInterface
             ),
             $this->lines($order, $currency),
             ...[
-                'returnUrl' => $return([]),
+                'returnUrl' => $event->returnUrl ?? $return([]),
                 'cancelUrl' => $return(['cancel' => 1]),
                 'idempotencyKey' => sprintf('%s-%s', $order->getReference() ?? $order->getId(), $transaction->getId() ?? spl_object_id($transaction)),
                 'method' => $method->getGatewayParameters()['method'] ?? null,
                 'notice' => $order->getVatExemption(),
                 'metadata' => $event->metadata,
                 'locale' => $event->locale,
-            ] + $connect,
+            ] + $connect + $saved,
         );
     }
 

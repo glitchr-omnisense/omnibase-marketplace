@@ -86,7 +86,7 @@ e-reporting period's `collect` and `send` (`EReportCrudController`).
 | Event | When |
 |---|---|
 | `OrderPaidEvent` | an order has just been paid in full, its stock decremented |
-| `PaymentPreparingEvent` | an order is about to be handed to an omnitrade gateway: the last moment to say how |
+| `PaymentPreparingEvent` | an order is about to be handed to an omnitrade gateway: the last moment to say how (a connected account and its fee, a subscription, metadata, a saved method charged with no page: `$savedMethod`, `$customer`, `$returnUrl`) |
 | `PaymentCancelledEvent` | a payment did not happen (the member turned back, the provider let it expire): the order is a cart again; a listener may set the response |
 | `PaymentNotificationEvent` | a provider's webhook about something else than an order or the catalogue |
 | `QuickOrderDoneEvent` | a quick order's page is about to be shown to the holder of its link; a listener may set the response |
