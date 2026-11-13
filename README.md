@@ -1,6 +1,6 @@
 # omnibase/marketplace
 
-A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (3.x, 4.0 or 5.0): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (5.1 and later 5.x): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
@@ -45,14 +45,24 @@ The demo app under [example/app/](example/app/) doubles as the minimal host. It 
 ## Install
 
 ```bash
-composer require omnibase/marketplace:dev-main
+composer require omnibase/marketplace
 ```
 
-Register the bundle in `config/bundles.php`:
+Under Symfony it runs on the core's Symfony host: Composer brings `omnisense/omnibase` 5.1, `omnibridge/symfony`,
+`omnibridge/doctrine`, `omnibase/admin` and `omnisense/omnistate` with it; `config/bundles.php` registers the core's
+bundle before this one (see the core's README for the other bundles a site usually adds):
 
 ```php
+// config/bundles.php
+Omnibridge\Symfony\Omnibase\BaseBundle::class => ['all' => true],
+Base\Admin\AdminBundle::class => ['all' => true],
+Omnistate\Bridge\Symfony\OmnistateBundle::class => ['all' => true],
 Base\Marketplace\MarketplaceBundle::class => ['all' => true],
 ```
+
+Payments through Stripe, PayPal and the other omnitrade gateways need `composer require omnisense/omnitrade:^1.1` and
+a provider (`omnitrade/stripe`...); shipping through a carrier, `omnisense/omnibus:^2.0` and one of its carriers.
+With the routes, the seller binding and the tables below, `/boutiques` lists the stores and `/panier` is the cart.
 
 Import the client routes. `MarketplaceBundle::getPath()` is the package root, so the path includes `src/`:
 

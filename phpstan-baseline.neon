@@ -1,0 +1,403 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to constant FRR on an unknown class Omnibill\\Model\\Syntax\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\OmnibillException not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\OutcomeUnknownException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\UnreachableException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Class Omnibill\\FlowLookupInterface not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Class Omnibill\\Model\\Flow not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Class Omnibill\\Request\\FindFlow not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Class Omnibill\\Request\\Report not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Model\\EReport not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\EReporting\:\:findAgain\(\) has invalid return type Omnibill\\Model\\Flow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Parameter \$gateway of method Base\\Marketplace\\Invoice\\Transmission\\EReporting\:\:findAgain\(\) has invalid type Omnibill\\GatewayInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Parameter \$registry of method Base\\Marketplace\\Invoice\\Transmission\\EReporting\:\:__construct\(\) has invalid type Omnibill\\Registry\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Property Base\\Marketplace\\Invoice\\Transmission\\EReporting\:\:\$registry has unknown class Omnibill\\Registry as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/EReporting.php
+
+		-
+			message: '#^Access to constant DEPOSITED on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant FACTURX on an unknown class Omnibill\\Model\\Syntax\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant IN on an unknown class Omnibill\\Model\\Direction\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant LIFECYCLE on an unknown class Omnibill\\Model\\FlowKind\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant PAID on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 4
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant REFUSED on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant REJECTED on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Access to constant SENT on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Call to static method from\(\) on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Call to static method tryFrom\(\) on an unknown class Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 4
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\InvalidConfigException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\InvalidKeyException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\InvalidNotificationException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\NotSupportedException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\OmnibillException not found\.$#'
+			identifier: class.notFound
+			count: 10
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\OutcomeUnknownException not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\ProviderException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\UnreachableException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Caught class Omnibill\\Exception\\UsageLimitReachedException not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\FlowLookupInterface not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Model\\StatusChange not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\FetchStatus not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\FindFlow not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\Lookup not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\Notify not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\Receive not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Class Omnibill\\Request\\SetStatus not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Email\\EmailGatewayFactory not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Exception\\InvalidConfigException not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Model\\Flow not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Model\\Invoice not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Model\\Party not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Model\\StatusChange not found\.$#'
+			identifier: class.notFound
+			count: 5
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnibill\\Request\\Receive not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:bill\(\) has invalid return type Omnibill\\Model\\Invoice\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:flow\(\) has invalid return type Omnibill\\Model\\Flow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:gatewayNamed\(\) has invalid return type Omnibill\\GatewayInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:line\(\) has invalid return type Omnibill\\Model\\Addressing\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:lookUp\(\) has invalid return type Omnibill\\Model\\Flow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$a of anonymous function has invalid type Omnibill\\Model\\Addressing\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$change of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:row\(\) has invalid type Omnibill\\Model\\StatusChange\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$flow of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:adopt\(\) has invalid type Omnibill\\Model\\Flow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$flow of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:reflect\(\) has invalid type Omnibill\\Model\\Flow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$registry of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:__construct\(\) has invalid type Omnibill\\Registry\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$status of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:declare\(\) has invalid type Omnibill\\Model\\LifecycleStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Parameter \$store of method Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:__construct\(\) has invalid type Omnibill\\Email\\StatusStoreInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Property Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:\$registry has unknown class Omnibill\\Registry as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Property Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission\:\:\$store has unknown class Omnibill\\Email\\StatusStoreInterface as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Invoice/Transmission/InvoiceTransmission.php
+
+		-
+			message: '#^Instantiated class Omnisign\\Model\\Document not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Quote/Signature/QuoteSignatures.php
+
+		-
+			message: '#^Instantiated class Omnisign\\Model\\Envelope not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Quote/Signature/QuoteSignatures.php
+
+		-
+			message: '#^Instantiated class Omnisign\\Model\\Field not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Quote/Signature/QuoteSignatures.php
+
+		-
+			message: '#^Instantiated class Omnisign\\Model\\File not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Quote/Signature/QuoteSignatures.php
+
+		-
+			message: '#^Instantiated class Omnisign\\Model\\Signer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Quote/Signature/QuoteSignatures.php
+
+		-
+			message: '#^Method Base\\Marketplace\\Quote\\Signature\\QuoteSignatures\:\:request\(\) has invalid return type Omnisign\\Model\\Envelope\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Quote/Signature/QuoteSignatures.php

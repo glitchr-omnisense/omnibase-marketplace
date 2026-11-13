@@ -32,25 +32,28 @@
     },
     "require": {
         "php": "^8.2",
+        "doctrine/doctrine-bundle": "^2.13|^3.0",
         "doctrine/orm": "^2.15|^3.0",
-        "omnibridge/symfony": "1.x-dev",
-        "omnisense/omnibase": "3.0.*-dev || 4.0.*-dev || 5.0.*-dev",
-        "omnibase/admin": "dev-main",
-        "omnisense/omnistate": "1.x-dev",
-        "omnistate/annuaire-entreprises": "1.x-dev",
-        "omnistate/vies": "1.x-dev",
-        "symfony/config": "^6.0|^7.0|^8.0",
-        "symfony/dependency-injection": "^6.0|^7.0|^8.0",
-        "symfony/form": "^6.0|^7.0|^8.0",
-        "symfony/http-kernel": "^6.0|^7.0|^8.0",
-        "symfony/security-bundle": "^6.0|^7.0|^8.0",
         "dompdf/dompdf": "^3.1",
         "horstoeko/zugferd": "^1.0.132",
-        "symfony/lock": "^6.0|^7.0|^8.0"
+        "omnibase/admin": "^1.0",
+        "omnibridge/doctrine": "^1.0",
+        "omnibridge/symfony": "^1.1",
+        "omnisense/omnibase": "^5.1",
+        "omnisense/omnistate": "^1.0",
+        "omnistate/annuaire-entreprises": "^1.0",
+        "omnistate/vies": "^1.0",
+        "symfony/config": "^6.0|^7.0|^8.0",
+        "symfony/dependency-injection": "^6.0|^7.0|^8.0",
+        "symfony/doctrine-bridge": "^6.4|^7.0|^8.0",
+        "symfony/form": "^6.0|^7.0|^8.0",
+        "symfony/http-kernel": "^6.0|^7.0|^8.0",
+        "symfony/lock": "^6.0|^7.0|^8.0",
+        "symfony/security-bundle": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
-        "omnisense/omnibus": "2.x-dev",
-        "omnisense/omnitrade": "1.x-dev",
+        "omnisense/omnibus": "^2.0",
+        "omnisense/omnitrade": "^1.1",
         "phpunit/phpunit": "^9.6",
         "symfony/console": "^6.0|^7.0|^8.0",
         "symfony/framework-bundle": "^6.0|^7.0|^8.0",
@@ -58,6 +61,11 @@
         "symfony/messenger": "^6.0|^7.0|^8.0",
         "symfony/twig-bundle": "^6.0|^7.0|^8.0",
         "symfony/var-dumper": "^6.0|^7.0|^8.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
     },
     "scripts": {
         "test": "phpunit",
@@ -68,24 +76,17 @@
             "*": "dist"
         },
         "sort-packages": true,
-        "minimum-stability": "dev",
         "allow-plugins": {
             "omnibridge/composer": true,
             "php-http/discovery": true
         }
     },
     "suggest": {
-        "omnisense/omnitrade": "Pay through its gateways (omnitrade/stripe, omnitrade/paypal...): a PaymentMethod names one",
-        "omnisense/omnibus": "Ship through its carriers (omnibus/mondial-relay, omnibus/ups...): a ShippingMethod names one",
+        "omnisense/omnitrade": "^1.1: pay through its gateways (omnitrade/stripe, omnitrade/paypal...): a PaymentMethod names one; a saved method charged with no page needs 1.1",
+        "omnisense/omnibus": "^2.0: ship through its carriers (omnibus/mondial-relay, omnibus/ups...): a ShippingMethod names one",
         "omnisense/omnibill": "Send the invoices through its gateways, their lifecycle statuses kept (marketplace.invoice.gateway); not on Packagist yet - a vcs repository, https://github.com/glitchr-omnisense/omnibill",
         "omnibill/email": "The default invoicing gateway: the invoice e-mailed from the seller's address, its statuses kept by hand (https://github.com/glitchr-omnisense/omnibill-email)",
         "omnibill/afnor": "An approved platform (XP Z12-013), the day the shop must issue through one (https://github.com/glitchr-omnisense/omnibill-afnor)",
         "omnisense/omnisign": "Accept a priced quote by signing it in the page (marketplace.quotes.signature), with omnisense/omnibase's Base\\Service\\Signatures; not on Packagist yet - https://github.com/glitchr-omnisense/omnisign"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/glitchr-omnisense/omnitrade"
-        }
-    ]
+    }
 }

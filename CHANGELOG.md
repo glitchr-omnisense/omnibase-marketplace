@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-13
+
+### Changed
+
+- Installs with the default minimum-stability: stable requirements (`omnisense/omnibase` ^5.1, `omnibridge/symfony`
+  ^1.1, `omnibase/admin` ^1.0, `omnisense/omnistate`, `omnistate/vies` and `omnistate/annuaire-entreprises` ^1.0), a
+  branch alias, no `minimum-stability: dev` left to the sites, no vcs repository.
+- `omnibridge/doctrine` ^1.0, `doctrine/doctrine-bundle` and `symfony/doctrine-bridge` required: the repositories
+  extend omnibridge/doctrine's `ServiceEntityRepository`, the admin forms use `EntityType`.
+- require-dev and suggested: `omnisense/omnitrade` ^1.1 (saved methods), `omnisense/omnibus` ^2.0.
+- CI: glitchr-studio/ci's package workflow (the bundle installed alone, composer validate, PHPUnit, PHPStan against
+  its baseline, a consumer install without require-dev) and its release workflow.
+
 ### Added
 - A saved method charged with no page (omnisense/omnitrade 1.1's `Payment::$savedMethod`): a
   `PaymentPreparingEvent` listener sets `$savedMethod` and `$customer` (the provider's customer it

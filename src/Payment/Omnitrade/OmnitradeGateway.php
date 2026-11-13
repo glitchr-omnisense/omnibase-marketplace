@@ -186,6 +186,18 @@ final class OmnitradeGateway implements PaymentGatewayInterface
         $customer = $order->getCustomer();
         $address = $order->getShippingAddress();
 
+        // The named arguments: those of every omnitrade 1.x, then Connect's and the saved method's where known.
+        /** @var array<string, mixed> $named */
+        $named = [
+            'returnUrl' => $event->returnUrl ?? $return([]),
+            'cancelUrl' => $return(['cancel' => 1]),
+            'idempotencyKey' => sprintf('%s-%s', $order->getReference() ?? $order->getId(), $transaction->getId() ?? spl_object_id($transaction)),
+            'method' => $method->getGatewayParameters()['method'] ?? null,
+            'notice' => $order->getVatExemption(),
+            'metadata' => $event->metadata,
+            'locale' => $event->locale,
+        ] + $connect + $saved;
+
         return new Payment(
             Money::of((int) $order->getNetPrice(), $currency),
             (string) ($order->getReference() ?? '#'.$order->getId()),
@@ -201,15 +213,7 @@ final class OmnitradeGateway implements PaymentGatewayInterface
                 $address?->getCountry(),
             ),
             $this->lines($order, $currency),
-            ...[
-                'returnUrl' => $event->returnUrl ?? $return([]),
-                'cancelUrl' => $return(['cancel' => 1]),
-                'idempotencyKey' => sprintf('%s-%s', $order->getReference() ?? $order->getId(), $transaction->getId() ?? spl_object_id($transaction)),
-                'method' => $method->getGatewayParameters()['method'] ?? null,
-                'notice' => $order->getVatExemption(),
-                'metadata' => $event->metadata,
-                'locale' => $event->locale,
-            ] + $connect + $saved,
+            ...$named,
         );
     }
 

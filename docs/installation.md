@@ -8,8 +8,9 @@ order: 10
 ## Requirements
 
 PHP 8.2 or later, Symfony 7.4 or 8 (config, dependency-injection, form,
-http-kernel, security-bundle, lock), Doctrine ORM, omnisense/omnibase 3.x or
-4.x, omnibridge/symfony 1.x, omnibase/admin, omnisense/omnistate with
+http-kernel, security-bundle, lock), Doctrine ORM through omnibridge/doctrine
+1.x, omnisense/omnibase 5.1 (PHP 8.4), omnibridge/symfony 1.1, omnibase/admin
+1.x, omnisense/omnistate 1.x with
 omnistate/annuaire-entreprises and omnistate/vies (business customers' VAT
 and company numbers), dompdf/dompdf (the invoices' PDF) and
 horstoeko/zugferd (their Factur-X data).
@@ -22,7 +23,7 @@ omnibus/ups...), omnisense/omnibill with omnibill/email or omnibill/afnor
 ## The bundle
 
 ```bash
-composer require omnibase/marketplace:dev-main
+composer require omnibase/marketplace
 ```
 
 ```php
