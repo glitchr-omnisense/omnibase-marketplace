@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-14
+
+### Changed
+
+- Accepts omnisense/omnibase 6.0, omnibridge/symfony 2.0 and omnibridge/doctrine 2.0 beside 5.1, 1.1 and 1.0
+  (`^5.1 || ^6.0`, `^1.1 || ^2.0`, `^1.0 || ^2.0`). The same code runs on both lines.
+
+### Fixed
+
+- `Product::__autocomplete()` and `Review::__autocomplete()` fell back on BaseTrait's `getTwig()`, which
+  omnisense/omnibase 6.0 removes, when no omnibridge Views is registered: they answer the entity's name then. Under
+  Symfony (TwigViews) nothing changes.
+- `QuoteSignaturesTest` gives `Base\Service\Signatures` a unit of work (`UnitOfWorks::of()`), not the entity manager,
+  which 6.0 no longer takes.
+
 ## [1.1.1] - 2026-11-14
 
 ### Fixed

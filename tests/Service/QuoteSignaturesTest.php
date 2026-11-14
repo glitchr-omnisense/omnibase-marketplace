@@ -2,6 +2,7 @@
 
 namespace Tests\Base\Marketplace\Service;
 
+use Base\Database\UnitOfWorks;
 use Base\Entity\Signature\Envelope;
 use Base\Event\SignatureEvent;
 use Base\Marketplace\Entity\Quote;
@@ -67,7 +68,7 @@ final class QuoteSignaturesTest extends MarketplaceKernelTestCase
         $registry = new Registry([new DocusealGatewayFactory($http)], ['contracts' => ['factory' => 'docuseal', 'options' => ['url' => 'http://localhost:13300/api', 'api_key' => 'k']]]);
         $container = self::getContainer();
         $dispatcher ??= new EventDispatcher();
-        $this->signatures = $signatures = new Signatures($this->entityManager, $container->get('flysystem'), $registry, $dispatcher, uploads: $container->getParameter('base.uploader.storage'));
+        $this->signatures = $signatures = new Signatures(UnitOfWorks::of($this->entityManager), $container->get('flysystem'), $registry, $dispatcher, uploads: $container->getParameter('base.uploader.storage'));
         $quoteSignatures = new QuoteSignatures($signatures, $container->get(QuoteToOrder::class), $this->entityManager, $container->get('twig'), null, $gateway, null, (array) $container->getParameter('marketplace.invoice.seller'));
         $dispatcher->addListener(SignatureEvent::COMPLETED, $quoteSignatures->onCompleted(...));
 
