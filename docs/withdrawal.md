@@ -116,6 +116,13 @@ With `confirmation_email: false` the host sends its own; `@Marketplace/email/_co
 and its hash changes the version, so a client or a page showing the older wording is asked again.
 Japanese has no consent texts: they fall back as the catalogue does.
 
+The language (since 1.1.1): the one a caller asks (omnibase/forge's `?locale=`), else the current
+request's - the page's language as the host resolves it (its address, the member's own language,
+the visitor's choice, the browser's) -, else the translator's, else `kernel.default_locale`; never a
+fixed one. Each statement's `locale`, recorded with it, is the language its text was found in: a
+language the catalogues have no text for falls back as they do, and the record says the language
+of the words recorded, not the one asked.
+
 ## Businesses
 
 `businesses: ask` (default) asks every buyer the withdrawal statements. `skip` leaves them out

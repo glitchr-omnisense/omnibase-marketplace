@@ -41,6 +41,8 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
     private array $methods = [];
     /** @var array<string, string> */
     private array $cookies = [];
+    /** The browser's language, sent with every request when set (Accept-Language). */
+    private ?string $language = null;
 
     protected function setUp(): void
     {
@@ -124,6 +126,51 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
         self::assertStringContainsString($this->termsUrl(), $body);
     }
 
+    public function testAFrenchPageShowsRecordsAndConfirmsTheFrenchTexts(): void
+    {
+        $this->terms('2026-11-14');
+        $cart = $this->cart(Withdrawal::DIGITAL_CONTENT, 'fr');
+        $this->language = 'fr';
+        $french = fn (string $key) => $this->text($key, 'fr');
+        self::assertNotSame($this->text('immediate_supply', 'en'), $french('immediate_supply'), 'two wordings to tell apart');
+
+        $page = $this->request('GET', $this->checkout($cart));
+        self::assertSame(200, $page->getStatusCode());
+        $html = (string) $page->getContent();
+        self::assertStringContainsString($french('immediate_supply'), html_entity_decode($html, \ENT_QUOTES), 'shown in French');
+
+        $paid = $this->pay($cart, $html, ['terms' => '1', 'immediate_supply' => '1']);
+        self::assertSame(302, $paid->getStatusCode(), substr((string) $paid->getContent(), 0, 2000));
+        $this->entityManager->clear();
+        $order = $this->entityManager->find(Order::class, $cart->getId());
+        $consents = $this->consents($order);
+        self::assertSame(['terms', 'immediate_supply'], array_map(static fn (Consent $c) => $c->getStatement(), $consents));
+        foreach ($consents as $consent) {
+            self::assertSame([$french($consent->getStatement()), hash('sha256', $french($consent->getStatement())), 'fr'], [$consent->getText(), $consent->getHash(), $consent->getLocale()], 'recorded in French, said so');
+        }
+        $mails = array_values(array_filter(self::getMailerMessages(), static fn ($m) => $m instanceof Email && str_contains((string) $m->getSubject(), (string) $order->getReference())));
+        self::assertCount(1, $mails);
+        self::assertStringContainsString($french('immediate_supply'), html_entity_decode((string) $mails[0]->getHtmlBody(), \ENT_QUOTES), 'confirmed in French');
+    }
+
+    public function testEachStatementSaysTheLanguageItsTextIsIn(): void
+    {
+        $this->terms('2026-11-14');
+        $cart = $this->cart(Withdrawal::DIGITAL_CONTENT);
+        $consents = self::getContainer()->get(Consents::class);
+
+        foreach (['fr' => 'fr', 'fr_FR' => 'fr', 'en' => 'en'] as $asked => $language) {
+            foreach ($consents->statementsFor($cart, $asked) as $statement) {
+                self::assertSame([$language, $this->text($statement->id, $language)], [$statement->locale, $statement->text], $asked.': '.$statement->id);
+            }
+        }
+        // A language the bundle has no text for: the catalogues' fallback, and the statement says which.
+        foreach ($consents->statementsFor($cart, 'xx') as $statement) {
+            self::assertNotSame('xx', $statement->locale);
+            self::assertSame($this->text($statement->id, $statement->locale), $statement->text);
+        }
+    }
+
     public function testABasketWithoutDigitalContentAsksForTheTermsOnly(): void
     {
         $this->terms();
@@ -198,7 +245,7 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
     private function terms(?string $version = null): void
     {
         $container = self::getContainer();
-        $container->set(Consents::class, new Consents($container->get(EntityManagerInterface::class), $container->get(TranslatorInterface::class), $container->get(RouterInterface::class), 'marketplace_cart', [], $version));
+        $container->set(Consents::class, new Consents($container->get(EntityManagerInterface::class), $container->get(TranslatorInterface::class), $container->get(RouterInterface::class), 'marketplace_cart', [], $version, 'ask', $container->get('request_stack'), (string) $container->getParameter('kernel.default_locale')));
     }
 
     private function termsUrl(): string
@@ -206,16 +253,19 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
         return self::getContainer()->get(RouterInterface::class)->generate('marketplace_cart', [], RouterInterface::ABSOLUTE_URL);
     }
 
-    private function text(string $key): string
+    private function text(string $key, ?string $locale = null): string
     {
-        return self::getContainer()->get(TranslatorInterface::class)->trans('@marketplace.consent.'.$key);
+        return self::getContainer()->get(TranslatorInterface::class)->trans('@marketplace.consent.'.$key, [], null, $locale);
     }
 
-    /** A signed-in buyer's cart of one pack of credits marked as $withdrawal. */
-    private function cart(Withdrawal $withdrawal): Order
+    /** A signed-in buyer's cart of one pack of credits marked as $withdrawal; the buyer's own language $locale. */
+    private function cart(Withdrawal $withdrawal, ?string $locale = null): Order
     {
         $buyer = $this->user('buyer');
         $buyer->setRoles(['ROLE_USER']);
+        if (null !== $locale && method_exists($buyer, 'setLocale')) {
+            $buyer->setLocale($locale);
+        }
         if (method_exists($buyer, 'verify')) {
             $buyer->verify();
         }
@@ -269,7 +319,9 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
     /** @param array<string, mixed> $parameters */
     private function request(string $method, string $uri, array $parameters = []): Response
     {
-        $response = self::$kernel->handle(Request::create('https://localhost'.$uri, $method, $parameters, $this->cookies, [], ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_ORIGIN' => 'https://localhost']));
+        $server = ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_ORIGIN' => 'https://localhost'] + (null !== $this->language ? ['HTTP_ACCEPT_LANGUAGE' => $this->language] : []);
+        $cookies = $this->cookies + (null !== $this->language ? ['LANG' => $this->language] : []);
+        $response = self::$kernel->handle(Request::create('https://localhost'.$uri, $method, $parameters, $cookies, [], $server));
         foreach ($response->headers->getCookies() as $cookie) {
             $this->cookies[$cookie->getName()] = (string) $cookie->getValue();
         }

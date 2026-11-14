@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-14
+
+### Fixed
+
+- The statements were shown, recorded and e-mailed in English on a site in another language: `Consents` took the
+  translator's language only from a translator implementing `LocaleAwareInterface`, which omnisense/omnibase's
+  `Base\Service\Translator` does not, and fell back on a fixed `'en'`. The language is now the one asked, else the
+  current request's, else the translator's (any translator that says it), else `kernel.default_locale`
+  (`Consents::locale()`). Each statement's `locale` is the language its text was actually found in (the catalogues'
+  fallbacks followed), so a record's `locale` is always the language of its `text`.
+- `Consents` takes two optional trailing arguments, `RequestStack` and `kernel.default_locale` (autowired).
+- `CheckoutConsentTest`: a French page shows, records (text, hash, `fr`) and confirms the French texts; each
+  statement says the language its text is in (`fr_FR` is `fr`, an unknown language its fallback). docs/withdrawal.md,
+  "The texts".
+
 ## [1.1.0] - 2026-11-14
 
 ### Added
