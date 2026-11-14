@@ -30,7 +30,8 @@ and the zones in [Lots, the age gate, where the shop delivers](selling-rules.md)
 [Lists of wishes](wishlists.md), `referral` in [Referrals](referrals.md),
 the suppliers (`supply`) in [Made to order](supply.md), `attachments` and
 `pickup` in [Hand-overs, options, starting prices, files](pickup-and-options.md),
-`catalogue` in [A catalogue kept on a platform](platform-catalogue.md).
+`catalogue` in [A catalogue kept on a platform](platform-catalogue.md),
+`consent` in [Terms of sale and the right of withdrawal](withdrawal.md).
 
 ## The whole tree
 
@@ -56,6 +57,22 @@ marketplace:
 
     # The mention after every price: "excl" ("HT") for a shop that quotes to businesses, "incl" ("TTC"), null for none. A total paid, VAT in it, says "TTC" whatever this is; a template may say otherwise for one amount (@Marketplace/client/_price.html.twig, price_tax).
     price_tax:            null # One of null; "excl"; "incl"
+    consent:
+
+        # The route of the host's terms of sale: with one, every checkout requires the box "I have read and accept the terms of sale", linked to it. Null: no such box.
+        terms_route:          null
+
+        # The parameters that route takes.
+        terms_route_parameters: []
+
+        # The version of the terms in force, as the host names it ("2026-11-14"): recorded with each statement and shown in the confirmation e-mail. The texts' own SHA-256 is recorded either way.
+        terms_version:        null
+
+        # "ask": every buyer is asked the withdrawal statements, as a consumer. "skip": not a buyer with a confirmed VAT number (Model\VatCustomerInterface), taken as a business buying for its trade - the terms are still accepted. A lawyer's call: docs/withdrawal.md.
+        businesses:           ask # One of "ask"; "skip"
+
+        # Once paid, an order carrying statements is confirmed to its buyer by e-mail (the durable medium of L221-13): @Marketplace/email/order_confirmation.html.twig. Off: the host sends its own (@Marketplace/email/_consents.html.twig lists them).
+        confirmation_email:   true
     quick_order:
 
         # The form of @Marketplace/client/_quick_order.html.twig takes orders.

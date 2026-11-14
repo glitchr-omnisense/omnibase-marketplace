@@ -3,16 +3,21 @@
 namespace Base\Marketplace\Controller\Client;
 
 use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Order\Consent;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Product;
+use Base\Marketplace\Form\CheckoutConsentType;
+use Base\Marketplace\Model\ConsentStatement;
 use Base\Marketplace\Payment\PaymentResult;
 use Base\Marketplace\Service\Cart;
 use Base\Marketplace\Service\CartException;
 use Base\Marketplace\Service\Checkout;
+use Base\Marketplace\Service\Consents;
 use Base\Marketplace\Service\Pricing;
 use Base\Marketplace\Service\Shipping;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -87,7 +92,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/panier/{order}/commander', name: 'marketplace_checkout', requirements: ['order' => '\d+'])]
-    public function Checkout(Request $request, int $order, Pricing $pricing, Shipping $shipping): Response
+    public function Checkout(Request $request, int $order, Pricing $pricing, Shipping $shipping, Consents $consents): Response
     {
         $cart = $this->entityManager->getRepository(Order::class)->find($order);
         if (!$cart instanceof Order) {
@@ -102,9 +107,20 @@ class CartController extends AbstractController
         }
 
         $methods = $this->checkout->methodsFor($cart);
+        // What the buyer states before paying (marketplace.consent): the terms of sale, the
+        // withdrawal statements the lines call for. None: the checkout as it always was.
+        $statements = $consents->statementsFor($cart);
+        $consent = [] !== $statements ? $this->consentForm($statements, $consents->version($statements)) : null;
 
         if ($request->isMethod('POST')) {
             $this->csrf($request, 'marketplace_checkout_'.$cart->getId());
+            if (null !== $consent) {
+                // Submitted whatever was posted: a box left unticked is not posted at all.
+                $consent->submit($request->request->all('consent'));
+                if (!$consent->isValid()) {
+                    return $this->page($cart, $methods, $shipping, $consent, $statements, Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+            }
             $method = $this->entityManager->getRepository(PaymentMethod::class)->find($request->request->getInt('method'));
             if (!$method instanceof PaymentMethod || !in_array($method, $methods, true)) {
                 $this->addFlash('error', $this->translator->trans('@marketplace.checkout.error.method'));
@@ -130,6 +146,9 @@ class CartController extends AbstractController
                     return $this->redirectToRoute('marketplace_checkout', ['order' => $cart->getId()]);
                 }
             }
+            if ([] !== $statements) {
+                $consents->record($cart, $statements, Consent::CHECKOUT);
+            }
             $pricing->reprice($cart);
             $this->entityManager->flush();
 
@@ -150,13 +169,30 @@ class CartController extends AbstractController
         $pricing->reprice($cart);
         $this->entityManager->flush();
 
+        return $this->page($cart, $methods, $shipping, $consent, $statements);
+    }
+
+    /**
+     * @param PaymentMethod[]        $methods
+     * @param list<ConsentStatement> $statements
+     */
+    private function page(Order $cart, array $methods, Shipping $shipping, ?FormInterface $consent, array $statements, int $status = Response::HTTP_OK): Response
+    {
         return $this->render('@Marketplace/client/checkout.html.twig', [
             'order' => $cart,
             'methods' => $methods,
             'needs_shipping' => $shipping->needsShipping($cart),
             'shipping_options' => $shipping->optionsFor($cart),
             'address' => $shipping->addressOf($cart),
-        ]);
+            'consent' => $consent?->createView(),
+            'consent_statements' => $statements,
+        ], new Response(null, $status));
+    }
+
+    /** @param list<ConsentStatement> $statements */
+    private function consentForm(array $statements, string $version): FormInterface
+    {
+        return $this->container->get('form.factory')->createNamed('consent', CheckoutConsentType::class, null, ['statements' => $statements, 'version' => $version]);
     }
 
     private function done(Order $order, PaymentResult $result): Response

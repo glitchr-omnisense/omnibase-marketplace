@@ -22,6 +22,7 @@ omnisense/omnitrade - and what any trade adds to it:
 - [Made to order: suppliers](supply.md)
 - [Hand-overs, options, starting prices, files](pickup-and-options.md)
 - [Invoices and credit notes](invoices.md)
+- [Terms of sale and the right of withdrawal](withdrawal.md)
 - [Configuration reference](configuration.md)
 - [Reference: routes, Twig, commands, events](reference.md)
 - [Testing](testing.md)

@@ -49,6 +49,18 @@
                 <span class="marketplace-method-label">{{ method.label ?? method.slug }}</span>
             </label>
         {% endfor %}
+        {# What the buyer states before paying (Service\Consents): none ticked beforehand, each one required. #}
+        {% if consent is defined and consent %}
+        <fieldset class="marketplace-consent">
+            <legend>{{ '@marketplace.consent.title'|trans }}</legend>
+            {% for statement in consent_statements %}
+                {{ form_row(consent[statement.id]) }}
+                {% if statement.url %}<p class="marketplace-note"><a href="{{ statement.url }}" target="_blank" rel="noopener">{{ '@marketplace.consent.terms_link'|trans }}</a></p>{% endif %}
+            {% endfor %}
+            {{ form_errors(consent) }}
+            {{ form_widget(consent.version) }}
+        </fieldset>
+        {% endif %}
         <button class="marketplace-btn marketplace-btn-primary" type="submit"><i class="fa-solid fa-lock"></i> {{ '@marketplace.checkout.confirm'|trans }}</button>
     </form>
     {% endif %}

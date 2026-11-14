@@ -434,6 +434,7 @@ quick:
     email: "Cette adresse e-mail ne semble pas valide."
     unavailable: "Cet article n'est plus en vente."
     one_store: "Ces articles ne viennent pas de la même boutique."
+    statements: "Cet article demande une déclaration avant le paiement (fourniture immédiate, début anticipé) : il se commande depuis le panier."
     payment: "Le paiement est indisponible pour le moment. Réessayez un peu plus tard."
     refused: "Le paiement a été refusé."
     cancelled: "Paiement annulé : rien n'a été débité."
@@ -665,3 +666,29 @@ ereport:
     send: "Transmettre"
     sent: "Période {period} transmise : {reference}."
     not_sent: "Période {period} non transmise : {error}"
+# What the buyer states before paying (Service\Consents). The statements are the buyer's own words
+# ("je"); a host may word them otherwise in its catalogue - the exact text shown is recorded.
+consent:
+  title: "Avant de payer"
+  terms: "J'ai lu et j'accepte les conditions générales de vente."
+  terms_link: "Lire les conditions générales de vente"
+  immediate_supply: "Je demande la fourniture immédiate du contenu numérique, dès le paiement, et je reconnais perdre ainsi mon droit de rétractation."
+  early_service: "Je demande que la prestation commence avant la fin du délai de rétractation de quatorze jours. Je reconnais que, si je me rétracte, je paierai la part déjà fournie, et que je perdrai mon droit de rétractation une fois la prestation entièrement exécutée."
+  error:
+    terms: "Accepte les conditions générales de vente pour commander."
+    terms._polite: "Acceptez les conditions générales de vente pour commander."
+    immediate_supply: "Cette commande contient un contenu numérique fourni dès le paiement : coche la case de fourniture immédiate pour commander."
+    immediate_supply._polite: "Cette commande contient un contenu numérique fourni dès le paiement : cochez la case de fourniture immédiate pour commander."
+    early_service: "Cette commande contient une prestation qui commence dès le paiement : coche la case correspondante pour commander."
+    early_service._polite: "Cette commande contient une prestation qui commence dès le paiement : cochez la case correspondante pour commander."
+    changed: "Les textes à accepter ont changé : relis-les et coche à nouveau les cases."
+    changed._polite: "Les textes à accepter ont changé : relisez-les et cochez à nouveau les cases."
+  mail:
+    subject: "Confirmation de ta commande {reference}"
+    subject._polite: "Confirmation de votre commande {reference}"
+    text: "Ta commande {reference} de {total} est payée le {date}. Elle comprend :"
+    text._polite: "Votre commande {reference} de {total} est payée le {date}. Elle comprend :"
+    statements: "Avant de payer, le {date}, tu as déclaré :"
+    statements._polite: "Avant de payer, le {date}, vous avez déclaré :"
+    terms_version: "Version des conditions générales de vente acceptées : {version}."
+    action: "Voir la commande"

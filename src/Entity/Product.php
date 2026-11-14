@@ -1085,6 +1085,45 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
         return $this;
     }
 
+    /**
+     * How it stands towards a consumer's right of withdrawal (Enum\Withdrawal), as its seller
+     * marked it - what the checkout asks the buyer to state before paying (Service\Consents).
+     * Kept as its value; null: as its principal for a variant, else as its class says
+     * (defaultWithdrawal()).
+     */
+    #[ORM\Column(type: 'string', length: 16, nullable: true)]
+    protected ?string $withdrawal = null;
+
+    public function getWithdrawal(): \Base\Marketplace\Enum\Withdrawal
+    {
+        $withdrawal = \Base\Marketplace\Enum\Withdrawal::tryFrom((string) $this->withdrawal);
+        if (null !== $withdrawal) {
+            return $withdrawal;
+        }
+        if ($this->isVariant() && method_exists($this, 'getPrincipal') && $this->getPrincipal() instanceof self) {
+            return $this->getPrincipal()->getWithdrawal();
+        }
+
+        return $this->defaultWithdrawal();
+    }
+
+    /** Null: back to its class's (or its principal's) default. */
+    public function setWithdrawal(\Base\Marketplace\Enum\Withdrawal|string|null $withdrawal): self
+    {
+        $this->withdrawal = $withdrawal instanceof \Base\Marketplace\Enum\Withdrawal ? $withdrawal->value : (null === $withdrawal ? null : \Base\Marketplace\Enum\Withdrawal::from($withdrawal)->value);
+
+        return $this;
+    }
+
+    /**
+     * What a product of this class is when nothing is set on it: nothing to state. A subclass
+     * selling digital content or a service says so (omnibase/forge's LicenseOffer, HourPack).
+     */
+    protected function defaultWithdrawal(): \Base\Marketplace\Enum\Withdrawal
+    {
+        return \Base\Marketplace\Enum\Withdrawal::NONE;
+    }
+
     public function isPlan(): bool
     {
         return \Base\Marketplace\Enum\ProductKind::PLAN === $this->getKind();

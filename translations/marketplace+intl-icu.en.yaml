@@ -419,6 +419,7 @@ quick:
     email: "This e-mail address does not look valid."
     unavailable: "This item is no longer for sale."
     one_store: "These items do not come from the same shop."
+    statements: "This item asks for statements before payment (immediate supply, an early start): order it from the basket."
     payment: "Payment is unavailable for the moment. Try again a little later."
     refused: "The payment was refused."
     cancelled: "Payment cancelled: nothing was charged."
@@ -650,3 +651,22 @@ ereport:
     send: "Transmit"
     sent: "Period {period} transmitted: {reference}."
     not_sent: "Period {period} not transmitted: {error}"
+# What the buyer states before paying (Service\Consents). The statements are the buyer's own words;
+# a host may word them otherwise in its catalogue - the exact text shown is recorded.
+consent:
+  title: "Before you pay"
+  terms: "I have read and accept the terms of sale."
+  terms_link: "Read the terms of sale"
+  immediate_supply: "I ask for the digital content to be supplied immediately, as soon as I pay, and I acknowledge that I thereby lose my right of withdrawal."
+  early_service: "I ask for the service to begin before the 14-day withdrawal period ends. I acknowledge that if I withdraw, I will pay for what has already been provided, and that I lose my right of withdrawal once the service has been fully performed."
+  error:
+    terms: "Accept the terms of sale to order."
+    immediate_supply: "This order contains digital content supplied as soon as it is paid: tick the immediate supply box to order."
+    early_service: "This order contains a service that begins as soon as it is paid: tick its box to order."
+    changed: "The texts to accept have changed: read them again and tick the boxes again."
+  mail:
+    subject: "Your order {reference} is confirmed"
+    text: "Your order {reference} of {total} was paid on {date}. It contains:"
+    statements: "Before paying, on {date}, you stated:"
+    terms_version: "Version of the terms of sale accepted: {version}."
+    action: "See the order"

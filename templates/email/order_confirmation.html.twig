@@ -1,0 +1,15 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}{{ '@marketplace.consent.mail.subject'|trans({'{reference}': order.reference}) }}{% endblock %}
+{% block action_url %}{{ link }}{% endblock %}
+{% block action_text %}{{ '@marketplace.consent.mail.action'|trans }}{% endblock %}
+
+{% block content %}
+<p>{{ '@marketplace.consent.mail.text'|trans({'{reference}': order.reference, '{total}': order.netPrice|invoice_money(order.currency), '{date}': (order.paidAt ?? 'now')|date('Y-m-d')}) }}</p>
+<ul>
+{% for item in order.items %}
+    <li>{{ item.quantity }} × {{ item.product ?? item }}</li>
+{% endfor %}
+</ul>
+{% include '@Marketplace/email/_consents.html.twig' with {consents: consents, terms_version: terms_version} %}
+{% endblock %}

@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-14
+
+### Added
+
+- What a buyer states before paying, recorded and confirmed (docs/withdrawal.md). An engineering mechanism prepared
+  for a lawyer's review, its assumptions listed there. Backward compatible: nothing is asked until the host names
+  its terms or marks a product.
+  - `marketplace.consent`: `terms_route` (+ `terms_route_parameters`), `terms_version`, `businesses` (`ask` |
+    `skip`), `confirmation_email`.
+  - `Enum\Withdrawal` (`none`, `digital_content`, `service`) and `Product::getWithdrawal()` / `setWithdrawal()`,
+    kept in a new nullable column `withdrawal`; a variant is as its principal, a product class says its own by
+    `defaultWithdrawal()`.
+  - The checkout (`Form\CheckoutConsentType`, inside its form): the terms of sale's box whenever `terms_route` is
+    set, the immediate supply's box for digital content (Code de la consommation L221-28 13°), the early start's
+    for a service (L221-25, L221-28 1°); unticked, each one required, the version of the texts shown checked. A box
+    missing or texts changed: the page again, 422, nothing paid.
+  - `Entity\Order\Consent` (table `marketplace_order_consent`): each statement word for word, its SHA-256, its
+    language, the terms' link and version, the channel (`checkout`, `hub`), when. No IP address, no user agent.
+  - `Service\Consents`: the statements an order asks (`statementsFor()`), their version, `record()`, `of()` - what
+    omnibase/forge's one-click purchases use as well.
+  - `EventListener\OrderConfirmationListener`: an order paid that carries statements is confirmed to its buyer by
+    e-mail (`@Marketplace/email/order_confirmation.html.twig`, the durable medium of L221-13);
+    `@Marketplace/email/_consents.html.twig` for a host's own e-mail.
+  - The texts in `@marketplace.consent.*`, fr and en.
+  - `CheckoutConsentTest`.
+
+### Changed
+
+- A quick order refuses a product marked `digital_content` or `service` (`quick.error.statements`): it asks no
+  statement; the basket does.
+
+### Schema
+
+- New table `marketplace_order_consent`, new nullable column `withdrawal` on the products' table: the host's
+  migration (`make:migration`).
+
 ## [1.0.0] - 2026-11-13
 
 ### Changed

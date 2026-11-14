@@ -35,6 +35,23 @@ class MarketplaceConfiguration extends AbstractBaseConfiguration
                     ->info('Whether a visitor who is not signed in may fill a cart.')->end()
                 ->enumNode('price_tax')->values([null, 'excl', 'incl'])->defaultNull()
                     ->info('The mention after every price: "excl" ("HT") for a shop that quotes to businesses, "incl" ("TTC"), null for none. A total paid, VAT in it, says "TTC" whatever this is; a template may say otherwise for one amount (@Marketplace/client/_price.html.twig, price_tax).')->end()
+                // What a buyer states before paying, recorded on the order and confirmed by e-mail
+                // (Service\Consents, Entity\Order\Consent, docs/withdrawal.md). Nothing is asked
+                // until the host names its terms' route or marks a product (Enum\Withdrawal).
+                ->arrayNode('consent')->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('terms_route')->defaultNull()
+                            ->info('The route of the host\'s terms of sale: with one, every checkout requires the box "I have read and accept the terms of sale", linked to it. Null: no such box.')->end()
+                        ->arrayNode('terms_route_parameters')->variablePrototype()->end()->defaultValue([])
+                            ->info('The parameters that route takes.')->end()
+                        ->scalarNode('terms_version')->defaultNull()
+                            ->info('The version of the terms in force, as the host names it ("2026-11-14"): recorded with each statement and shown in the confirmation e-mail. The texts\' own SHA-256 is recorded either way.')->end()
+                        ->enumNode('businesses')->values(['ask', 'skip'])->defaultValue('ask')
+                            ->info('"ask": every buyer is asked the withdrawal statements, as a consumer. "skip": not a buyer with a confirmed VAT number (Model\VatCustomerInterface), taken as a business buying for its trade - the terms are still accepted. A lawyer\'s call: docs/withdrawal.md.')->end()
+                        ->booleanNode('confirmation_email')->defaultTrue()
+                            ->info('Once paid, an order carrying statements is confirmed to its buyer by e-mail (the durable medium of L221-13): @Marketplace/email/order_confirmation.html.twig. Off: the host sends its own (@Marketplace/email/_consents.html.twig lists them).')->end()
+                    ->end()
+                ->end()
                 // A product bought in one step, with an e-mail address and no account (Service\QuickOrder).
                 ->arrayNode('quick_order')->addDefaultsIfNotSet()
                     ->children()

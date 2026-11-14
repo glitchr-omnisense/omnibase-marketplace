@@ -1,0 +1,10 @@
+{# What the buyer stated before paying (Entity\Order\Consent), word for word, for an e-mail: consents, terms_version. #}
+{% if consents|length > 0 %}
+<p>{{ '@marketplace.consent.mail.statements'|trans({'{date}': consents|first.acceptedAt|date('Y-m-d H:i T')}) }}</p>
+<ul>
+{% for consent in consents %}
+    <li>« {{ consent.text }} »{% if consent.url %} - <a href="{{ consent.url }}">{{ consent.url }}</a>{% endif %}</li>
+{% endfor %}
+</ul>
+{% if terms_version is defined and terms_version %}<p>{{ '@marketplace.consent.mail.terms_version'|trans({'{version}': terms_version}) }}</p>{% endif %}
+{% endif %}

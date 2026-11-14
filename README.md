@@ -202,6 +202,10 @@ A product can name its maker (`Brand`: a wine estate, a house - Shopify's vendor
 
 An order paid gets its invoice (`Entity\Invoice`, `Service\Invoices::issue()`, by itself with `marketplace.invoice.auto_issue`): a number from a sequence without a gap per series and year (F-2026-000041), the seller and the buyer as they are that day, the order's lines and VAT, the French mentions; a PDF carrying its Factur-X XML (EN 16931, `horstoeko/zugferd`); never changed once issued - a credit note cancels it. The buyer downloads it at `/factures/{number}`, the back office sends it, marks it paid, credits it. Sites create its table by a migration. See [docs/invoices.md](docs/invoices.md).
 
+## Terms of sale and the right of withdrawal
+
+Name the host's terms (`marketplace.consent.terms_route`) and the checkout requires the box "I have read and accept the terms of sale"; mark a product as digital content supplied at once or as a service begun on payment (`Enum\Withdrawal`, `Product::setWithdrawal()`) and it adds the statement French and EU law require to waive or shorten the 14-day right of withdrawal (Code de la consommation L221-28, L221-25). None ticked beforehand, each one required; the exact texts recorded on the order (`Entity\Order\Consent`, no IP address, no user agent) and confirmed to the buyer by e-mail once paid. Prepared for a lawyer's review, not legal advice. See [docs/withdrawal.md](docs/withdrawal.md).
+
 ## Business quotes and exports
 
 A professional asks for a quotation (`/cotation`); the seller prices lines - a product or a free line, by the lot - with the trade's terms (export or import, an Incoterm and its place, the country, the volumes, a date), sends it; the client accepts it and pays its order like any other. An order delivered outside the EU carries no VAT (`Pricing\ExportExemption`, art. 262 I CGI), and a cart that should go there is sent to the quotation form instead. omnibase/forge's quotes (hours) are the same `AbstractQuote`. See [docs/quotes.md](docs/quotes.md).

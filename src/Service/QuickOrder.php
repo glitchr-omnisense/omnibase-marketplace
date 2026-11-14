@@ -71,6 +71,11 @@ class QuickOrder
             if (!$product instanceof Product || !$product->isForSell() || !$product->getStore() instanceof Store) {
                 throw new CartException('quick.error.unavailable');
             }
+            // Digital content or a service (Enum\Withdrawal): its buyer states something before paying,
+            // which only the checkout's page asks (Service\Consents) - from the basket, then.
+            if (\Base\Marketplace\Enum\Withdrawal::NONE !== $product->getWithdrawal()) {
+                throw new CartException('quick.error.statements');
+            }
             $store ??= $product->getStore();
             if ($product->getStore() !== $store) {
                 throw new CartException('quick.error.one_store');
