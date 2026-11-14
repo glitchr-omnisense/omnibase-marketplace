@@ -32,6 +32,17 @@
 
 - A quick order refuses a product marked `digital_content` or `service` (`quick.error.statements`): it asks no
   statement; the basket does.
+- The bundle's classes extend omnibridge/symfony's `AbstractBaseBundle`, `AbstractBaseExtension` and
+  `AbstractBaseConfiguration` by their names (`Omnibridge\Symfony\Omnibase\Bundle\*`), no longer by the former
+  `Base\Bundle\*` ones, which omnisense/omnibase keeps only as aliases until 6.0. The same classes: nothing changes
+  for an application. The example application registers `Omnibridge\Symfony\Omnibase\BaseBundle` (`Base\BaseBundle`
+  is its former name).
+- `OrderCrudController`'s "cart" filter says its condition with `Filter::matchWith()` only: its `applyWith()`
+  (Doctrine's QueryBuilder, deprecated by omnibase/admin since its step B1b) is gone. With omnisense/omnibase 5.1 and
+  `OrderRepository`, which reads the finder, the admin builds the orders' list through the finder and never called
+  it. Only an application's controller extending `OrderCrudController` and overriding one of the admin's deprecated
+  QueryBuilder hooks (`createIndexQueryBuilder()`, `applySearch()`, `applyFilters()`) had the filter written on the
+  QueryBuilder; it moves to `indexCriteria()`. `OrderCartFilterTest` drops its QueryBuilder case.
 
 ### Schema
 

@@ -3,7 +3,7 @@
 namespace Base\Marketplace\DependencyInjection;
 
 use Base\Marketplace\Payment\DevGateway;
-use Base\Bundle\AbstractBaseExtension;
+use Omnibridge\Symfony\Omnibase\Bundle\AbstractBaseExtension;
 use Base\Marketplace\Enum\Barcode;
 use Base\Marketplace\Enum\OrderState;
 use Base\Marketplace\Enum\PaymentState;

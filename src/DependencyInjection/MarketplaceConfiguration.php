@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\DependencyInjection;
 
-use Base\Bundle\AbstractBaseConfiguration;
+use Omnibridge\Symfony\Omnibase\Bundle\AbstractBaseConfiguration;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 
 class MarketplaceConfiguration extends AbstractBaseConfiguration

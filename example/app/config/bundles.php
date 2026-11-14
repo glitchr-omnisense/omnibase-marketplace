@@ -15,7 +15,7 @@ return [
     HWI\Bundle\OAuthBundle\HWIOAuthBundle::class => ['all' => true],
     Symfony\WebpackEncoreBundle\WebpackEncoreBundle::class => ['all' => true],
     Google\GoogleBundle::class => ['all' => true],
-    Base\BaseBundle::class => ['all' => true],
+    Omnibridge\Symfony\Omnibase\BaseBundle::class => ['all' => true],
     // The shop ships admin CRUD controllers for its stores, products, orders
     // and payment methods, so it requires base-bundle-admin: registered here
     // even though the demo opens no backoffice.

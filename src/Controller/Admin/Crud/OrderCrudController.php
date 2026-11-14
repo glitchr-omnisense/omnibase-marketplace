@@ -21,7 +21,6 @@ use Base\Admin\Filter\Filter;
 use Base\Database\Repository\Finder\Criterion;
 use Base\Database\Repository\Finder\Parser;
 use Base\Marketplace\Enum\OrderState;
-use Doctrine\ORM\QueryBuilder;
 
 /**
  * Admin view of the orders: a list and a detail page. Their state moves
@@ -103,20 +102,15 @@ class OrderCrudController extends AbstractMarketplaceCrudController
     {
         // Carts and orders share the table: "cart" splits them (every
         // ORDER_CART* state is a cart, abandoned ones included). Said in the
-        // core's finder language, which every persistence reads (matchWith());
-        // the same on Doctrine's QueryBuilder where the list is still built on
-        // it, under omnisense/omnibase 4.x (applyWith()).
+        // core's finder language, which every persistence reads (matchWith();
+        // OrderRepository reads it).
         $isCart = static fn (mixed $value): bool => '1' === $value || 'true' === $value || true === $value;
 
         return $filters
             ->add(Filter::new('cart', 'Cart')->asBoolean()
                 ->matchWith(static fn (mixed $value) => $isCart($value)
                     ? Criterion::of('state', OrderState::CART.'%', Parser::OPTION_PARTIAL)
-                    : Criterion::of('state', OrderState::CART.'%', Parser::OPTION_NOT_EQUAL, Parser::OPTION_PARTIAL))
-                ->applyWith(static function (QueryBuilder $queryBuilder, string $alias, mixed $value) use ($isCart): void {
-                    $queryBuilder->andWhere(sprintf('%s.state %s LIKE :cart_state', $alias, $isCart($value) ? '' : 'NOT'))
-                        ->setParameter('cart_state', OrderState::CART.'%');
-                }))
+                    : Criterion::of('state', OrderState::CART.'%', Parser::OPTION_NOT_EQUAL, Parser::OPTION_PARTIAL)))
             ->add('store')->add('state')->add('customer');
     }
 
