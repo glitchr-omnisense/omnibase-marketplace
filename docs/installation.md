@@ -9,8 +9,8 @@ order: 10
 
 PHP 8.2 or later, Symfony 7.4 or 8 (config, dependency-injection, form,
 http-kernel, security-bundle, lock), Doctrine ORM through omnibridge/doctrine
-1.x, omnisense/omnibase 5.1 (PHP 8.4), omnibridge/symfony 1.1, omnibase/admin
-1.x, omnisense/omnistate 1.x with
+3.x, omnisense/omnibase 7.0 (PHP 8.4), omnibridge/symfony 3.0, omnibase/admin
+2.x, omnisense/omnistate 1.x with
 omnistate/annuaire-entreprises and omnistate/vies (business customers' VAT
 and company numbers), dompdf/dompdf (the invoices' PDF) and
 horstoeko/zugferd (their Factur-X data).

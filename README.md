@@ -1,6 +1,6 @@
 # omnibase/marketplace
 
-A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (5.1 and later 5.x): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
+A shop for [omnisense/omnibase](https://github.com/glitchr-omnisense/omnibase) applications (7.0 and later 7.x): stores, products and variants, carts, checkout, orders, and payment through pluggable gateways. It began as one shop's own marketplace, ported to the core's attributes and stripped of what that shop sold. What a shop sells is the application's business: products are subclassed in the app.
 
 Namespace `Base\Marketplace`, package `omnibase/marketplace`.
 
@@ -48,7 +48,7 @@ The demo app under [example/app/](example/app/) doubles as the minimal host. It 
 composer require omnibase/marketplace
 ```
 
-Under Symfony it runs on the core's Symfony host: Composer brings `omnisense/omnibase` 5.1, `omnibridge/symfony`,
+Under Symfony it runs on the core's Symfony host: Composer brings `omnisense/omnibase` 7.0, `omnibridge/symfony`,
 `omnibridge/doctrine`, `omnibase/admin` and `omnisense/omnistate` with it; `config/bundles.php` registers the core's
 bundle before this one (see the core's README for the other bundles a site usually adds):
 
