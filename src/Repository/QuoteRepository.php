@@ -4,8 +4,8 @@ namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Quote;
 use Base\Marketplace\Quote\QuoteRepositoryTrait;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /**
  * The business quotes, numbered D-<year>-<n> (saveNumbered()), a client's
@@ -17,12 +17,12 @@ class QuoteRepository extends ServiceEntityRepository
 {
     use QuoteRepositoryTrait;
 
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Quote::class);
+        parent::__construct($finders, Quote::class);
     }
 
-    protected function quotePrefix(): string
+    public function quotePrefix(): string
     {
         return 'D';
     }

@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity;
 
 use Base\Marketplace\Repository\InvoiceRepository;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * An invoice of the shop, or a credit note (avoir): what was sold, to whom,

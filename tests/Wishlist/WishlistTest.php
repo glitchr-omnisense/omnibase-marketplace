@@ -52,7 +52,7 @@ final class WishlistTest extends MarketplaceKernelTestCase
 
     private function wishlists(): Wishlists
     {
-        return new Wishlists($this->entityManager, new ProductLookup($this->gateways(), ['amazon', 'web']));
+        return new Wishlists($this->unitOfWork, new ProductLookup($this->gateways(), ['amazon', 'web']));
     }
 
     public function testAWishIsReadFromItsAddress(): void
@@ -80,7 +80,7 @@ final class WishlistTest extends MarketplaceKernelTestCase
         self::assertNull($unknown->getPrice());
         self::assertSame('https://www.artisan.example/berceau', $unknown->getBuyUrl());
 
-        $found = $this->entityManager->getRepository(Wishlist::class)->findForHolder($holder);
+        $found = $this->repository(Wishlist::class)->findForHolder($holder);
         self::assertCount(1, $found);
         self::assertSame($list->getId(), $found[0]->getId());
 
@@ -104,7 +104,7 @@ final class WishlistTest extends MarketplaceKernelTestCase
     public function testAnObjectIsReservedOnce(): void
     {
         $lists = $this->wishlists();
-        $reservations = new Reservations($this->entityManager, 30);
+        $reservations = new Reservations($this->unitOfWork, 30);
         $list = $lists->create($this->user('host'), 'Liste de mariage');
         $item = $lists->addFromUrl($list, 'https://boutique.example/p/poussette-yoyo')->setQuantity(2);
         $this->entityManager->flush();
@@ -148,8 +148,8 @@ final class WishlistTest extends MarketplaceKernelTestCase
         $dispatcher->addListener(ContributionPreparingEvent::class, static function (ContributionPreparingEvent $e): void { $e->fee = (int) round($e->contribution->getAmount() * 0.02); });
 
         $lists = $this->wishlists();
-        $accounts = new PayoutAccounts($this->entityManager, $this->gateways(), 'stripe');
-        $contributions = new Contributions($this->entityManager, $this->gateways(), $dispatcher, 0.03, 0, 500);
+        $accounts = new PayoutAccounts($this->unitOfWork, $this->gateways(), 'stripe');
+        $contributions = new Contributions($this->unitOfWork, $this->gateways(), $dispatcher, 0.03, 0, 500);
         $host = $this->user('host');
         $list = $lists->create($host, 'Liste de mariage');
         $fund = $lists->addFund($list, 'Voyage de noces');
@@ -214,8 +214,8 @@ final class WishlistTest extends MarketplaceKernelTestCase
     public function testASharedGiftTakesNoMoreThanItsPrice(): void
     {
         $lists = $this->wishlists();
-        $accounts = new PayoutAccounts($this->entityManager, $this->gateways(), 'stripe');
-        $contributions = new Contributions($this->entityManager, $this->gateways(), null, 0.03, 0, 500);
+        $accounts = new PayoutAccounts($this->unitOfWork, $this->gateways(), 'stripe');
+        $contributions = new Contributions($this->unitOfWork, $this->gateways(), null, 0.03, 0, 500);
         $host = $this->user('host');
         $list = $lists->create($host, 'Liste');
         $this->provider->accountReady = true;

@@ -7,7 +7,7 @@ use Base\Marketplace\Repository\Order\Address\BillingAddressRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\User\Address;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: BillingAddressRepository::class)]
 #[\Base\Database\Attribute\DiscriminatorEntry(value: 'marketplace_billing_address')]

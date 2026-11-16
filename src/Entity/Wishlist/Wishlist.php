@@ -8,7 +8,7 @@ use Base\Marketplace\Model\WishlistHolderInterface;
 use Base\Marketplace\Repository\Wishlist\WishlistRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A list of wishes: a wedding's or a birthday's gifts, a birth list, a

@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Invoice\Transmission\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * One e-reporting period of the shop (CGI art. 290 and 290 A): the data an

@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity;
 
 use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Repository\AttachmentRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A file somebody gave the shop: with a quote request (a logo, a photo of

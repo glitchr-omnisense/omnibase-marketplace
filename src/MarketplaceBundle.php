@@ -3,7 +3,7 @@
 namespace Base\Marketplace;
 
 use Base\Traits\SingletonTrait;
-use Omnibridge\Symfony\Omnibase\Bundle\AbstractBaseBundle;
+use Base\Bundle\AbstractBaseBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class MarketplaceBundle extends AbstractBaseBundle

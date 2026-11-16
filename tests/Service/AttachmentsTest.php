@@ -3,12 +3,12 @@
 namespace Tests\Base\Marketplace\Service;
 
 use Base\Marketplace\Entity\Attachment;
+use Base\Contract\UnitOfWork;
 use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Quote;
 use Base\Marketplace\Service\Attachments;
 use Base\Marketplace\Service\CartException;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\UriSigner;
@@ -46,7 +46,7 @@ final class AttachmentsTest extends TestCase
         $router = $this->createMock(UrlGeneratorInterface::class);
         $router->method('generate')->willReturnCallback(fn (string $name, array $parameters) => 'https://shop.test/marketplace/piece-jointe/'.($parameters['id'] ?? 0));
 
-        return new Attachments($this->createMock(EntityManagerInterface::class), new UriSigner('secret'), $router, $this->directory, $maxSize, $maxFiles, ['pdf', 'png', 'svg']);
+        return new Attachments($this->createMock(UnitOfWork::class), new UriSigner('secret'), $router, $this->directory, $maxSize, $maxFiles, ['pdf', 'png', 'svg']);
     }
 
     private function upload(string $name, string $content = '%PDF-1.4 logo'): UploadedFile

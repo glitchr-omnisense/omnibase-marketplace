@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Order;
 
 use Base\Marketplace\Entity\Order\OrderItem;
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method OrderItem|null find($id, $lockMode = null, $lockVersion = null)

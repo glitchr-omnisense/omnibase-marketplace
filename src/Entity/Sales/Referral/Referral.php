@@ -5,7 +5,7 @@ namespace Base\Marketplace\Entity\Sales\Referral;
 use Base\Entity\User;
 use Base\Marketplace\Enum\ReferralStatus;
 use Base\Marketplace\Repository\Sales\Referral\ReferralRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * Somebody who came through a member's code: the referee (one referral

@@ -8,9 +8,9 @@ use Base\Marketplace\Repository\Sales\Attribute\Action\FixedAmountAdapterReposit
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
-use Omnibridge\Symfony\Omnibase\Field\Type\MoneyType;
+use Base\Field\Type\MoneyType;
 use Base\Traits\BaseTrait;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Intl\Currencies;
 
 #[ORM\Entity(repositoryClass: FixedAmountAdapterRepository::class)]

@@ -4,7 +4,8 @@ namespace Base\Marketplace\Twig;
 
 use Base\Marketplace\Entity\Invoice;
 use Base\Marketplace\Entity\Order;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\Intl\Currencies;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -24,7 +25,7 @@ use Twig\TwigFunction;
  */
 final class InvoiceTwigExtension extends AbstractExtension
 {
-    public function __construct(private readonly ?EntityManagerInterface $entityManager = null)
+    public function __construct(private readonly ?UnitOfWork $unitOfWork = null)
     {
     }
 
@@ -36,11 +37,11 @@ final class InvoiceTwigExtension extends AbstractExtension
     /** @return Invoice[] */
     public function ofOrder(Order $order): array
     {
-        if (null === $this->entityManager || null === $order->getId()) {
+        if (null === $this->unitOfWork || null === $order->getId()) {
             return [];
         }
 
-        return $this->entityManager->getRepository(Invoice::class)->ofOrder($order);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->ofOrder($order);
     }
 
     public function getFilters(): array

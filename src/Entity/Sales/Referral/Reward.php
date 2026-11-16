@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Sales\Referral;
 
 use Base\Entity\User;
 use Base\Marketplace\Entity\Sales\Discount\Coupon;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * What a referral gave: the referee's welcome coupon, the referrer's coupon

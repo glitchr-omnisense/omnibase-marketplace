@@ -9,8 +9,13 @@ use Base\Marketplace\Entity\Order\Subscription;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Usage;
 use Base\Marketplace\Event\EntitlementGrantedEvent;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
+use Base\Contract\UnitOfWork;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -29,9 +34,14 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 class Entitlements
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly ?EventDispatcherInterface $dispatcher = null,
     ) {
+    }
+
+    private function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
     }
 
     /**
@@ -46,8 +56,8 @@ class Entitlements
         $entitlement->setOrderReference(isset($context['order']) ? (string) $context['order']->getReference() : null);
         $entitlement->setSubscription($context['subscription'] ?? null);
         $entitlement->setLevel((int) ($context['level'] ?? 0));
-        $this->entityManager->persist($entitlement);
-        $this->entityManager->flush();
+        $this->unitOfWork()->persist($entitlement);
+        $this->unitOfWork()->flush();
         $this->dispatcher?->dispatch(new EntitlementGrantedEvent($entitlement, $context['order'] ?? null));
 
         return $entitlement;
@@ -60,7 +70,7 @@ class Entitlements
      */
     public function active(User $holder, ?string $resourceType = null, int|string|null $resourceId = null, ?\DateTimeImmutable $at = null): array
     {
-        $all = $this->entityManager->getRepository(Entitlement::class)->findBy(['holder' => $holder]);
+        $all = UnitOfWorks::repositories($this->unitOfWork())->of(Entitlement::class)->findBy(['holder' => Key::of($holder)]);
         $active = array_values(array_filter($all, static fn (Entitlement $e) => $e->isActive($at)
             && (null === $e->getResourceType() || $e->isFor($resourceType, $resourceId))));
         usort($active, static fn (Entitlement $a, Entitlement $b) => [$b->getLevel(), $b->getId()] <=> [$a->getLevel(), $a->getId()]);
@@ -143,26 +153,31 @@ class Entitlements
      */
     public function consume(User $holder, string $key, int $quantity = 1, ?string $usedByType = null, int|string|null $usedById = null): Usage
     {
-        return $this->transactional(function () use ($holder, $key, $quantity, $usedByType, $usedById): Usage {
+        // "None left" is an answer the application goes on from: the transaction ends without it, the exception after.
+        $usage = $this->unitOfWork()->transactional(function () use ($holder, $key, $quantity, $usedByType, $usedById): ?Usage {
             // The soonest to end first: what would be lost is spent first.
             $candidates = $this->active($holder);
             usort($candidates, static fn (Entitlement $a, Entitlement $b) => ($a->getExpiresAt()?->getTimestamp() ?? \PHP_INT_MAX) <=> ($b->getExpiresAt()?->getTimestamp() ?? \PHP_INT_MAX));
+            $entitlements = UnitOfWorks::repositories($this->unitOfWork())->of(Entitlement::class);
+            \assert($entitlements instanceof ServiceEntityRepository);
             foreach ($candidates as $entitlement) {
                 if (!\is_int($entitlement->getGrant($key))) {
                     continue;
                 }
-                $this->entityManager->lock($entitlement, LockMode::PESSIMISTIC_WRITE);
+                // Its row locked (SELECT ... FOR UPDATE) while counting: two requests cannot take the last one both.
+                $entitlements->lockOneBy(['id' => $entitlement->getId()]);
                 if ($this->left($entitlement, $key) >= $quantity) {
                     $usage = new Usage($entitlement, $key, $quantity, $usedByType, $usedById);
-                    $this->entityManager->persist($usage);
-                    $this->entityManager->flush();
+                    $this->unitOfWork()->persist($usage);
 
                     return $usage;
                 }
             }
 
-            throw new EntitlementException($key);
+            return null;
         });
+
+        return $usage ?? throw new EntitlementException($key);
     }
 
     /** Gives back what that thing had taken of a counted grant. */
@@ -175,7 +190,7 @@ class Entitlements
                 $released += $usage->getQuantity();
             }
         }
-        $this->entityManager->flush();
+        $this->unitOfWork()->flush();
 
         return $released;
     }
@@ -202,8 +217,11 @@ class Entitlements
         if (null === $entitlement->getId()) {
             return $grant;
         }
-        $used = (int) $this->entityManager->createQuery('SELECT COALESCE(SUM(u.quantity), 0) FROM '.Usage::class.' u WHERE u.entitlement = :e AND u.key = :k AND u.releasedAt IS NULL')
-            ->setParameter('e', $entitlement)->setParameter('k', $key)->getSingleScalarResult();
+        $used = (int) UnitOfWorks::repositories($this->unitOfWork())->of(Usage::class)->sumOfQuantityBy([
+            'entitlement' => Key::of($entitlement),
+            'key' => $key,
+            Group::of(Parser::SEPARATOR_AND, Criterion::of('releasedAt', null, Parser::OPTION_NULL)),
+        ]);
 
         return max(0, $grant - $used);
     }
@@ -211,27 +229,6 @@ class Entitlements
     /** @return list<Usage> */
     private function usages(User $holder, string $key): array
     {
-        return $this->entityManager->createQuery('SELECT u FROM '.Usage::class.' u JOIN u.entitlement e WHERE e.holder = :h AND u.key = :k ORDER BY u.id ASC')
-            ->setParameter('h', $holder)->setParameter('k', $key)->getResult();
-    }
-
-    /**
-     * A transaction by hand, not wrapInTransaction(): that closes the
-     * EntityManager on any exception, and "none left" is an answer the
-     * application goes on from, not a failure.
-     */
-    private function transactional(callable $work): mixed
-    {
-        $this->entityManager->beginTransaction();
-        try {
-            $result = $work();
-            $this->entityManager->commit();
-
-            return $result;
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
-
-            throw $e;
-        }
+        return UnitOfWorks::repositories($this->unitOfWork())->of(Usage::class)->findBy(['entitlement.holder' => $holder, 'key' => $key], ['id' => 'ASC']);
     }
 }

@@ -8,7 +8,8 @@ use Base\Marketplace\Enum\Withdrawal;
 use Base\Marketplace\Model\ConsentStatement;
 use Base\Marketplace\Model\VatCustomerInterface;
 use Base\Marketplace\Repository\Order\ConsentRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -38,7 +39,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class Consents
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly TranslatorInterface $translator,
         private readonly UrlGeneratorInterface $router,
         #[Autowire('%marketplace.consent.terms_route%')] private readonly ?string $termsRoute = null,
@@ -107,12 +108,12 @@ class Consents
     public function record(Order $order, array $statements, string $channel, ?\DateTimeImmutable $at = null): array
     {
         foreach ($this->of($order) as $earlier) {
-            $this->entityManager->remove($earlier);
+            $this->unitOfWork->remove($earlier);
         }
         $at ??= new \DateTimeImmutable();
         $recorded = [];
         foreach ($statements as $statement) {
-            $this->entityManager->persist($recorded[] = new Consent($order, $statement, $channel, $this->termsVersion, $at));
+            $this->unitOfWork->persist($recorded[] = new Consent($order, $statement, $channel, $this->termsVersion, $at));
         }
 
         return $recorded;
@@ -121,7 +122,7 @@ class Consents
     /** @return list<Consent> what the order's buyer stated before paying it */
     public function of(Order $order): array
     {
-        $repository = $this->entityManager->getRepository(Consent::class);
+        $repository = UnitOfWorks::repositories($this->unitOfWork)->of(Consent::class);
 
         return $repository instanceof ConsentRepository ? $repository->ofOrder($order) : [];
     }

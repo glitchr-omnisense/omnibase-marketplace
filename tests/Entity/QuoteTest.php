@@ -7,7 +7,7 @@ use Base\Marketplace\Entity\Quote\QuoteLine;
 use Base\Marketplace\Enum\Incoterm;
 use Base\Marketplace\Enum\QuoteStatus;
 use Base\Marketplace\Service\QuoteToOrder;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
 use PHPUnit\Framework\TestCase;
 
 /** A business quote: lines by the lot, terms, totals, what accepting makes of it. */
@@ -55,7 +55,7 @@ final class QuoteTest extends TestCase
     public function testTheOrdersLinesShareTheLotsOutInUnitsWhenTheyDivide(): void
     {
         $quote = $this->quote()->setDiscountPercent(10);
-        $items = (new QuoteToOrder($this->createMock(EntityManagerInterface::class)))->itemsOf($quote);
+        $items = (new QuoteToOrder($this->createMock(UnitOfWork::class)))->itemsOf($quote);
 
         [$line, $quantity, $unit, $comment] = $items[0];
         self::assertSame(120, $quantity, '20 cases of 6: 120 bottles');

@@ -6,7 +6,7 @@ use Base\Entity\User;
 use Base\Marketplace\Enum\QuoteStatus;
 use Base\Marketplace\Service\CompanyRegistry;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**

@@ -16,7 +16,8 @@ use Base\Marketplace\Service\Checkout;
 use Base\Marketplace\Service\Consents;
 use Base\Marketplace\Service\Pricing;
 use Base\Marketplace\Service\Shipping;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,7 +31,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class CartController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Cart $cart,
         private readonly Checkout $checkout,
         private readonly TranslatorInterface $translator,
@@ -44,7 +45,7 @@ class CartController extends AbstractController
         foreach ($carts as $cart) {
             $pricing->reprice($cart);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $this->render('@Marketplace/client/cart.html.twig', ['carts' => $carts]);
     }
@@ -53,7 +54,7 @@ class CartController extends AbstractController
     public function Add(Request $request, int $id): Response
     {
         $this->csrf($request, 'marketplace_cart');
-        $product = $this->entityManager->getRepository(Product::class)->find($id);
+        $product = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->find($id);
         if (!$product instanceof Product) {
             throw $this->createNotFoundException('Unknown product.');
         }
@@ -94,7 +95,7 @@ class CartController extends AbstractController
     #[Route('/panier/{order}/commander', name: 'marketplace_checkout', requirements: ['order' => '\d+'])]
     public function Checkout(Request $request, int $order, Pricing $pricing, Shipping $shipping, Consents $consents): Response
     {
-        $cart = $this->entityManager->getRepository(Order::class)->find($order);
+        $cart = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->find($order);
         if (!$cart instanceof Order) {
             throw $this->createNotFoundException('Unknown cart.');
         }
@@ -121,7 +122,7 @@ class CartController extends AbstractController
                     return $this->page($cart, $methods, $shipping, $consent, $statements, Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
             }
-            $method = $this->entityManager->getRepository(PaymentMethod::class)->find($request->request->getInt('method'));
+            $method = UnitOfWorks::repositories($this->unitOfWork)->of(PaymentMethod::class)->find($request->request->getInt('method'));
             if (!$method instanceof PaymentMethod || !in_array($method, $methods, true)) {
                 $this->addFlash('error', $this->translator->trans('@marketplace.checkout.error.method'));
                 return $this->redirectToRoute('marketplace_checkout', ['order' => $cart->getId()]);
@@ -150,7 +151,7 @@ class CartController extends AbstractController
                 $consents->record($cart, $statements, Consent::CHECKOUT);
             }
             $pricing->reprice($cart);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
 
             try {
                 $result = $this->checkout->pay($cart, $method);
@@ -167,7 +168,7 @@ class CartController extends AbstractController
         }
 
         $pricing->reprice($cart);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $this->page($cart, $methods, $shipping, $consent, $statements);
     }
@@ -221,7 +222,7 @@ class CartController extends AbstractController
             $this->cart->assertMine($cart);
             $files = $request->files->all()['files'] ?? [];
             $stored = $attachments->attachToItem($line, \is_array($files) ? $files : [$files]);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             if ($stored) {
                 $this->addFlash('success', $this->translator->trans('@marketplace.attachment.added', ['{count}' => \count($stored)]));
             }
@@ -234,8 +235,8 @@ class CartController extends AbstractController
 
     private function line(int $order, int $item): array
     {
-        $cart = $this->entityManager->getRepository(Order::class)->find($order);
-        $line = $this->entityManager->getRepository(OrderItem::class)->find($item);
+        $cart = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->find($order);
+        $line = UnitOfWorks::repositories($this->unitOfWork)->of(OrderItem::class)->find($item);
         if (!$cart instanceof Order || !$line instanceof OrderItem || $line->getOrder() !== $cart) {
             throw $this->createNotFoundException('Unknown cart line.');
         }

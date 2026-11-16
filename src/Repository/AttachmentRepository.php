@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Attachment;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<Attachment> */
 class AttachmentRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Attachment::class);
+        parent::__construct($finders, Attachment::class);
     }
 }

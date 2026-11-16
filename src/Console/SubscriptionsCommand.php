@@ -4,7 +4,8 @@ namespace Base\Marketplace\Console;
 
 use Base\Marketplace\Entity\Order\Subscription;
 use Base\Marketplace\Service\Subscriptions;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,7 +22,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'marketplace:subscriptions', description: 'End the rights that ran out, announce those about to; --sync reads the subscriptions from their providers.')]
 class SubscriptionsCommand extends Command
 {
-    public function __construct(private readonly Subscriptions $subscriptions, private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly Subscriptions $subscriptions, private readonly UnitOfWork $unitOfWork)
     {
         parent::__construct();
     }
@@ -35,7 +36,7 @@ class SubscriptionsCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         if ($input->getOption('sync')) {
-            foreach ($this->entityManager->getRepository(Subscription::class)->findAll() as $subscription) {
+            foreach (UnitOfWorks::repositories($this->unitOfWork)->of(Subscription::class)->findAll() as $subscription) {
                 if (!$subscription->isRunning()) {
                     continue;
                 }

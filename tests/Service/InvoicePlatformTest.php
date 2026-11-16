@@ -140,7 +140,7 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         $container = self::getContainer();
 
         return new InvoiceTransmission(
-            $this->entityManager, $container->get('translator'), $registry ?? $this->registry(), $container->get('mailer.mailer'),
+            $this->unitOfWork, $container->get('translator'), $registry ?? $this->registry(), $container->get('mailer.mailer'),
             $container->get(\Omnibill\Email\StatusStoreInterface::class), 'platform', $this->writer, null, 'email', 'goods',
         );
     }
@@ -150,7 +150,7 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         $c = self::getContainer();
 
         return new Invoices(
-            $this->entityManager, $c->get(InvoiceComposer::class), $c->get(InvoiceNumbering::class), $c->get(FacturX::class),
+            $this->unitOfWork, $c->get(InvoiceComposer::class), $c->get(InvoiceNumbering::class), $c->get(FacturX::class),
             $c->get('twig'), $c->get('router'), $c->get(UriSigner::class), $c->get('mailer.mailer'), $c->get('translator'),
             'F', 'A', 30, $transmission,
         );
@@ -330,7 +330,7 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         };
         $transmission = $this->transmission();
         $this->answers = [new MockResponse('{"flowId":"FLW-0002"}', ['http_code' => 202])];
-        $tester = new CommandTester(new InvoiceStatusCommand($transmission, $this->entityManager));
+        $tester = new CommandTester(new InvoiceStatusCommand($transmission, $this->unitOfWork));
         $tester->execute(['numbers' => ['none'], '--no-receive' => true]);
         self::assertStringContainsString('Statuses sent again: 1', $tester->getDisplay());
         ['info' => $info, 'file' => $file] = self::multipart($this->requests[3]['body']);
@@ -524,7 +524,7 @@ final class InvoicePlatformTest extends MarketplaceKernelTestCase
         // The catch-up finds it: kept as if its answer had come back.
         $this->requests = [];
         $this->answers = [self::search([$this->deposited($number)])];
-        $tester = new CommandTester(new InvoiceStatusCommand($transmission, $this->entityManager));
+        $tester = new CommandTester(new InvoiceStatusCommand($transmission, $this->unitOfWork));
         $tester->execute(['numbers' => [$number], '--no-receive' => true, '--no-send' => true]);
         self::assertSame(['POST /flow-service/v1/flows/search'], $this->calls());
         self::assertFalse($row->isOutcomeUnknown());

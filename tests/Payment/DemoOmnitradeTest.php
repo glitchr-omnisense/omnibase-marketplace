@@ -90,8 +90,8 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
     {
         // The list, its owner's account and a fund, as production left them.
         $live = $this->gateways('prod');
-        $lists = new Wishlists($this->entityManager, new ProductLookup($live, ['web']));
-        $accounts = new PayoutAccounts($this->entityManager, $live, 'stripe');
+        $lists = new Wishlists($this->unitOfWork, new ProductLookup($live, ['web']));
+        $accounts = new PayoutAccounts($this->unitOfWork, $live, 'stripe');
         $host = $this->user('host');
         $list = $lists->create($host, 'Liste de mariage');
         $this->provider->accountReady = true;
@@ -102,7 +102,7 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
 
         // The same list in a demonstration: nothing reaches the provider.
         $demo = $this->gateways('demo');
-        $contributions = new Contributions($this->entityManager, $demo, null, 0.03, 0, 500);
+        $contributions = new Contributions($this->unitOfWork, $demo, null, 0.03, 0, 500);
         try {
             $contributions->start($fund, 5000, 'Zoé', 'https://site.test/merci');
             self::fail('A contribution reached a real gateway in a demonstration.');
@@ -113,7 +113,7 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
         self::assertSame(0, $fund->getCollected());
 
         // Nor is an account opened, refreshed or sent to the provider's page.
-        $demoAccounts = new PayoutAccounts($this->entityManager, $demo, 'stripe');
+        $demoAccounts = new PayoutAccounts($this->unitOfWork, $demo, 'stripe');
         self::assertFalse($demoAccounts->isAvailable());
         foreach ([
             fn () => $demoAccounts->open($this->user('other')),
@@ -147,8 +147,8 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
         self::assertNotNull($demo->get('essai'));
         self::assertSame($demo->get('essai'), $demo->get('essai'), 'built once');
 
-        $lists = new Wishlists($this->entityManager, new ProductLookup($demo, ['web']));
-        $accounts = new PayoutAccounts($this->entityManager, $demo, 'essai');
+        $lists = new Wishlists($this->unitOfWork, new ProductLookup($demo, ['web']));
+        $accounts = new PayoutAccounts($this->unitOfWork, $demo, 'essai');
         self::assertTrue($accounts->isAvailable());
         $host = $this->user('host');
         $list = $lists->create($host, 'Liste de mariage');
@@ -156,7 +156,7 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
         $fund = $lists->addFund($list, 'Voyage de noces');
         $this->entityManager->flush();
 
-        $contribution = (new Contributions($this->entityManager, $demo, null, 0.03, 0, 500))->start($fund, 5000, 'Zoé', 'https://site.test/merci');
+        $contribution = (new Contributions($this->unitOfWork, $demo, null, 0.03, 0, 500))->start($fund, 5000, 'Zoé', 'https://site.test/merci');
         self::assertSame(ContributionStatus::PENDING, $contribution->getStatus());
         self::assertSame('essai', $contribution->getGateway());
         self::assertNotEmpty($trial->made->requests, 'the trial gateway was asked');
@@ -168,7 +168,7 @@ final class DemoOmnitradeTest extends MarketplaceKernelTestCase
 
     public function testTheCatalogueReadsNoPlatform(): void
     {
-        $arguments = [$this->entityManager, $this->createMock(PlatformLinkRepository::class), $this->registry, null, [], 'EUR'];
+        $arguments = [$this->unitOfWork, $this->createMock(PlatformLinkRepository::class), $this->registry, null, [], 'EUR'];
 
         self::assertNotNull((new PlatformSynchronizer(...[...$arguments, 'prod']))->gateway('stripe'));
 

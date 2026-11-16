@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Sales\Referral;
 
 use Base\Entity\User;
 use Base\Marketplace\Repository\Sales\Referral\ReferralCodeRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /** A member's referral code: one each, the part of the link they share (an application route: /p/{code}). */
 #[ORM\Entity(repositoryClass: ReferralCodeRepository::class)]

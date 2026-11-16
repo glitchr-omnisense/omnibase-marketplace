@@ -112,7 +112,7 @@ return function (ContainerConfigurator $configurator) {
         if ($email) {
             $services->set('marketplace.invoice.status_store', 'Omnibill\\Email\\StatusStoreInterface')
                 ->factory(['Base\\Marketplace\\Invoice\\Transmission\\InvoiceStatusStore', 'create'])
-                ->args([service('doctrine.orm.entity_manager')]);
+                ->args([service('Base\\Contract\\UnitOfWork')]);
             $services->alias('Omnibill\\Email\\StatusStoreInterface', 'marketplace.invoice.status_store')->public();
         }
         $services->get('Base\\Marketplace\\Invoice\\Transmission\\InvoiceTransmission')

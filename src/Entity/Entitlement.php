@@ -5,7 +5,7 @@ namespace Base\Marketplace\Entity;
 use Base\Entity\User;
 use Base\Marketplace\Entity\Order\Subscription;
 use Base\Marketplace\Repository\EntitlementRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A right somebody holds: what a plan bought gives (its grants: limits,

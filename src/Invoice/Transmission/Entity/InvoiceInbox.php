@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Invoice\Transmission\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * Where the shop stands in what an approved platform has for it: the cursor

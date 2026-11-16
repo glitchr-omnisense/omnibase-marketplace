@@ -21,7 +21,7 @@ final class ReferralsTest extends MarketplaceKernelTestCase
         $nothing = ['type' => null];
         $credit = ['type' => 'credit', 'credit_kind' => 'stationery', 'credit_quantity' => 1000];
 
-        return new Referrals($this->entityManager, new Credits($this->entityManager), $dispatcher, true, 14, $cap, $nothing, $credit);
+        return new Referrals($this->unitOfWork, new Credits($this->unitOfWork), $dispatcher, true, 14, $cap, $nothing, $credit);
     }
 
     public function testACodeEachAndAReferralOnce(): void
@@ -70,7 +70,7 @@ final class ReferralsTest extends MarketplaceKernelTestCase
     public function testTheReferrerIsRewardedOnceTheOrderHasHeld(): void
     {
         $referrals = $this->referrals();
-        $credits = new Credits($this->entityManager);
+        $credits = new Credits($this->unitOfWork);
         $lea = $this->user('lea');
         $tom = $this->user('tom');
         $referral = $referrals->attribute($referrals->codeFor($lea)->getCode(), $tom);

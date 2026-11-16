@@ -5,7 +5,7 @@ namespace Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Product;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A choice the buyer makes on a product, which is not another product: how

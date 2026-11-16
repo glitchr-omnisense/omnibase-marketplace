@@ -8,7 +8,8 @@ use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Enum\OrderState;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -23,7 +24,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class Cart
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Security $security,
         private readonly RegionResolver $regions,
         #[Autowire('%marketplace.cart_max_quantity%')] private readonly int $maxQuantity = 99,
@@ -46,7 +47,7 @@ class Cart
             return null;
         }
 
-        $order = $this->entityManager->getRepository(Order::class)->findOneBy([
+        $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findOneBy([
             'customer' => $customer,
             'store' => $store,
             'state' => OrderState::CART,
@@ -56,7 +57,7 @@ class Cart
             $order = new Order($store);
             $order->setCustomer($customer);
             $order->setRegion($this->regions->for($store));
-            $this->entityManager->persist($order);
+            $this->unitOfWork->persist($order);
         }
 
         return $order;
@@ -67,7 +68,7 @@ class Cart
     {
         $customer = $this->customer();
 
-        return $customer ? $this->entityManager->getRepository(Order::class)->findBy(['customer' => $customer, 'state' => OrderState::CART], ['id' => 'DESC']) : [];
+        return $customer ? UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findBy(['customer' => $customer, 'state' => OrderState::CART], ['id' => 'DESC']) : [];
     }
 
     /** How many items the member's carts hold, for a badge. */
@@ -121,10 +122,10 @@ class Cart
                 $line->applyOptions($selection);
             }
             $order->addItem($line);
-            $this->entityManager->persist($line);
+            $this->unitOfWork->persist($line);
         }
 
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $order;
     }
@@ -138,7 +139,7 @@ class Cart
             return;
         }
         $line->setQuantity($this->bounded($line->getProduct(), $quantity));
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 
     /** @throws CartException */
@@ -146,11 +147,11 @@ class Cart
     {
         $this->assertMine($order);
         $order->removeItem($line);
-        $this->entityManager->remove($line);
+        $this->unitOfWork->remove($line);
         if ($order->isEmpty()) {
-            $this->entityManager->remove($order);
+            $this->unitOfWork->remove($order);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 
     /** @throws CartException */

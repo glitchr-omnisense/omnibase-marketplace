@@ -3,7 +3,8 @@
 namespace Base\Marketplace\Entity\Wishlist;
 
 use Base\Marketplace\Enum\ReservationStatus;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Marketplace\Repository\Wishlist\ReservationRepository;
+use Base\Mapping as ORM;
 
 /**
  * Somebody promises an object of a list: it leaves the list for the others,
@@ -11,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * unless confirmed as bought - or cancelled with the link sent to its
  * author (only the link's hash is kept).
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ReservationRepository::class)]
 #[ORM\Table(name: 'marketplace_wishlist_reservation')]
 class Reservation
 {

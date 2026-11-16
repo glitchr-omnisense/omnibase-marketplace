@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Wishlist;
 
 use Base\Entity\User;
 use Base\Marketplace\Repository\Wishlist\PayoutAccountRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * Where the money given to somebody's lists goes: their connected account

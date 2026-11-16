@@ -8,7 +8,8 @@ use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Model\QuickPayment;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\UriSigner;
@@ -35,7 +36,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class QuickOrder
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly RegionResolver $regions,
         private readonly Pricing $pricing,
         private readonly Checkout $checkout,
@@ -90,14 +91,14 @@ class QuickOrder
         $order = new Order($store);
         $order->setCustomer($signedIn ?? $this->customer($email));
         $order->setRegion($this->regions->for($store));
-        $this->entityManager->persist($order);
+        $this->unitOfWork->persist($order);
         foreach ($lines as $line) {
             $item = new OrderItem($line['product'], max(1, (int) ($line['quantity'] ?? 1)));
             $order->addItem($item);
-            $this->entityManager->persist($item);
+            $this->unitOfWork->persist($item);
         }
         $this->pricing->reprice($order);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         foreach ($this->checkout->methodsFor($order) as $method) {
             try {
@@ -123,7 +124,7 @@ class QuickOrder
     private function customer(string $email): User
     {
         $class = $this->userClass();
-        $users = $this->entityManager->getRepository($class);
+        $users = UnitOfWorks::repositories($this->unitOfWork)->of($class);
         $customer = $users->findOneBy(['email' => $email]);
         if ($customer instanceof User) {
             return $customer;
@@ -144,7 +145,7 @@ class QuickOrder
         $customer->setPlainPassword(bin2hex(random_bytes(24)));
         $customer->setRoles(['ROLE_USER']);
         $customer->verify(false);
-        $this->entityManager->persist($customer);
+        $this->unitOfWork->persist($customer);
 
         return $customer;
     }
@@ -152,7 +153,7 @@ class QuickOrder
     /** The application's User (App\Entity\User extends omnibase's): what an order's customer is mapped to. */
     private function userClass(): string
     {
-        $class = $this->entityManager->getClassMetadata(Order::class)->getAssociationTargetClass('customer');
+        $class = UnitOfWorks::shapes($this->unitOfWork)->shape(Order::class)->targetClass('customer');
         // omnibase's own User is the mapped target; the application's extends it and is the one that is stored.
         if (class_exists('App\\Entity\\User') && is_a('App\\Entity\\User', $class, true)) {
             return 'App\\Entity\\User';

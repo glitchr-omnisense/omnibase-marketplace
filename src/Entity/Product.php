@@ -41,7 +41,7 @@ use Base\Traits\CacheableTrait;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -85,8 +85,8 @@ class Product extends Thread implements \Base\Database\Entity\Extension\Translat
     public function __autocomplete(): string
     {
         // omnibridge's Views (TwigViews under Symfony); without a host that renders views, the product's name.
-        if (\Omnibridge\Runtime::has(\Omnibridge\Contract\Views::class)) {
-            return \Omnibridge\Runtime::views()->render('entity/marketplace/product.html.twig', ['product' => $this]);
+        if (\Base\Contract\Runtime::has(\Base\Contract\Views::class)) {
+            return \Base\Contract\Runtime::views()->render('entity/marketplace/product.html.twig', ['product' => $this]);
         }
 
         return (string) $this;

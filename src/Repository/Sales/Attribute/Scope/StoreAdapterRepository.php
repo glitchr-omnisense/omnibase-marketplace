@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute\Scope;
 
 use Base\Marketplace\Entity\Sales\Attribute\Scope\StoreAdapter;
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method StoreAdapter|null find($id, $lockMode = null, $lockVersion = null)

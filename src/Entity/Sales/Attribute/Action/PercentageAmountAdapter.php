@@ -8,8 +8,8 @@ use Base\Marketplace\Repository\Sales\Attribute\Action\PercentageAmountAdapterRe
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractActionAdapter;
-use Omnibridge\Symfony\Omnibase\Field\Type\NumberType;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Field\Type\NumberType;
+use Base\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PercentageAmountAdapterRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]

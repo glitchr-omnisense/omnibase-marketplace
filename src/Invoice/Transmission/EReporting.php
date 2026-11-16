@@ -8,7 +8,11 @@ use Base\Marketplace\Enum\InvoiceRoute;
 use Base\Marketplace\Invoice\InvoiceComposer;
 use Base\Marketplace\Invoice\Transmission\Entity\EReport;
 use Base\Marketplace\Pricing\ReverseCharge;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Parser;
 use Omnibill\Exception\OmnibillException;
 use Omnibill\Exception\OutcomeUnknownException;
 use Omnibill\Exception\UnreachableException;
@@ -65,7 +69,7 @@ class EReporting
     public const REGIMES = ['normal_monthly', 'normal_quarterly', 'simplified', 'franchise'];
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly InvoiceComposer $composer,
         private readonly InvoiceTransmission $transmission,
         private readonly ?Registry $registry = null,
@@ -142,15 +146,15 @@ class EReporting
             $day = $current->modify('-1 day');
         }
         [$from, $to, $due] = self::period($regime, $kind, $day);
-        $report = $this->entityManager->getRepository(EReport::class)->findOneBy(['kind' => $kind, 'startsOn' => $from]);
+        $report = UnitOfWorks::repositories($this->unitOfWork)->of(EReport::class)->findOneBy(['kind' => $kind, 'startsOn' => $from]);
         if (null === $report) {
             $report = new EReport($kind, $from, $to, $due, $regime);
-            $this->entityManager->persist($report);
+            $this->unitOfWork->persist($report);
         }
         if (!$report->isSent()) {
             $report->collected(EReport::TRANSACTIONS === $kind ? $this->transactions($from, $to) : $this->payments($from, $to));
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $report;
     }
@@ -205,7 +209,7 @@ class EReporting
                 $report->notSent($unknown.$e->getMessage(), true);
             }
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $report;
     }
@@ -405,27 +409,27 @@ class EReporting
     /** @return iterable<Order> the orders paid in the period */
     private function paidOrders(\DateTimeImmutable $from, \DateTimeImmutable $to): iterable
     {
-        return $this->entityManager->getRepository(Order::class)->createQueryBuilder('o')
-            ->where('o.paidAt >= :from')->setParameter('from', $from)
-            ->andWhere('o.paidAt < :to')->setParameter('to', $to->modify('+1 day'))
-            ->orderBy('o.paidAt', 'ASC')
-            ->getQuery()->toIterable();
+        // A finder's query, read row after row as before (toIterable()).
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)
+            ->findByPaidAtGreaterEqualToAndPaidAtLowerThan($from, $to->modify('+1 day'), [], ['paidAt' => 'ASC'])
+            ->toIterable();
     }
 
     /** @return list<Invoice> the invoices and credit notes issued in the period */
     private function invoicesIssued(\DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
-        return $this->entityManager->getRepository(Invoice::class)->createQueryBuilder('i')
-            ->where('i.issuedAt >= :from')->setParameter('from', $from)
-            ->andWhere('i.issuedAt < :to')->setParameter('to', $to->modify('+1 day'))
-            ->orderBy('i.issuedAt', 'ASC')
-            ->getQuery()->getResult();
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->findBy([
+            Group::of(Parser::SEPARATOR_AND,
+                Criterion::of('issuedAt', $from, Parser::OPTION_GREATER_EQUAL),
+                Criterion::of('issuedAt', $to->modify('+1 day'), Parser::OPTION_LOWER),
+            ),
+        ], ['issuedAt' => 'ASC']);
     }
 
     /** The order's first invoice: what it was sold as, even if a credit note cancelled it since. */
     private function firstInvoice(Order $order): ?Invoice
     {
-        foreach ($this->entityManager->getRepository(Invoice::class)->ofOrder($order) as $invoice) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->ofOrder($order) as $invoice) {
             if (!$invoice->isCreditNote()) {
                 return $invoice;
             }

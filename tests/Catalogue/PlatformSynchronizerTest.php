@@ -3,12 +3,12 @@
 namespace Tests\Base\Marketplace\Catalogue;
 
 use Base\Marketplace\Catalogue\PlatformSynchronizer;
+use Base\Contract\UnitOfWork;
 use Base\Marketplace\Entity\Catalogue\PlatformLink;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Enum\ProductAvailability;
 use Base\Marketplace\Repository\Catalogue\PlatformLinkRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Omnitrade\Model\Money;
 use Omnitrade\Model\Offer;
 use Omnitrade\Model\Product as RemoteProduct;
@@ -33,14 +33,14 @@ final class PlatformSynchronizerTest extends TestCase
 
     public function testTheFingerprintFollowsOnlyTheOwnedFields(): void
     {
-        $priceOnly = new PlatformSynchronizer($this->createMock(EntityManagerInterface::class), $this->createMock(PlatformLinkRepository::class), null, null, ['price']);
+        $priceOnly = new PlatformSynchronizer($this->createMock(UnitOfWork::class), $this->createMock(PlatformLinkRepository::class), null, null, ['price']);
         $variant = fn (RemoteProduct $p) => $p->variants[0];
 
         $a = $this->remote();
         self::assertSame($priceOnly->fingerprint($a, $variant($a)), $priceOnly->fingerprint($b = $this->remote(description: 'Autre texte'), $variant($b)), 'the description is not owned');
         self::assertNotSame($priceOnly->fingerprint($a, $variant($a)), $priceOnly->fingerprint($c = $this->remote(3100), $variant($c)));
 
-        $all = new PlatformSynchronizer($this->createMock(EntityManagerInterface::class), $this->createMock(PlatformLinkRepository::class), null, null, ['price', 'description', 'attributes']);
+        $all = new PlatformSynchronizer($this->createMock(UnitOfWork::class), $this->createMock(PlatformLinkRepository::class), null, null, ['price', 'description', 'attributes']);
         self::assertNotSame($all->fingerprint($a, $variant($a)), $all->fingerprint($d = $this->remote(attributes: ['appellation' => 'Lalande-de-Pomerol']), $variant($d)));
     }
 
@@ -53,10 +53,10 @@ final class PlatformSynchronizerTest extends TestCase
         $link = new PlatformLink($product, 'fake', 'p1', 'v1');
         $links = $this->createMock(PlatformLinkRepository::class);
         $links->method('findProduct')->with('fake', 'p1')->willReturn([$link]);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::never())->method('remove');
+        $unitOfWork = $this->createMock(UnitOfWork::class);
+        $unitOfWork->expects(self::never())->method('remove');
 
-        $synchronizer = new PlatformSynchronizer($entityManager, $links, null, null, ['stock', 'availability']);
+        $synchronizer = new PlatformSynchronizer($unitOfWork, $links, null, null, ['stock', 'availability']);
         self::assertSame(1, $synchronizer->discontinue('fake', 'p1'));
         self::assertTrue($link->isOrphaned());
         self::assertSame(0, $synchronizer->discontinue('fake', 'p1'), 'once');
@@ -73,10 +73,10 @@ final class PlatformSynchronizerTest extends TestCase
         $links->method('findVariant')->willReturnCallback(fn ($g, $ref) => 'v1' === $ref ? $link : null);
         $links->method('findItem')->willReturnCallback(fn ($g, $item) => 'item-7' === $item ? $link : null);
 
-        $synchronizer = new PlatformSynchronizer($this->createMock(EntityManagerInterface::class), $links, null, null, ['stock', 'availability']);
+        $synchronizer = new PlatformSynchronizer($this->createMock(UnitOfWork::class), $links, null, null, ['stock', 'availability']);
         self::assertTrue($synchronizer->updateStock('fake', new Stock('v1', 3)));
         self::assertTrue($synchronizer->updateStock('fake', new Stock('item-7', 0, item: 'item-7')), 'a Shopify inventory level names the item only');
         self::assertFalse($synchronizer->updateStock('fake', new Stock('v9', 1)));
-        self::assertFalse((new PlatformSynchronizer($this->createMock(EntityManagerInterface::class), $links, null, null, ['price']))->updateStock('fake', new Stock('v1', 1)), 'the stock is not owned');
+        self::assertFalse((new PlatformSynchronizer($this->createMock(UnitOfWork::class), $links, null, null, ['price']))->updateStock('fake', new Stock('v1', 1)), 'the stock is not owned');
     }
 }

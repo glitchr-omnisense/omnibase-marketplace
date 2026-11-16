@@ -6,7 +6,7 @@ use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Enum\PickupMode;
 use Base\Marketplace\Enum\PickupStatus;
 use Base\Marketplace\Repository\Order\PickupRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * How an order is handed over, when it is not simply posted: collected at

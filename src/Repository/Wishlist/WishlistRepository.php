@@ -4,15 +4,15 @@ namespace Base\Marketplace\Repository\Wishlist;
 
 use Base\Marketplace\Entity\Wishlist\Wishlist;
 use Base\Marketplace\Model\WishlistHolderInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<Wishlist> */
 class WishlistRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Wishlist::class);
+        parent::__construct($finders, Wishlist::class);
     }
 
     /** @return list<Wishlist> the lists of an event, a project... */

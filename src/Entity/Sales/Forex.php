@@ -6,7 +6,7 @@ use Base\Marketplace\Repository\Sales\ForexRepository;
 use Base\Database\Attribute\Timestamp;
 use Base\Database\Attribute\Cache;
 use Base\Service\Model\IconizeInterface;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ForexRepository::class)]
 // One rate per pair: with two rows for EUR/USD, which one converts is chance.

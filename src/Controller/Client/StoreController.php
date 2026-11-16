@@ -6,7 +6,9 @@ use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Service\Cart;
 use Base\Service\PaginatorInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class StoreController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly PaginatorInterface $paginator,
         private readonly Cart $cart,
         #[Autowire('%marketplace.products_per_page%')] private readonly int $perPage = 24,
@@ -32,7 +34,7 @@ class StoreController extends AbstractController
     public function Stores(): Response
     {
         return $this->render('@Marketplace/client/stores.html.twig', [
-            'stores' => $this->entityManager->getRepository(Store::class)->findBy(['open' => true]),
+            'stores' => UnitOfWorks::repositories($this->unitOfWork)->of(Store::class)->findBy(['open' => true]),
         ]);
     }
 
@@ -41,14 +43,11 @@ class StoreController extends AbstractController
     {
         $store = $this->findStore($slug);
 
-        $query = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
-            ->andWhere('p.parent = :store')->setParameter('store', $store)
-            ->orderBy('p.createdAt', 'DESC')
-            ->getQuery();
+        $products = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class);
 
         return $this->render('@Marketplace/client/store.html.twig', [
             'store' => $store,
-            'products' => $this->paginator->paginate($query, max(1, $request->query->getInt('page', 1)), $this->perPage),
+            'products' => $this->paginator->paginate($products, ['parent' => Key::of($store)], ['createdAt' => 'DESC'], page: max(1, $request->query->getInt('page', 1)), pageSize: $this->perPage),
             'cart' => $this->cart->of($store),
         ]);
     }
@@ -57,7 +56,7 @@ class StoreController extends AbstractController
     public function Product(string $store, string $slug): Response
     {
         $shop = $this->findStore($store);
-        $product = $this->entityManager->getRepository(Product::class)->findOneBy(['slug' => $slug]);
+        $product = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->findOneBy(['slug' => $slug]);
         if (!$product instanceof Product || $product->getStore() !== $shop) {
             throw $this->createNotFoundException('Unknown product.');
         }
@@ -71,7 +70,7 @@ class StoreController extends AbstractController
 
     private function findStore(string $slug): Store
     {
-        $store = $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => $slug]);
+        $store = UnitOfWorks::repositories($this->unitOfWork)->of(Store::class)->findOneBy(['slug' => $slug]);
         if (!$store instanceof Store) {
             throw $this->createNotFoundException('Unknown store.');
         }

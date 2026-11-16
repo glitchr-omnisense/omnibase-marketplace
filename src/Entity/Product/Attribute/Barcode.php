@@ -10,7 +10,7 @@ use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractAdapter;
 use Base\Entity\Layout\Attribute\Common\AbstractAttribute;
 use Base\Validator\Constraints as AssertBase;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: BarcodeRepository::class)]

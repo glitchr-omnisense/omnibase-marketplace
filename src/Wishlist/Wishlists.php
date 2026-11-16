@@ -9,7 +9,12 @@ use Base\Marketplace\Entity\Wishlist\Wishlist;
 use Base\Marketplace\Enum\WishlistItemKind;
 use Base\Marketplace\Enum\WishlistKind;
 use Base\Marketplace\Model\WishlistHolderInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -20,7 +25,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class Wishlists
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly ?ProductLookup $lookup = null,
         #[Autowire('%marketplace.wishlist.price_ttl%')] private readonly int $priceTtl = 86400,
     ) {
@@ -29,8 +34,8 @@ class Wishlists
     public function create(User $owner, string $title, WishlistKind $kind = WishlistKind::GIFTS, ?WishlistHolderInterface $holder = null): Wishlist
     {
         $wishlist = new Wishlist($owner, $title, $kind, $holder);
-        $this->entityManager->persist($wishlist);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($wishlist);
+        $this->unitOfWork->flush();
 
         return $wishlist;
     }
@@ -53,8 +58,8 @@ class Wishlists
         $item->setPosition($wishlist->getItems()->count());
         $this->read($item);
         $wishlist->addItem($item);
-        $this->entityManager->persist($item);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($item);
+        $this->unitOfWork->flush();
 
         return $item;
     }
@@ -65,8 +70,8 @@ class Wishlists
         $item = new Item((string) $product, WishlistItemKind::OBJECT, (int) $product->getUnitPrice(), (string) ($product->getCurrency() ?: $wishlist->getCurrency()));
         $item->setProduct($product)->setQuantity($quantity)->setPosition($wishlist->getItems()->count());
         $wishlist->addItem($item);
-        $this->entityManager->persist($item);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($item);
+        $this->unitOfWork->flush();
 
         return $item;
     }
@@ -83,8 +88,8 @@ class Wishlists
         $item = new Item($title, $kind, $goal, $wishlist->getCurrency());
         $item->setDescription($description)->setPosition($wishlist->getItems()->count());
         $wishlist->addItem($item);
-        $this->entityManager->persist($item);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($item);
+        $this->unitOfWork->flush();
 
         return $item;
     }
@@ -101,13 +106,22 @@ class Wishlists
             return 0;
         }
         $before = ($now ?? new \DateTimeImmutable())->modify(sprintf('-%d seconds', $this->priceTtl));
-        $items = $this->entityManager->createQuery('SELECT i FROM '.Item::class.' i JOIN i.wishlist w WHERE w.open = true AND i.url IS NOT NULL AND i.product IS NULL AND (i.priceFetchedAt IS NULL OR i.priceFetchedAt < :before) ORDER BY i.priceFetchedAt ASC')
-            ->setParameter('before', $before)->setMaxResults($limit)->getResult();
+        $items = UnitOfWorks::repositories($this->unitOfWork)->of(Item::class)->findBy([
+            'wishlist.open' => true,
+            Group::of(Parser::SEPARATOR_AND,
+                Criterion::of('url', null, Parser::OPTION_NOT_NULL),
+                Criterion::of('product', Key::of(null)),
+                Group::of(Parser::SEPARATOR_OR,
+                    Criterion::of('priceFetchedAt', null, Parser::OPTION_NULL),
+                    Criterion::of('priceFetchedAt', $before, Parser::OPTION_LOWER),
+                ),
+            ),
+        ], ['priceFetchedAt' => 'ASC'], $limit);
         $read = 0;
         foreach ($items as $item) {
             $read += (int) $this->read($item, true);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $read;
     }

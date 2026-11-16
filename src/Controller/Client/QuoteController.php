@@ -19,7 +19,8 @@ use Base\Marketplace\Service\CompanyRegistry;
 use Base\Marketplace\Service\QuoteStatusGuard;
 use Base\Marketplace\Service\QuoteToOrder;
 use Base\Marketplace\Service\VatNumbers;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -54,7 +55,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class QuoteController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly QuoteRepository $quotes,
         private readonly TranslatorInterface $translator,
         #[Autowire('%marketplace.quotes.enabled%')] private readonly bool $enabled = true,
@@ -81,7 +82,7 @@ class QuoteController extends AbstractController
         }
         // From a product's page (?product=12), from a cart going abroad (?country=JP).
         $products = array_values(array_filter(array_map(
-            fn ($id) => $this->entityManager->getRepository(Product::class)->find((int) $id),
+            fn ($id) => UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->find((int) $id),
             array_filter((array) ($request->query->all()['product'] ?? []) ?: array_filter([$request->query->get('product')])),
         )));
         $data->products = array_map(fn (Product $p) => $p->getId(), $products);
@@ -145,7 +146,7 @@ class QuoteController extends AbstractController
             $this->quotes->saveNumbered($quote);
             if ($this->attachments && $data->files) {
                 $files->attachToQuote($quote, $data->files);
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
             }
 
             if ($this->recipient) {
@@ -271,7 +272,7 @@ class QuoteController extends AbstractController
         $this->assertMine($request, $quote);
         if ($quote->getStatus()->isOpenToClient()) {
             $quote->setStatus(QuoteStatus::DECLINED);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             $this->addFlash('info', $this->translator->trans('@marketplace.quote.declined', ['{reference}' => $quote->getReference()]));
         }
 

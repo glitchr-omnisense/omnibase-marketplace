@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Quote;
 
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Quote;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**

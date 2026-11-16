@@ -8,7 +8,8 @@ use Base\Marketplace\Entity\Order\Transaction;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateway;
 use Base\Marketplace\Payment\PaymentGatewayRegistry;
 use Base\Marketplace\Service\Checkout;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Omnitrade\Exception\InvalidNotificationException;
 use Omnitrade\Exception\OmnitradeException;
 use Omnitrade\Model\Status;
@@ -31,7 +32,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class PaymentController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Checkout $checkout,
         private readonly PaymentGatewayRegistry $gateways,
         private readonly TranslatorInterface $translator,
@@ -43,7 +44,7 @@ class PaymentController extends AbstractController
     public function Return(Request $request, int $order, string $gateway): Response
     {
         $bridge = $this->gateways->get($gateway);
-        $order = $this->entityManager->getRepository(Order::class)->find($order);
+        $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->find($order);
         $transaction = $order ? $this->pending($order) : null;
         if (!$bridge instanceof OmnitradeGateway || !$order || !$transaction || !$order->isCustomer($this->getUser())) {
             return $this->redirectToRoute('marketplace_cart');
@@ -103,7 +104,7 @@ class PaymentController extends AbstractController
             return new JsonResponse(['received' => $notification->event, 'catalogue' => $event?->getOutcome() ?? 'ignored']);
         }
 
-        $transaction = $notification->reference ? $this->entityManager->getRepository(Transaction::class)->findOneBy(['webhook' => $notification->reference]) : null;
+        $transaction = $notification->reference ? UnitOfWorks::repositories($this->unitOfWork)->of(Transaction::class)->findOneBy(['webhook' => $notification->reference]) : null;
         $order = $transaction?->getOrder();
         if (!$transaction || !$order || !$order->getPaymentMethod() instanceof PaymentMethod) {
             // Not an order's payment: a connected account, a subscription's

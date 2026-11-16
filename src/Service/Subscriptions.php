@@ -10,7 +10,11 @@ use Base\Marketplace\Event\EntitlementEndingEvent;
 use Base\Marketplace\Event\SubscriptionChangedEvent;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateway;
 use Base\Marketplace\Payment\PaymentGatewayRegistry;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Parser;
 use Omnitrade\Model\Subscription as ProviderSubscription;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -25,7 +29,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class Subscriptions
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly PaymentGatewayRegistry $gateways,
         private readonly ?EventDispatcherInterface $dispatcher = null,
         private readonly ?Credits $credits = null,
@@ -35,7 +39,7 @@ class Subscriptions
 
     public function find(string $gateway, string $providerReference): ?Subscription
     {
-        return $this->entityManager->getRepository(Subscription::class)->findOneBy(['gateway' => $gateway, 'providerReference' => $providerReference]);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Subscription::class)->findOneBy(['gateway' => $gateway, 'providerReference' => $providerReference]);
     }
 
     /** The provider's subscription as it stands, applied to ours; null when we do not know it. */
@@ -54,7 +58,7 @@ class Subscriptions
         if (null !== $remote->interval) {
             $subscription->setInterval($remote->interval);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         // A new period paid: the plan's credits are credited again (the first
         // period's were, when the order was paid).
         $renewed = null !== $periodEnd && null !== $remote->currentPeriodEnd && $remote->currentPeriodEnd > $periodEnd && $subscription->isRunning();
@@ -109,7 +113,7 @@ class Subscriptions
         $soon = $now->modify(sprintf('+%d days', $this->reminderDays));
         $ended = $ending = 0;
         /** @var Entitlement $entitlement */
-        foreach ($this->entityManager->getRepository(Entitlement::class)->findBy(['endedAt' => null]) as $entitlement) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork)->of(Entitlement::class)->findBy([Group::of(Parser::SEPARATOR_AND, Criterion::of('endedAt', null, Parser::OPTION_NULL))]) as $entitlement) {
             if ($entitlement->getStartsAt() > $now) {
                 continue;
             }
@@ -130,7 +134,7 @@ class Subscriptions
                 ++$ending;
             }
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return ['ended' => $ended, 'ending' => $ending];
     }

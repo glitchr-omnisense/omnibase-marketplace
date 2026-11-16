@@ -10,8 +10,9 @@ use Base\Marketplace\Invoice\InvoiceNumbering;
 use Base\Marketplace\Model\InvoiceSource;
 use Base\Marketplace\Invoice\Transmission\InvoiceTransmission;
 use Base\Marketplace\Repository\InvoiceRepository;
-use Omnibridge\Symfony\Omnibase\Response\PdfResponse;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Response\PdfResponse;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\UriSigner;
@@ -44,7 +45,7 @@ use Twig\Environment;
 class Invoices
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly InvoiceComposer $composer,
         private readonly InvoiceNumbering $numbering,
         private readonly FacturX $facturX,
@@ -62,7 +63,7 @@ class Invoices
 
     public function repository(): InvoiceRepository
     {
-        return $this->entityManager->getRepository(Invoice::class);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class);
     }
 
     /** The order's invoice that stands, if it has one. */
@@ -231,7 +232,7 @@ class Invoices
     {
         $at ??= new \DateTimeImmutable();
         $invoice->markPaid($at);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         // Told to the gateway it went through: "Encaissée" (212), a status the reform makes mandatory.
         $this->transmission?->paid($invoice, $at);
     }
@@ -382,6 +383,6 @@ class Invoices
             ->context(['invoice' => $invoice, 'link' => $this->signedUrl($invoice)])
             ->addPart(new DataPart($this->pdf($invoice), $this->filename($invoice), 'application/pdf')));
         $invoice->markSent();
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 }

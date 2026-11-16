@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Product\Attribute;
 
 use Base\Marketplace\Entity\Product\Attribute\Hyperlink;
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Hyperlink|null find($id, $lockMode = null, $lockVersion = null)

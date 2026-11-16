@@ -3,6 +3,7 @@
 namespace Tests\Base\Marketplace\Http;
 
 use Base\Marketplace\Entity\Order;
+use Base\Contract\UnitOfWork;
 use Base\Marketplace\Entity\Order\Consent;
 use Base\Marketplace\Entity\Order\Method\PaymentMethod;
 use Base\Marketplace\Entity\Order\OrderItem;
@@ -13,7 +14,6 @@ use Base\Marketplace\Model\ConsentStatement;
 use Base\Marketplace\Service\CartException;
 use Base\Marketplace\Service\Consents;
 use Base\Marketplace\Service\QuickOrder;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\TestBrowserToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -245,7 +245,7 @@ final class CheckoutConsentTest extends MarketplaceKernelTestCase
     private function terms(?string $version = null): void
     {
         $container = self::getContainer();
-        $container->set(Consents::class, new Consents($container->get(EntityManagerInterface::class), $container->get(TranslatorInterface::class), $container->get(RouterInterface::class), 'marketplace_cart', [], $version, 'ask', $container->get('request_stack'), (string) $container->getParameter('kernel.default_locale')));
+        $container->set(Consents::class, new Consents($container->get(UnitOfWork::class), $container->get(TranslatorInterface::class), $container->get(RouterInterface::class), 'marketplace_cart', [], $version, 'ask', $container->get('request_stack'), (string) $container->getParameter('kernel.default_locale')));
     }
 
     private function termsUrl(): string

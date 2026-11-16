@@ -3,6 +3,7 @@
 namespace Tests\Base\Marketplace\Service;
 
 use Base\Marketplace\Entity\Order;
+use Base\Contract\UnitOfWork;
 use Base\Marketplace\Entity\Order\Pickup;
 use Base\Marketplace\Enum\PickupMode;
 use Base\Marketplace\Enum\PickupStatus;
@@ -10,7 +11,6 @@ use Base\Marketplace\Event\PickupChangedEvent;
 use Base\Marketplace\Repository\Order\PickupRepository;
 use Base\Marketplace\Service\CartException;
 use Base\Marketplace\Service\Pickups;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -28,7 +28,7 @@ final class PickupsTest extends TestCase
         $dispatcher = new EventDispatcher();
         $dispatcher->addListener(PickupChangedEvent::class, function (PickupChangedEvent $event): void { $this->events[] = $event; });
 
-        return new Pickups($this->createMock(EntityManagerInterface::class), $repository, $dispatcher, $this->createMock(UrlGeneratorInterface::class), $modes, $zips, ['from' => '11:00', 'to' => '14:00', 'step' => 30], 60, 3, 'Europe/Paris');
+        return new Pickups($this->createMock(UnitOfWork::class), $repository, $dispatcher, $this->createMock(UrlGeneratorInterface::class), $modes, $zips, ['from' => '11:00', 'to' => '14:00', 'step' => 30], 60, 3, 'Europe/Paris');
     }
 
     private function order(bool $paid = false): Order

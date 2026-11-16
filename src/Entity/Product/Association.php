@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Product;
 
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Enum\AssociationType;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * One product leading to another on its page: what goes with it (a pairing),

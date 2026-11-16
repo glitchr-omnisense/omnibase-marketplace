@@ -4,9 +4,12 @@ namespace Tests\Base\Marketplace\Controller;
 
 use Base\Admin\Filter\Filter;
 use Base\Admin\Filter\Filters;
+use Base\Database\Repository\Finder\Criterion;
 use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Parser;
 use Base\Marketplace\Controller\Admin\Crud\OrderCrudController;
 use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Enum\OrderState;
 use Tests\Base\Marketplace\MarketplaceKernelTestCase;
 use Tests\Base\Marketplace\ShopFixtureTrait;
 
@@ -46,12 +49,14 @@ final class OrderCartFilterTest extends MarketplaceKernelTestCase
     public function testTheCartsAndTheOrdersThroughTheFinder(): void
     {
         $filter = $this->cart();
-        self::assertTrue($filter->isNeutral(), 'every persistence can say it');
+        // The criteria of the language, which every persistence reads: a cart's state starts with "cart".
+        self::assertEquals(Group::of(Parser::SEPARATOR_AND, Criterion::of('state', OrderState::CART.'%', Parser::OPTION_PARTIAL)), $filter->match('1'));
+        self::assertEquals(Group::of(Parser::SEPARATOR_AND, Criterion::of('state', OrderState::CART.'%', Parser::OPTION_NOT_EQUAL, Parser::OPTION_PARTIAL)), $filter->match('0'));
         if (!method_exists(Group::class, 'of')) {
             self::markTestSkipped('Needs omnisense/omnibase 5.x (Finder\\Group::of()).');
         }
         [$cart, $order] = $this->orders();
-        $repository = $this->entityManager->getRepository(Order::class);
+        $repository = $this->repository(Order::class);
 
         foreach (['1' => [$cart, $order], '0' => [$order, $cart]] as $value => [$in, $out]) {
             $read = $repository->findBy([$filter->match((string) $value)]);

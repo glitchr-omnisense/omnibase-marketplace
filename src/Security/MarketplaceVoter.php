@@ -5,7 +5,8 @@ namespace Base\Marketplace\Security;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Product\Taxon;
 use Base\Marketplace\Entity\Store;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
@@ -43,7 +44,7 @@ final class MarketplaceVoter extends Voter implements ResetInterface
 
     public function __construct(
         private readonly AccessDecisionManagerInterface $accessDecisionManager,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         #[Autowire('%marketplace.admin_role%')] private readonly string $creators = 'ROLE_SUPERADMIN',
     ) {
     }
@@ -85,10 +86,7 @@ final class MarketplaceVoter extends Voter implements ResetInterface
             return false;
         }
 
-        return $this->owners[$id] ??= (bool) $this->entityManager->createQueryBuilder()
-            ->select('COUNT(s.id)')->from(Store::class, 's')
-            ->join('s.owners', 'o')->where('o.id = :member')->setParameter('member', $id)
-            ->getQuery()->getSingleScalarResult();
+        return $this->owners[$id] ??= 0 < UnitOfWorks::repositories($this->unitOfWork)->of(Store::class)->count(['owners.id' => $id]);
     }
 
     /**
@@ -116,7 +114,7 @@ final class MarketplaceVoter extends Voter implements ResetInterface
             $values = $scope->getValue();
             foreach (\is_array($values) ? $values : [$values] as $value) {
                 if (is_numeric($value) && $scope->getAdapter() instanceof \Base\Marketplace\Entity\Sales\Attribute\Scope\StoreAdapter) {
-                    $value = $this->entityManager->find(Store::class, $value);
+                    $value = UnitOfWorks::repositories($this->unitOfWork)->of(Store::class)->find($value);
                 }
                 $store = match (true) {
                     $value instanceof Store => $value,

@@ -11,7 +11,9 @@ use Base\Marketplace\Supply\Model\SupplyOrder;
 use Base\Marketplace\Supply\Model\SupplyRecipient;
 use Base\Marketplace\Supply\Model\SupplyResult;
 use Base\Marketplace\Supply\SupplierRegistry;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -29,7 +31,7 @@ use Psr\Log\LoggerInterface;
 class Supply
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly SupplierRegistry $suppliers,
         private readonly ?EventDispatcherInterface $dispatcher = null,
         private readonly ?LoggerInterface $logger = null,
@@ -71,11 +73,11 @@ class Supply
         $rank = 0;
         foreach ($groups as $group) {
             $job = new SupplyJob($order, $group['supplier'], sprintf('%s-%d', $order->getReference() ?? $order->getId(), ++$rank), $group['lines'], $group['recipient']?->toArray() ?? []);
-            $this->entityManager->persist($job);
+            $this->unitOfWork->persist($job);
             $this->submit($job, $draft);
             $jobs[] = $job;
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $jobs;
     }
@@ -85,7 +87,7 @@ class Supply
     {
         if (SupplyStatus::FAILED === $job->getStatus()) {
             $this->submit($job, $draft);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $job;
@@ -96,7 +98,7 @@ class Supply
     {
         if (SupplyStatus::DRAFT === $job->getStatus() && null !== $job->getSupplierReference()) {
             $this->attempt($job, fn ($supplier) => $supplier->confirm($job->getSupplierReference()));
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $job;
@@ -107,7 +109,7 @@ class Supply
     {
         if (null !== $job->getSupplierReference() && !$job->getStatus()->isFinal()) {
             $this->attempt($job, fn ($supplier) => $supplier->fetch($job->getSupplierReference()), false);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $job;
@@ -117,7 +119,7 @@ class Supply
     {
         if (null !== $job->getSupplierReference() && !$job->getStatus()->isFinal()) {
             $this->attempt($job, fn ($supplier) => $supplier->cancel($job->getSupplierReference()), false);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $job;
@@ -126,12 +128,12 @@ class Supply
     /** A supplier's word (its webhook, its page): applied to the job it is about, when we know it. */
     public function apply(SupplyResult $result): ?SupplyJob
     {
-        $jobs = $this->entityManager->getRepository(SupplyJob::class);
+        $jobs = UnitOfWorks::repositories($this->unitOfWork)->of(SupplyJob::class);
         $job = $jobs->findOneBy(['supplier' => $result->supplier, 'supplierReference' => $result->reference])
             ?? (null !== $result->orderReference ? $jobs->findOneBy(['supplier' => $result->supplier, 'reference' => $result->orderReference]) : null);
         if ($job) {
             $this->record($job, $result);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $job;
@@ -140,12 +142,12 @@ class Supply
     /** @return list<SupplyJob> */
     public function jobsOf(Order $order): array
     {
-        return null === $order->getId() ? [] : $this->entityManager->getRepository(SupplyJob::class)->findBy(['order' => $order], ['id' => 'ASC']);
+        return null === $order->getId() ? [] : UnitOfWorks::repositories($this->unitOfWork)->of(SupplyJob::class)->findBy(['order' => Key::of($order)], ['id' => 'ASC']);
     }
 
     public function find(string $reference): ?SupplyJob
     {
-        return $this->entityManager->getRepository(SupplyJob::class)->findOneBy(['reference' => $reference]);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(SupplyJob::class)->findOneBy(['reference' => $reference]);
     }
 
     private function submit(SupplyJob $job, bool $draft): void

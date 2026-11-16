@@ -4,7 +4,11 @@ namespace Base\Marketplace\Invoice\Transmission;
 
 use Base\Marketplace\Entity\Invoice;
 use Base\Marketplace\Invoice\Transmission\Entity\InvoiceFlow;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Parser;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -31,7 +35,7 @@ class InvoiceStatusCommand extends Command
 {
     public function __construct(
         private readonly InvoiceTransmission $transmission,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
     ) {
         parent::__construct();
     }
@@ -50,11 +54,14 @@ class InvoiceStatusCommand extends Command
         $numbers = (array) $input->getArgument('numbers');
         $failed = false;
         if ([] !== $numbers) {
-            $invoices = array_filter(array_map(fn (string $n) => $this->entityManager->getRepository(Invoice::class)->findOneBy(['number' => $n]), $numbers));
+            $invoices = array_filter(array_map(fn (string $n) => UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->findOneBy(['number' => $n]), $numbers));
         } else {
-            $invoices = array_map(static fn (InvoiceFlow $f) => $f->getInvoice(), $this->entityManager->getRepository(InvoiceFlow::class)->createQueryBuilder('f')
-                ->where('f.status IS NULL OR f.status NOT IN (:final)')->setParameter('final', ['paid', 'refused', 'rejected'])
-                ->getQuery()->getResult());
+            $invoices = array_map(static fn (InvoiceFlow $f) => $f->getInvoice(), UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceFlow::class)->findBy([
+                Group::of(Parser::SEPARATOR_OR,
+                    Criterion::of('status', null, Parser::OPTION_NULL),
+                    Criterion::of('status', ['paid', 'refused', 'rejected'], Parser::OPTION_NOT_EQUAL),
+                ),
+            ]));
         }
         foreach ($invoices as $invoice) {
             try {

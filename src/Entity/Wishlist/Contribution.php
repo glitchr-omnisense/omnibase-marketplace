@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Wishlist;
 
 use Base\Marketplace\Enum\ContributionStatus;
 use Base\Marketplace\Repository\Wishlist\ContributionRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * Money given to a pot or towards a shared object: the gift (`amount`), the

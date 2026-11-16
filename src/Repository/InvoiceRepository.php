@@ -2,9 +2,13 @@
 
 namespace Base\Marketplace\Repository;
 
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 use Base\Marketplace\Entity\Invoice;
 use Base\Marketplace\Entity\Order;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
 
 /**
  * @method Invoice|null find($id, $lockMode = null, $lockVersion = null)
@@ -17,22 +21,17 @@ class InvoiceRepository extends ServiceEntityRepository
     /** The last number taken in a series and a year: 0 before the first. */
     public function lastSequence(string $series, int $year): int
     {
-        return (int) $this->createQueryBuilder('i')
-            ->select('MAX(i.sequence)')
-            ->where('i.series = :series')->setParameter('series', $series)
-            ->andWhere('i.year = :year')->setParameter('year', $year)
-            ->getQuery()->getSingleScalarResult();
+        return (int) $this->maxOfSequenceBy(['series' => $series, 'year' => $year]);
     }
 
     /** The invoice of an order that stands - not cancelled by a credit note. */
     public function standingFor(Order $order): ?Invoice
     {
-        return $this->createQueryBuilder('i')
-            ->where('i.order = :order')->setParameter('order', $order)
-            ->andWhere('i.type = :type')->setParameter('type', Invoice::TYPE_INVOICE)
-            ->andWhere('i.state != :cancelled')->setParameter('cancelled', Invoice::STATE_CANCELLED)
-            ->setMaxResults(1)
-            ->getQuery()->getOneOrNullResult();
+        return $this->findOneBy([
+            'order' => Key::of($order),
+            'type' => Invoice::TYPE_INVOICE,
+            Group::of(Parser::SEPARATOR_AND, Criterion::of('state', Invoice::STATE_CANCELLED, Parser::OPTION_NOT_EQUAL)),
+        ]);
     }
 
     /** @return Invoice[] an order's invoices and credit notes, oldest first */

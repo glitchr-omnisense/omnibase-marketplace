@@ -54,7 +54,7 @@ bundle before this one (see the core's README for the other bundles a site usual
 
 ```php
 // config/bundles.php
-Omnibridge\Symfony\Omnibase\BaseBundle::class => ['all' => true],
+Base\BaseBundle::class => ['all' => true],
 Base\Admin\AdminBundle::class => ['all' => true],
 Omnistate\Bridge\Symfony\OmnistateBundle::class => ['all' => true],
 Base\Marketplace\MarketplaceBundle::class => ['all' => true],

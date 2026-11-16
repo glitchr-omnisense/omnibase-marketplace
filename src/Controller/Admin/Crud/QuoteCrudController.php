@@ -24,7 +24,7 @@ use Base\Marketplace\Enum\QuoteStatus;
 use Base\Marketplace\Enum\TradeDirection;
 use Base\Marketplace\Form\QuoteLineType;
 use Base\Marketplace\Repository\QuoteRepository;
-use Omnibridge\Persistence\UnitOfWork;
+use Base\Contract\UnitOfWork;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
@@ -179,7 +179,7 @@ class QuoteCrudController extends AbstractMarketplaceCrudController
         }
         $quote->setStatus(QuoteStatus::SENT);
         $quote->setValidUntil($quote->getValidUntil() ?? new \DateTimeImmutable(sprintf('+%d days', $this->validity)));
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         $this->mailer->send((new TemplatedEmail())
             ->to($quote->getEmail())

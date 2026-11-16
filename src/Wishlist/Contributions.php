@@ -9,8 +9,11 @@ use Base\Marketplace\Enum\WishlistItemKind;
 use Base\Marketplace\Event\ContributionPaidEvent;
 use Base\Marketplace\Event\ContributionPreparingEvent;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
+use Base\Database\Attribute\Backend\Backends;
+use Base\Database\Backend\RowLocks;
 use Omnitrade\Exception\OmnitradeException;
 use Omnitrade\Model\Customer;
 use Omnitrade\Model\Line;
@@ -33,13 +36,34 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class Contributions
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly OmnitradeGateways $gateways,
         private readonly ?EventDispatcherInterface $dispatcher = null,
         #[Autowire('%marketplace.wishlist.fee_rate%')] private readonly float $feeRate = 0.03,
         #[Autowire('%marketplace.wishlist.fee_fixed%')] private readonly int $feeFixed = 0,
         #[Autowire('%marketplace.wishlist.minimum%')] private readonly int $minimum = 500,
     ) {
+    }
+
+    private function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
+    }
+
+    /**
+     * The work run with the entity's row locked (SELECT ... FOR UPDATE, in a transaction rolled back by hand: an
+     * exception inside leaves the unit of work usable) WITHOUT reading the entity again - what the caller set on it is
+     * kept. An entity with no row yet is not locked: the work runs, its flush is its own transaction.
+     *
+     * @template R
+     *
+     * @param callable(): R $work
+     *
+     * @return R
+     */
+    private function locked(object $entity, callable $work): mixed
+    {
+        return null === $this->unitOfWork()->identifier($entity) ? $work() : Backends::of($this->unitOfWork(), RowLocks::class)->locked($entity, $work);
     }
 
     /** The platform's fee on a gift of that amount, before any listener's word. */
@@ -85,8 +109,8 @@ class Contributions
         $this->dispatcher?->dispatch($event);
         $covered = ($options['coverFees'] ?? false) && $wishlist->isGiverMayCoverFees();
         $contribution->setFee(min(max(0, $event->fee), $amount), $covered);
-        $this->entityManager->persist($contribution);
-        $this->entityManager->flush();
+        $this->unitOfWork()->persist($contribution);
+        $this->unitOfWork()->flush();
 
         $currency = $contribution->getCurrency();
         try {
@@ -106,7 +130,7 @@ class Contributions
             ));
         } catch (OmnitradeException $e) {
             $contribution->markCancelled();
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
 
             throw new WishlistException('wishlist.error.payment', ['{reason}' => $e->getMessage()]);
         }
@@ -117,7 +141,7 @@ class Contributions
         } elseif ($paid->status->isFinal()) {
             $contribution->markCancelled();
         }
-        $this->entityManager->flush();
+        $this->unitOfWork()->flush();
         if (null === $contribution->getRedirectUrl() && !$contribution->isPaid()) {
             throw new WishlistException('wishlist.error.payment');
         }
@@ -127,12 +151,12 @@ class Contributions
 
     public function find(string $reference): ?Contribution
     {
-        return $this->entityManager->getRepository(Contribution::class)->findOneBy(['reference' => $reference]);
+        return UnitOfWorks::repositories($this->unitOfWork())->of(Contribution::class)->findOneBy(['reference' => $reference]);
     }
 
     public function findByProviderReference(string $gateway, string $providerReference): ?Contribution
     {
-        return $this->entityManager->getRepository(Contribution::class)->findOneBy(['gateway' => $gateway, 'providerReference' => $providerReference]);
+        return UnitOfWorks::repositories($this->unitOfWork())->of(Contribution::class)->findOneBy(['gateway' => $gateway, 'providerReference' => $providerReference]);
     }
 
     /** Where it stands at the provider, applied: paid, cancelled, or still pending. */
@@ -161,7 +185,7 @@ class Contributions
             $this->markPaid($contribution);
         } elseif (null !== $status && $status->isFinal() && ContributionStatus::PENDING === $contribution->getStatus()) {
             $contribution->markCancelled();
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
         }
 
         return $contribution;
@@ -170,27 +194,21 @@ class Contributions
     /** Paid, and told - once: the row is locked and its state read from the database (the return page and the webhook come together). */
     private function markPaid(Contribution $contribution): void
     {
-        $this->entityManager->beginTransaction();
-        try {
+        $this->locked($contribution, function () use ($contribution): void {
             if (null !== $contribution->getId()) {
-                $this->entityManager->lock($contribution, LockMode::PESSIMISTIC_WRITE);
-                $stored = $this->entityManager->createQuery('SELECT c.status FROM '.Contribution::class.' c WHERE c.id = :id')->setParameter('id', $contribution->getId())->getSingleScalarResult();
+                // Its status as the database has it (the return page and the webhook come together).
+                $contributions = UnitOfWorks::repositories($this->unitOfWork())->of(Contribution::class);
+                \assert($contributions instanceof ServiceEntityRepository);
+                $stored = $contributions->findValuesBy(['status'], ['id' => $contribution->getId()], null, 1)[0]['status'] ?? null;
                 $stored = $stored instanceof ContributionStatus ? $stored : ContributionStatus::tryFrom((string) $stored);
                 if (ContributionStatus::PENDING !== $stored) {
-                    $this->entityManager->commit();
-
                     return;
                 }
             }
             $contribution->markPaid();
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
             $this->dispatcher?->dispatch(new ContributionPaidEvent($contribution));
-            $this->entityManager->flush();
-            $this->entityManager->commit();
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
-
-            throw $e;
-        }
+            $this->unitOfWork()->flush();
+        });
     }
 }

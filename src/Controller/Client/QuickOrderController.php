@@ -12,7 +12,8 @@ use Base\Marketplace\Service\CartException;
 use Base\Marketplace\Service\Checkout;
 use Base\Marketplace\Service\QuickOrder;
 use Base\Marketplace\Twig\QuickOrderTwigExtension;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,7 +42,7 @@ class QuickOrderController extends AbstractController
 
     public function __construct(
         private readonly QuickOrder $quickOrder,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -49,7 +50,7 @@ class QuickOrderController extends AbstractController
     #[Route('/commande-express/{id}', name: 'marketplace_quick_order', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function Buy(Request $request, int $id, QuickOrderTwigExtension $forms): Response
     {
-        $product = $this->entityManager->getRepository(Product::class)->find($id);
+        $product = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->find($id);
         if (!$product instanceof Product || !$this->quickOrder->isEnabled()) {
             throw $this->createNotFoundException();
         }
@@ -98,7 +99,7 @@ class QuickOrderController extends AbstractController
     /** Back from the payment provider (QuickOrderReturnListener routes marketplace_payment_return here for a quick order). */
     public function Back(Request $request, int $order, string $gateway, PaymentGatewayRegistry $gateways, Checkout $checkout): Response
     {
-        $order = $this->entityManager->getRepository(Order::class)->find($order);
+        $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->find($order);
         if (!$order instanceof Order) {
             throw $this->createNotFoundException();
         }
@@ -137,7 +138,7 @@ class QuickOrderController extends AbstractController
         if (!$signer->checkRequest($request)) {
             throw new AccessDeniedHttpException('This link is invalid or has expired.');
         }
-        $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]) ?? throw $this->createNotFoundException();
+        $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findOneBy(['reference' => $reference]) ?? throw $this->createNotFoundException();
 
         $event = new QuickOrderDoneEvent($order);
         $dispatcher->dispatch($event);

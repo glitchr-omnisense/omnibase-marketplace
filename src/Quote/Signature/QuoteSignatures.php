@@ -10,9 +10,10 @@ use Base\Marketplace\Entity\Quote;
 use Base\Marketplace\Pricing\ExportExemption;
 use Base\Marketplace\Service\QuoteStatusGuard;
 use Base\Marketplace\Service\QuoteToOrder;
-use Omnibridge\Symfony\Omnibase\Response\PdfResponse;
+use Base\Response\PdfResponse;
 use Base\Service\Signatures;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Omnisign\Model\Document;
 use Omnisign\Model\Envelope as SignatureRequest;
 use Omnisign\Model\Field;
@@ -51,7 +52,7 @@ class QuoteSignatures
     public function __construct(
         private readonly Signatures $signatures,
         private readonly QuoteToOrder $quoteToOrder,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Environment $twig,
         private readonly ?LoggerInterface $logger = null,
         #[Autowire('%marketplace.quotes.signature%')] private readonly ?string $gateway = null,
@@ -120,7 +121,7 @@ class QuoteSignatures
         if (!$quote instanceof Quote || !$quote->isAcceptable()) {
             return;
         }
-        $client = $quote->getClient() ?? (class_exists('App\\Entity\\User') ? $this->entityManager->getRepository('App\\Entity\\User')->findOneBy(['email' => $quote->getEmail()]) : null);
+        $client = $quote->getClient() ?? (class_exists('App\\Entity\\User') ? UnitOfWorks::repositories($this->unitOfWork)->of('App\\Entity\\User')->findOneBy(['email' => $quote->getEmail()]) : null);
         if (!$client instanceof User) {
             // Nobody to make the order for yet: the client's way back does it.
             $this->logger?->info('Quote {reference} signed; accepted when its client comes back.', ['reference' => $quote->getReference()]);

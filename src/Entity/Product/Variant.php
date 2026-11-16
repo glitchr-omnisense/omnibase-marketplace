@@ -12,7 +12,7 @@ use Base\Database\Entity\Extension\TranslatableTrait;
 use Base\Database\Entity\Extension\TranslatableInterface;
 use Base\Entity\Layout\ImageCrop;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: VariantRepository::class)]

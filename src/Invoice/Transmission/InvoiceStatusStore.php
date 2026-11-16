@@ -3,7 +3,8 @@
 namespace Base\Marketplace\Invoice\Transmission;
 
 use Base\Marketplace\Invoice\Transmission\Entity\InvoiceFlow;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Omnibill\Email\StatusStoreInterface;
 use Omnibill\Model\LifecycleStatus;
 use Omnibill\Model\StatusChange;
@@ -22,13 +23,13 @@ use Omnibill\Model\StatusChange;
  */
 final class InvoiceStatusStore
 {
-    public static function create(EntityManagerInterface $entityManager): StatusStoreInterface
+    public static function create(UnitOfWork $unitOfWork): StatusStoreInterface
     {
-        return new class($entityManager) implements StatusStoreInterface {
+        return new class($unitOfWork) implements StatusStoreInterface {
             /** @var array<string, list<StatusChange>> */
             private array $pending = [];
 
-            public function __construct(private readonly EntityManagerInterface $entityManager)
+            public function __construct(private readonly UnitOfWork $unitOfWork)
             {
             }
 
@@ -60,7 +61,7 @@ final class InvoiceStatusStore
 
             private function row(string $reference): ?InvoiceFlow
             {
-                return $this->entityManager->getRepository(InvoiceFlow::class)->findOneBy(['reference' => $reference]);
+                return UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceFlow::class)->findOneBy(['reference' => $reference]);
             }
         };
     }

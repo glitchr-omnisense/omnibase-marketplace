@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Entity;
 
 use Base\Marketplace\Repository\UsageRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A counted grant used: one of the "events.major": 1 of a plan taken by

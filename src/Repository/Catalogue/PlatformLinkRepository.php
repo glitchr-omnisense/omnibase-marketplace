@@ -3,15 +3,15 @@
 namespace Base\Marketplace\Repository\Catalogue;
 
 use Base\Marketplace\Entity\Catalogue\PlatformLink;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<PlatformLink> */
 class PlatformLinkRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, PlatformLink::class);
+        parent::__construct($finders, PlatformLink::class);
     }
 
     public function findVariant(string $gateway, string $remoteVariant): ?PlatformLink
@@ -33,9 +33,7 @@ class PlatformLinkRepository extends ServiceEntityRepository
     /** The newest change read from this platform: where an incremental sync starts. */
     public function lastRemoteUpdate(string $gateway): ?\DateTimeImmutable
     {
-        $value = $this->createQueryBuilder('l')->select('MAX(l.remoteUpdatedAt)')
-            ->andWhere('l.gateway = :gateway')->setParameter('gateway', $gateway)
-            ->getQuery()->getSingleScalarResult();
+        $value = $this->maxOfRemoteUpdatedAtBy(['gateway' => $gateway]);
 
         return $value ? new \DateTimeImmutable((string) $value) : null;
     }

@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Repository\Order\Address;
 
-use Omnibridge\Doctrine\Omnibase\Repository\User\AddressRepository;
+use Base\Repository\User\AddressRepository;
 
 /**
  *

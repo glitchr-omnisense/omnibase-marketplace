@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Entitlement;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<Entitlement> */
 class EntitlementRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Entitlement::class);
+        parent::__construct($finders, Entitlement::class);
     }
 }

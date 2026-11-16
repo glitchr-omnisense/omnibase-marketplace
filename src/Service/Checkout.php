@@ -12,8 +12,11 @@ use Base\Marketplace\Event\OrderPaidEvent;
 use Base\Marketplace\Event\PaymentCancelledEvent;
 use Base\Marketplace\Payment\PaymentGatewayRegistry;
 use Base\Marketplace\Payment\PaymentResult;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
+use Base\Database\Attribute\Backend\Backends;
+use Base\Database\Backend\RowLocks;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -31,7 +34,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 class Checkout
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly PaymentGatewayRegistry $gateways,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly Cart $cart,
@@ -39,10 +42,31 @@ class Checkout
     ) {
     }
 
+    private function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
+    }
+
+    /**
+     * The work run with the entity's row locked (SELECT ... FOR UPDATE, in a transaction rolled back by hand: an
+     * exception inside leaves the unit of work usable) WITHOUT reading the entity again - what the caller set on it is
+     * kept. An entity with no row yet is not locked: the work runs, its flush is its own transaction.
+     *
+     * @template R
+     *
+     * @param callable(): R $work
+     *
+     * @return R
+     */
+    private function locked(object $entity, callable $work): mixed
+    {
+        return null === $this->unitOfWork()->identifier($entity) ? $work() : Backends::of($this->unitOfWork(), RowLocks::class)->locked($entity, $work);
+    }
+
     /** @return PaymentMethod[] the methods able to take this order */
     public function methodsFor(Order $order): array
     {
-        $methods = $this->gateways->usableFor($order, $this->entityManager->getRepository(PaymentMethod::class)->findAll());
+        $methods = $this->gateways->usableFor($order, UnitOfWorks::repositories($this->unitOfWork())->of(PaymentMethod::class)->findAll());
         // The shop's default gateway first: checkout preselects the first method.
         usort($methods, fn (PaymentMethod $a, PaymentMethod $b) => ($b->getGatewayFactory() === $this->defaultGateway) <=> ($a->getGatewayFactory() === $this->defaultGateway));
 
@@ -77,16 +101,11 @@ class Checkout
         // One payment at a time: the order's row locked, its state read from
         // the database - a double click opened two payments (two Stripe
         // sessions, two Shopify drafts) on the same cart.
-        // By hand, not wrapInTransaction(): that closes the EntityManager on any
-        // exception, and a buyer's double click is not a reason to break the
-        // rest of the request.
-        $this->entityManager->beginTransaction();
-        try {
-            if (null !== $order->getId()) {
-                $this->entityManager->lock($order, LockMode::PESSIMISTIC_WRITE);
-                if (!str_starts_with((string) $this->stored($order, 'state'), OrderState::CART)) {
-                    throw new CartException('checkout.error.pending');
-                }
+        // RowLocks rolls back by hand: a buyer's double click (CartException)
+        // is not a reason to break the rest of the request.
+        $transaction = $this->locked($order, function () use ($order, $method): Transaction {
+            if (null !== $order->getId() && !str_starts_with((string) $this->stored($order, 'state'), OrderState::CART)) {
+                throw new CartException('checkout.error.pending');
             }
 
             $customer = $order->getCustomer();
@@ -100,14 +119,11 @@ class Checkout
             $order->setPaymentMethod($method);
             $order->addTransaction($transaction);
             $order->markAsPending();
-            $this->entityManager->persist($transaction);
-            $this->entityManager->flush(); // the order gets its reference here
-            $this->entityManager->commit();
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
+            $this->unitOfWork()->persist($transaction);
+            $this->unitOfWork()->flush(); // the order gets its reference here
 
-            throw $e;
-        }
+            return $transaction;
+        });
 
         $transaction->setNumber($order->getReference());
         try {
@@ -117,7 +133,7 @@ class Checkout
             // nobody's money on it: back to the cart, then let it surface.
             $transaction->markAsCancelled();
             $order->markAsCart();
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
 
             throw $e;
         }
@@ -127,9 +143,9 @@ class Checkout
         } elseif ($result->isRefused()) {
             $transaction->markAsCancelled();
             $order->markAsCart();
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
         } else {
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
         }
 
         return $result;
@@ -156,12 +172,9 @@ class Checkout
      */
     public function confirm(Order $order, Transaction $transaction): void
     {
-        $this->entityManager->wrapInTransaction(function () use ($order, $transaction): void {
-            if (null !== $order->getId()) {
-                $this->entityManager->lock($order, LockMode::PESSIMISTIC_WRITE);
-            }
+        $this->locked($order, function () use ($order, $transaction): void {
             if ($this->isAlreadyPaid($order, $transaction)) {
-                $this->entityManager->flush();
+                $this->unitOfWork()->flush();
 
                 return;
             }
@@ -175,10 +188,10 @@ class Checkout
                     $product->setStock(max(0, $product->getStock() - (int) $item->getQuantity()));
                 }
             }
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
 
             $this->dispatcher->dispatch(new OrderPaidEvent($order));
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
         });
     }
 
@@ -196,7 +209,7 @@ class Checkout
             if (!$order->isConfirmed() && !$order->isCompleted()) {
                 $order->markAsCart();
             }
-            $this->entityManager->flush();
+            $this->unitOfWork()->flush();
         }
 
         return $this->dispatcher->dispatch(new PaymentCancelledEvent($order, $transaction));
@@ -216,10 +229,11 @@ class Checkout
     /** A field as the database has it now - not the entity in memory, nor the second-level cache's copy. */
     private function stored(object $entity, string $field): mixed
     {
-        return $this->entityManager->createQuery(sprintf('SELECT e.%s FROM %s e WHERE e.id = :id', $field, $entity::class))
-            ->setParameter('id', $entity->getId())
-            ->setCacheable(false)
-            ->getSingleScalarResult();
+        $records = UnitOfWorks::repositories($this->unitOfWork())->of($entity::class);
+        \assert($records instanceof ServiceEntityRepository);
+
+        // The row's value read in the database (findValuesBy() hydrates no entity and reads no cache).
+        return $records->findValuesBy([$field], ['id' => $entity->getId()], null, 1)[0][$field] ?? null;
     }
 
     /** @throws CartException */

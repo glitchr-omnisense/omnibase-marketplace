@@ -14,7 +14,7 @@ use Base\Traits\BaseTrait;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: PaymentMethodRepository::class)]

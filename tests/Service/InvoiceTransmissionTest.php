@@ -112,7 +112,7 @@ final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
         $registry = new Registry([new EmailGatewayFactory($container->get('mailer.mailer'), $store)], [
             'accounting' => ['factory' => 'email', 'options' => ['from' => 'compta@example.org', 'subject' => 'Facture {number} de {seller}', 'bcc' => ['archives@example.org']]],
         ]);
-        $transmission = new InvoiceTransmission($this->entityManager, $container->get('translator'), $registry, $container->get('mailer.mailer'), $store, 'accounting');
+        $transmission = new InvoiceTransmission($this->unitOfWork, $container->get('translator'), $registry, $container->get('mailer.mailer'), $store, 'accounting');
         $invoice = $this->invoices->issue($this->order());
 
         $flow = $transmission->submit($invoice, '%PDF-1.7 test', 'facture.pdf', 'https://example.org/f');
@@ -130,7 +130,7 @@ final class InvoiceTransmissionTest extends MarketplaceKernelTestCase
     public function testWithoutTheSellersAddressNothingIsSentAndItSaysWhy(): void
     {
         $container = self::getContainer();
-        $transmission = new InvoiceTransmission($this->entityManager, $container->get('translator'), null, $container->get('mailer.mailer'), null, 'email');
+        $transmission = new InvoiceTransmission($this->unitOfWork, $container->get('translator'), null, $container->get('mailer.mailer'), null, 'email');
         $invoice = $this->invoices->issue($this->order());
         (new \ReflectionProperty(Invoice::class, 'seller'))->setValue($invoice, ['email' => null] + $invoice->getSeller());
 

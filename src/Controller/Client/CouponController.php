@@ -7,7 +7,8 @@ use Base\Marketplace\Entity\Sales\Discount\Coupon;
 use Base\Marketplace\Service\Cart;
 use Base\Marketplace\Service\CartException;
 use Base\Marketplace\Service\Pricing;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +21,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class CouponController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Cart $cart,
         private readonly Pricing $pricing,
         private readonly TranslatorInterface $translator,
@@ -33,7 +34,7 @@ class CouponController extends AbstractController
         $cart = $this->mine($request, $order);
         try {
             $coupon = $this->pricing->applyCoupon($cart, (string) $request->request->get('code'), $this->getUser());
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             $this->addFlash('success', $this->translator->trans('@marketplace.coupon.applied', ['{code}' => $coupon->getCode()]));
         } catch (CartException $e) {
             $this->addFlash('error', $this->translator->trans('@marketplace.'.$e->getMessage(), $e->getParameters()));
@@ -46,10 +47,10 @@ class CouponController extends AbstractController
     public function Remove(Request $request, int $order, int $coupon): Response
     {
         $cart = $this->mine($request, $order);
-        $found = $this->entityManager->getRepository(Coupon::class)->find($coupon);
+        $found = UnitOfWorks::repositories($this->unitOfWork)->of(Coupon::class)->find($coupon);
         if ($found instanceof Coupon) {
             $this->pricing->removeCoupon($cart, $found);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $this->redirectToRoute('marketplace_cart');
@@ -60,7 +61,7 @@ class CouponController extends AbstractController
         if (!$this->isCsrfTokenValid('marketplace_cart', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid token.');
         }
-        $cart = $this->entityManager->getRepository(Order::class)->find($order);
+        $cart = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->find($order);
         if (!$cart instanceof Order) {
             throw $this->createNotFoundException('Unknown cart.');
         }

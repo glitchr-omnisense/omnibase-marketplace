@@ -4,8 +4,11 @@ namespace Base\Marketplace\Service;
 
 use Base\Entity\User;
 use Base\Marketplace\Entity\Credit;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
+use Base\Contract\UnitOfWork;
+use Base\Database\Attribute\Backend\Backends;
+use Base\Database\Backend\RowLocks;
 
 /**
  * Somebody's credits of one kind (Entity\Credit): credited by a pack bought
@@ -15,8 +18,29 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class Credits
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly UnitOfWork $unitOfWork)
     {
+    }
+
+    private function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
+    }
+
+    /**
+     * The work run with the entity's row locked (SELECT ... FOR UPDATE, in a transaction rolled back by hand: an
+     * exception inside leaves the unit of work usable) WITHOUT reading the entity again - what the caller set on it is
+     * kept. An entity with no row yet is not locked: the work runs, its flush is its own transaction.
+     *
+     * @template R
+     *
+     * @param callable(): R $work
+     *
+     * @return R
+     */
+    private function locked(object $entity, callable $work): mixed
+    {
+        return null === $this->unitOfWork()->identifier($entity) ? $work() : Backends::of($this->unitOfWork(), RowLocks::class)->locked($entity, $work);
     }
 
     public function grant(User $holder, string $kind, int $quantity, ?string $reason = null, ?\DateTimeImmutable $expiresAt = null, ?string $orderReference = null): Credit
@@ -25,8 +49,8 @@ class Credits
             throw new \InvalidArgumentException('A grant is positive.');
         }
         $credit = (new Credit($holder, $kind, $quantity, $reason, $expiresAt))->setOrderReference($orderReference);
-        $this->entityManager->persist($credit);
-        $this->entityManager->flush();
+        $this->unitOfWork()->persist($credit);
+        $this->unitOfWork()->flush();
 
         return $credit;
     }
@@ -37,7 +61,7 @@ class Credits
         $granted = 0;
         $expired = 0;
         $spent = 0;
-        foreach ($this->entityManager->getRepository(Credit::class)->findBy(['holder' => $holder, 'kind' => $kind], ['id' => 'ASC']) as $line) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork())->of(Credit::class)->findBy(['holder' => Key::of($holder), 'kind' => $kind], ['id' => 'ASC']) as $line) {
             if (!$line->isGrant()) {
                 $spent -= $line->getQuantity();
             } elseif (null !== $line->getExpiresAt() && $line->getExpiresAt() <= $at) {
@@ -63,17 +87,15 @@ class Credits
             throw new \InvalidArgumentException('A spending is positive.');
         }
 
-        return $this->transactional(function () use ($holder, $kind, $quantity, $reason, $resourceType, $resourceId): Credit {
-            if (null !== $holder->getId()) {
-                $this->entityManager->lock($holder, LockMode::PESSIMISTIC_WRITE);
-            }
+        // The holder's row locked while its balance is read (not the holder read again: the request's changes are kept).
+        return $this->locked($holder, function () use ($holder, $kind, $quantity, $reason, $resourceType, $resourceId): Credit {
             $balance = $this->balance($holder, $kind);
             if ($balance < $quantity) {
                 throw new CreditException($kind, $quantity, $balance);
             }
             $credit = (new Credit($holder, $kind, -$quantity, $reason))->setResource($resourceType, $resourceId);
-            $this->entityManager->persist($credit);
-            $this->entityManager->flush();
+            $this->unitOfWork()->persist($credit);
+            $this->unitOfWork()->flush();
 
             return $credit;
         });
@@ -88,25 +110,5 @@ class Credits
     public function refund(Credit $spent, ?string $reason = null): ?Credit
     {
         return $spent->isGrant() ? null : $this->grant($spent->getHolder(), $spent->getKind(), -$spent->getQuantity(), $reason ?? 'refund');
-    }
-
-    /**
-     * A transaction by hand, not wrapInTransaction(): that closes the
-     * EntityManager on any exception, and "none left" is an answer the
-     * application goes on from, not a failure.
-     */
-    private function transactional(callable $work): mixed
-    {
-        $this->entityManager->beginTransaction();
-        try {
-            $result = $work();
-            $this->entityManager->commit();
-
-            return $result;
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
-
-            throw $e;
-        }
     }
 }

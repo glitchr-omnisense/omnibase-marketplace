@@ -5,7 +5,7 @@ namespace Base\Marketplace\Service;
 use Base\Marketplace\Entity\Attachment;
 use Base\Marketplace\Entity\Order\OrderItem;
 use Base\Marketplace\Entity\Quote;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -24,7 +24,7 @@ class Attachments
 {
     /** @param list<string> $extensions */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly UriSigner $signer,
         private readonly UrlGeneratorInterface $router,
         #[Autowire('%marketplace.attachments.directory%')] private readonly string $directory,
@@ -152,7 +152,7 @@ class Attachments
         if ($file = $this->file($attachment)) {
             @unlink($file);
         }
-        $this->entityManager->remove($attachment);
+        $this->unitOfWork->remove($attachment);
     }
 
     /**
@@ -178,7 +178,7 @@ class Attachments
 
             $attachment = new Attachment($folder.'/'.$name, $original, $mime, $size);
             $attach($attachment);
-            $this->entityManager->persist($attachment);
+            $this->unitOfWork->persist($attachment);
             $stored[] = $attachment;
         }
 

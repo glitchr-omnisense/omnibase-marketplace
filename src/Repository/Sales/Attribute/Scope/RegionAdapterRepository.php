@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Sales\Attribute\Scope;
 
 use Base\Marketplace\Entity\Sales\Attribute\Scope\RegionAdapter;
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method RegionAdapter|null find($id, $lockMode = null, $lockVersion = null)

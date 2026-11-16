@@ -3,6 +3,7 @@
 namespace Tests\Base\Marketplace;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
@@ -15,6 +16,9 @@ abstract class MarketplaceKernelTestCase extends KernelTestCase
 {
     protected EntityManagerInterface $entityManager;
 
+    /** The neutral unit of work over the same entity manager: what the bundle's services take. */
+    protected UnitOfWork $unitOfWork;
+
     protected function setUp(): void
     {
         $_SERVER['KERNEL_CLASS'] ??= $_ENV['KERNEL_CLASS'] ?? 'App\\Kernel';
@@ -23,6 +27,7 @@ abstract class MarketplaceKernelTestCase extends KernelTestCase
         }
         self::bootKernel();
         $this->entityManager = self::getContainer()->get('doctrine')->getManager();
+        $this->unitOfWork = self::getContainer()->get(UnitOfWork::class);
     }
 
     /**
@@ -45,6 +50,17 @@ abstract class MarketplaceKernelTestCase extends KernelTestCase
                 \Closure::bind(function () use ($name): void { unset($this->{$name}); }, $this, $class->getName())();
             }
         }
+    }
+
+    /**
+     * The bundle's repository of a class, as its services get it (Base\Database\Repository\Repositories): the
+     * finder language and the repository's own methods. Doctrine's getRepository() gives its plain repository.
+     *
+     * @param class-string $class
+     */
+    protected function repository(string $class): \Base\Database\Repository\Entities
+    {
+        return \Base\Database\UnitOfWorks::repositories($this->unitOfWork)->of($class);
     }
 
     /** A member, stored: the application's User. */

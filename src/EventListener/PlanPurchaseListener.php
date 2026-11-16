@@ -8,7 +8,8 @@ use Base\Marketplace\Enum\SubscriptionStatus;
 use Base\Marketplace\Event\OrderPaidEvent;
 use Base\Marketplace\Service\Credits;
 use Base\Marketplace\Service\Entitlements;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 /**
@@ -21,7 +22,7 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 final class PlanPurchaseListener
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Entitlements $entitlements,
         private readonly Credits $credits,
     ) {
@@ -76,7 +77,7 @@ final class PlanPurchaseListener
             if (empty($details['subscription']) || empty($details['gateway'])) {
                 continue;
             }
-            $existing = $this->entityManager->getRepository(Subscription::class)->findOneBy(['gateway' => $details['gateway'], 'providerReference' => $details['subscription']]);
+            $existing = UnitOfWorks::repositories($this->unitOfWork)->of(Subscription::class)->findOneBy(['gateway' => $details['gateway'], 'providerReference' => $details['subscription']]);
             if ($existing) {
                 return $existing;
             }
@@ -85,7 +86,7 @@ final class PlanPurchaseListener
             $subscription->setInterval((string) $product->getPlanTerms()->interval);
             // Paid: it runs. Its period's end comes with the provider's next event (Service\Subscriptions::apply()).
             $subscription->setStatus(SubscriptionStatus::ACTIVE);
-            $this->entityManager->persist($subscription);
+            $this->unitOfWork->persist($subscription);
 
             return $subscription;
         }

@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Product\AttributeSet;
 
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractAdapter;
 use Base\Marketplace\Entity\Product\AttributeSet;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * One attribute of a set: the adapter (its code, its translated label, its

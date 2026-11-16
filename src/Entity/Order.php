@@ -2,6 +2,7 @@
 
 namespace Base\Marketplace\Entity;
 
+use Base\Database\Type\Utc;
 use Base\Contract\Link;
 use Base\Marketplace\Attribute\OrderReference;
 use Base\Marketplace\Entity\Order\Address\BillingAddress;
@@ -28,7 +29,7 @@ use Base\Service\Model\LinkableInterface;
 use Base\Traits\BaseTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
@@ -657,7 +658,7 @@ class Order implements IconizeInterface, LinkableInterface
     {
         // Not ??= on the field: reading an estimate must not mark an unpaid order paid.
         $delay = $this->getShippingMethod()->getShippingDelay() + $this->getShippingMethod()->getDeliveryTime();
-        $arrivingTime = $this->paidAt ? clone $this->paidAt : new \DateTime('now');
+        $arrivingTime = $this->paidAt ? clone $this->paidAt : \DateTime::createFromImmutable(Utc::now());
         $arrivingTime->modify('+' . $delay . ' days');
 
         return $arrivingTime;
@@ -1012,7 +1013,7 @@ class Order implements IconizeInterface, LinkableInterface
      */
     public function markAsPaidAt(?\DateTimeInterface $at = null): self
     {
-        $this->paidAt = $at ?? new \DateTime('now');
+        $this->paidAt = $at ?? \DateTime::createFromImmutable(Utc::now());
 
         return $this;
     }

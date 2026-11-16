@@ -67,7 +67,7 @@ final class SupplyTest extends MarketplaceKernelTestCase
         $moves = [];
         $dispatcher = new EventDispatcher();
         $dispatcher->addListener(SupplyJobChangedEvent::class, static function (SupplyJobChangedEvent $e) use (&$moves): void { $moves[] = $e->job->getStatus(); });
-        $supply = new Supply($this->entityManager, new SupplierRegistry([$printer]), $dispatcher);
+        $supply = new Supply($this->unitOfWork, new SupplierRegistry([$printer]), $dispatcher);
 
         $card = $this->goods('faire-part')->setSupplier('printer')->setSupplierReference('card-a5');
         $mug = $this->goods('mug')->setSupplier('printer')->setSupplierReference('mug-11oz');
@@ -107,7 +107,7 @@ final class SupplyTest extends MarketplaceKernelTestCase
     public function testAFailureIsKeptAndSentAgain(): void
     {
         $printer = $this->printer(true);
-        $supply = new Supply($this->entityManager, new SupplierRegistry([$printer]));
+        $supply = new Supply($this->unitOfWork, new SupplierRegistry([$printer]));
         $card = $this->goods('faire-part')->setSupplier('printer');
         $order = $this->paidOrder($this->user('host'), [[$card, 10]]);
         $order->getItems()->first()->setRecipient(self::LEA);
@@ -137,11 +137,11 @@ final class SupplyTest extends MarketplaceKernelTestCase
         $urls = $this->createMock(UrlGeneratorInterface::class);
         $urls->method('generate')->willReturnCallback(static fn (string $route, array $p) => 'https://shop.test/marketplace/fabrication/'.$p['reference']);
         $signer = new UriSigner('secret');
-        $workshop = new OfflineSupplier($this->entityManager, $urls, $signer, $mailer, 'atelier@example.org', 'Atelier Dupont');
+        $workshop = new OfflineSupplier($this->unitOfWork, $urls, $signer, $mailer, 'atelier@example.org', 'Atelier Dupont');
         self::assertTrue($workshop->isConfigured());
-        self::assertFalse((new OfflineSupplier($this->entityManager, $urls, $signer, $mailer))->isConfigured());
+        self::assertFalse((new OfflineSupplier($this->unitOfWork, $urls, $signer, $mailer))->isConfigured());
 
-        $supply = new Supply($this->entityManager, new SupplierRegistry([$workshop]));
+        $supply = new Supply($this->unitOfWork, new SupplierRegistry([$workshop]));
         $card = $this->goods('menu')->setSupplier('offline')->setSupplierReference('menu-a5-vergé');
         $order = $this->paidOrder($this->user('host'), [[$card, 120]]);
         $order->getItems()->first()->setRecipient(self::LEA);

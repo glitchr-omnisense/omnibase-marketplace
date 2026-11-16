@@ -8,8 +8,8 @@ use Base\Marketplace\Repository\Sales\Attribute\Scope\UserAdapterRepository;
 use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractScopeAdapter;
-use Omnibridge\Symfony\Omnibase\Field\Type\SelectType;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Field\Type\SelectType;
+use Base\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserAdapterRepository::class)]
 #[\Base\Database\Attribute\Cache(usage: 'NONSTRICT_READ_WRITE', associations: 'ALL')]

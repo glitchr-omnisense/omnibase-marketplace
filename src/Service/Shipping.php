@@ -7,7 +7,12 @@ use Base\Marketplace\Entity\Order\Address\ShippingAddress;
 use Base\Marketplace\Entity\Order\Method\ShippingMethod;
 use Base\Marketplace\Entity\Order\Shipment;
 use Base\Marketplace\Enum\ShippingRate;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
 use Omnibus\GatewayInterface as Carrier;
 use Omnibus\Model\Address;
 use Omnibus\Model\Label;
@@ -38,7 +43,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 final class Shipping
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly ?ParameterBagInterface $parameters = null,
         private readonly ?Carriers $carriers = null,
     ) {
@@ -92,7 +97,7 @@ final class Shipping
     public function optionsFor(Order $order): array
     {
         $options = [];
-        foreach ($this->entityManager->getRepository(ShippingMethod::class)->findAll() as $method) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork)->of(ShippingMethod::class)->findAll() as $method) {
             if ($method->getCurrency() && strtoupper($method->getCurrency()) !== strtoupper((string) $order->getCurrency())) {
                 continue;
             }
@@ -125,10 +130,13 @@ final class Shipping
     {
         $address = $order->getShippingAddress();
         if (!$address && $order->getCustomer()) {
-            $last = $this->entityManager->getRepository(Order::class)->createQueryBuilder('o')
-                ->andWhere('o.customer = :customer')->andWhere('o.shippingAddress IS NOT NULL')->andWhere('o.id != :id')
-                ->setParameter('customer', $order->getCustomer())->setParameter('id', (int) $order->getId())
-                ->orderBy('o.id', 'DESC')->setMaxResults(1)->getQuery()->getOneOrNullResult();
+            $last = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findOneBy([
+                'customer' => Key::of($order->getCustomer()),
+                Group::of(Parser::SEPARATOR_AND,
+                    Criterion::of('shippingAddress', Key::of(null), Parser::OPTION_NOT_EQUAL),
+                    Criterion::of('id', (int) $order->getId(), Parser::OPTION_NOT_EQUAL),
+                ),
+            ], ['id' => 'DESC']);
             $address = $last?->getShippingAddress();
         }
 
@@ -188,7 +196,7 @@ final class Shipping
         }
         $address->setOrder($order);
         $order->setShippingAddress($address);
-        $this->entityManager->persist($address);
+        $this->unitOfWork->persist($address);
 
         $order->setShippingMethod($option['method']);
         $order->setShippingCharge($option['charge']);
@@ -205,7 +213,7 @@ final class Shipping
         $shipment->setNumber($trackingNumber);
         $order->addShipment($shipment);
         $order->markAsShipped();
-        $this->entityManager->persist($shipment);
+        $this->unitOfWork->persist($shipment);
 
         return $shipment;
     }
@@ -213,7 +221,7 @@ final class Shipping
     /** @return Order[] paid orders with an address that have not left yet */
     public function queue(): array
     {
-        $orders = $this->entityManager->getRepository(Order::class)->findBy([], ['id' => 'DESC'], 200);
+        $orders = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findBy([], ['id' => 'DESC'], 200);
 
         return array_values(array_filter($orders, fn (Order $o) => $o->isConfirmed() && null !== $o->getShippingAddress()));
     }

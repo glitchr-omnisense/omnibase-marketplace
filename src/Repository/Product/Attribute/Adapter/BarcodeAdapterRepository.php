@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Product\Attribute\Adapter;
 
 use Base\Marketplace\Entity\Product\Attribute\Adapter\BarcodeAdapter;
-use Omnibridge\Doctrine\Omnibase\Repository\Layout\AttributeRepository;
+use Base\Repository\Layout\AttributeRepository;
 
 /**
  * @method BarcodeAdapter|null find($id, $lockMode = null, $lockVersion = null)

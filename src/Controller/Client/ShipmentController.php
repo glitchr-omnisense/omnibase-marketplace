@@ -7,7 +7,8 @@ use Base\Admin\EventSubscriber\NestHeaderSubscriber;
 use Base\Admin\Menu\MenuBuilder;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Service\Shipping;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,7 +29,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class ShipmentController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Shipping $shipping,
         private readonly TranslatorInterface $translator,
         private readonly AdminContext $adminContext,
@@ -77,7 +78,7 @@ class ShipmentController extends AbstractController
             $this->addFlash('error', $this->translator->trans('@marketplace.shipping.error.state'));
         } else {
             $this->shipping->ship($order, $number);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             $this->addFlash('success', $this->translator->trans('@marketplace.shipping.shipped', ['{reference}' => $order->getReference()]));
         }
 
@@ -89,7 +90,7 @@ class ShipmentController extends AbstractController
     {
         $order = $this->order($request, $reference);
         $order->markAsCompleted();
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         $this->addFlash('success', $this->translator->trans('@marketplace.shipping.delivered', ['{reference}' => $order->getReference()]));
 
         return $this->redirectToRoute('marketplace_shipping_queue');
@@ -100,7 +101,7 @@ class ShipmentController extends AbstractController
         if (!$this->isCsrfTokenValid('marketplace_ship', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid token.');
         }
-        $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]);
+        $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findOneBy(['reference' => $reference]);
         if (!$order instanceof Order) {
             throw $this->createNotFoundException('Unknown order.');
         }

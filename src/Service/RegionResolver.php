@@ -4,7 +4,8 @@ namespace Base\Marketplace\Service;
 
 use Base\Marketplace\Entity\Sales\Region;
 use Base\Marketplace\Entity\Store;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -16,7 +17,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class RegionResolver
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         #[Autowire('%marketplace.default_currency%')] private readonly string $defaultCurrency = 'EUR',
     ) {
     }
@@ -31,14 +32,14 @@ class RegionResolver
         $currency = $store?->getCurrency() ?: $this->defaultCurrency;
         $slug = 'marketplace-'.strtolower($currency);
 
-        $region = $this->entityManager->getRepository(Region::class)->findOneBy(['slug' => $slug]);
+        $region = UnitOfWorks::repositories($this->unitOfWork)->of(Region::class)->findOneBy(['slug' => $slug]);
         if (!$region) {
             $region = new Region();
             $region->setLabel($currency);
             $region->setSlug($slug);
             $region->setCurrency($currency);
             $region->setEnabled(true);
-            $this->entityManager->persist($region);
+            $this->unitOfWork->persist($region);
         }
 
         return $region;

@@ -3,7 +3,8 @@
 namespace Base\Marketplace\Invoice;
 
 use Base\Marketplace\Entity\Invoice;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Lock\LockFactory;
 
@@ -22,10 +23,15 @@ use Symfony\Component\Lock\LockFactory;
 final class InvoiceNumbering
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly ?LockFactory $locks = null,
         #[Autowire('%marketplace.invoice.digits%')] private readonly int $digits = 6,
     ) {
+    }
+
+    private function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
     }
 
     public function format(string $series, int $year, int $sequence): string
@@ -44,18 +50,14 @@ final class InvoiceNumbering
         $lock = $this->locks?->createLock('marketplace.invoice.'.$series, 30);
         $lock?->acquire(true);
         try {
-            $this->entityManager->beginTransaction();
-            try {
-                $sequence = $this->entityManager->getRepository(Invoice::class)->lastSequence($series, $year) + 1;
+            // A failure rolls the number and its invoice back together.
+            $invoice = $this->unitOfWork()->transactional(function () use ($series, $year, $make): Invoice {
+                $sequence = UnitOfWorks::repositories($this->unitOfWork())->of(Invoice::class)->lastSequence($series, $year) + 1;
                 $invoice = $make($sequence, $this->format($series, $year, $sequence), $year);
-                $this->entityManager->persist($invoice);
-                $this->entityManager->flush();
-                $this->entityManager->commit();
-            } catch (\Throwable $e) {
-                $this->entityManager->rollback();
+                $this->unitOfWork()->persist($invoice);
 
-                throw $e;
-            }
+                return $invoice;
+            });
         } finally {
             $lock?->release();
         }

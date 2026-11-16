@@ -12,7 +12,7 @@ final class EntitlementsTest extends MarketplaceKernelTestCase
 {
     private function entitlements(): Entitlements
     {
-        return new Entitlements($this->entityManager);
+        return new Entitlements($this->unitOfWork);
     }
 
     public function testSwitchesValuesAndCeilings(): void

@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Entity\Product;
 
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * One option of a group: "Bien cuit", "Œuf mollet (+1,50 €)". Its price is

@@ -2,8 +2,11 @@
 
 namespace Base\Marketplace\Repository;
 
+use Base\Database\Repository\Finder\Parser;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Criterion;
 use Base\Marketplace\Entity\Product;
-use Omnibridge\Doctrine\Omnibase\Repository\ThreadRepository;
+use Base\Repository\ThreadRepository;
 
 /**
  * @method Product|null find($id, $lockMode = null, $lockVersion = null)
@@ -13,4 +16,13 @@ use Omnibridge\Doctrine\Omnibase\Repository\ThreadRepository;
  */
 class ProductRepository extends ThreadRepository
 {
+    /**
+     * The currencies its records are priced in, each once (null left out).
+     *
+     * @return list<string>
+     */
+    public function currencies(): array
+    {
+        return array_column($this->findValuesBy(['currency'], [Group::of(Parser::SEPARATOR_AND, Criterion::of('currency', null, Parser::OPTION_NOT_NULL))], distinct: true), 'currency');
+    }
 }

@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository\Wishlist;
 
 use Base\Marketplace\Entity\Wishlist\PayoutAccount;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<PayoutAccount> */
 class PayoutAccountRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, PayoutAccount::class);
+        parent::__construct($finders, PayoutAccount::class);
     }
 }

@@ -4,7 +4,8 @@ namespace Base\Marketplace\Console;
 
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Service\Invoices;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -23,7 +24,7 @@ class InvoiceIssueCommand extends Command
 {
     public function __construct(
         private readonly Invoices $invoices,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
     ) {
         parent::__construct();
     }
@@ -37,7 +38,7 @@ class InvoiceIssueCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $repository = $this->entityManager->getRepository(Order::class);
+        $repository = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class);
         $orders = [];
         foreach ((array) $input->getArgument('orders') as $key) {
             $order = $repository->findOneBy(['reference' => $key]) ?? (ctype_digit((string) $key) ? $repository->find((int) $key) : null);

@@ -5,15 +5,16 @@ namespace Base\Marketplace\Repository\Product;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Entity\Product\AttributeSet;
 use Base\Marketplace\Entity\Product\Taxon;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<AttributeSet> */
 class AttributeSetRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, AttributeSet::class);
+        parent::__construct($finders, AttributeSet::class);
     }
 
     /** The set of a taxon: its own, else its parent's, up the tree, else the set of every product. */
@@ -22,14 +23,14 @@ class AttributeSetRepository extends ServiceEntityRepository
         $seen = [];
         while ($taxon instanceof Taxon && !isset($seen[spl_object_id($taxon)])) {
             $seen[spl_object_id($taxon)] = true;
-            if ($set = $this->findOneBy(['taxon' => $taxon])) {
+            if ($set = $this->findOneBy(['taxon' => Key::of($taxon)])) {
                 return $set;
             }
             $parent = $taxon->getParent();
             $taxon = $parent instanceof Taxon ? $parent : null;
         }
 
-        return $this->findOneBy(['taxon' => null]);
+        return $this->findOneBy(['taxon' => Key::of(null)]);
     }
 
     /** The set a product is described by: its first taxon's that has one. */
@@ -41,6 +42,6 @@ class AttributeSetRepository extends ServiceEntityRepository
             }
         }
 
-        return $this->findOneBy(['taxon' => null]);
+        return $this->findOneBy(['taxon' => Key::of(null)]);
     }
 }

@@ -6,7 +6,7 @@ use Base\Marketplace\Entity\Product\AttributeSet\Field;
 use Base\Marketplace\Repository\Product\AttributeSetRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * The typed sheet of a kind of product, without code: which attributes a

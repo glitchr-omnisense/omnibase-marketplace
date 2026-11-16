@@ -12,7 +12,7 @@ use Base\Entity\Thread\Tag;
 use Base\Service\Model\IconizeInterface;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: FeatureRepository::class)]

@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Credit;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<Credit> */
 class CreditRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Credit::class);
+        parent::__construct($finders, Credit::class);
     }
 }

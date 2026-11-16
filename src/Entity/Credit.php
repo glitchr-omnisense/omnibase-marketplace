@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity;
 
 use Base\Entity\User;
 use Base\Marketplace\Repository\CreditRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A line of somebody's credit ledger, of one kind ("ai": answers of an

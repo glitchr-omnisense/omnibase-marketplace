@@ -4,7 +4,7 @@ namespace Base\Marketplace\Entity\Catalogue;
 
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Repository\Catalogue\PlatformLinkRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A product of this site and its original on a platform (an omnitrade

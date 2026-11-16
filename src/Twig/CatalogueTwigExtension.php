@@ -8,7 +8,8 @@ use Base\Marketplace\Entity\Product\Association;
 use Base\Marketplace\Enum\AssociationType;
 use Base\Marketplace\Repository\Product\AttributeSetRepository;
 use Base\Marketplace\Service\AgeGate;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -27,7 +28,7 @@ final class CatalogueTwigExtension extends AbstractExtension
     public function __construct(
         private readonly AgeGate $ageGate,
         private readonly AttributeSetRepository $sets,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
     ) {
     }
 
@@ -86,9 +87,8 @@ final class CatalogueTwigExtension extends AbstractExtension
     public function productsOf(Thread $thread): array
     {
         $products = array_values(array_filter($thread->getConnexes()->toArray(), fn ($t) => $t instanceof Product));
-        $naming = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
-            ->innerJoin('p.connexes', 'c')->andWhere('c = :thread')->setParameter('thread', $thread)
-            ->getQuery()->getResult();
+        // Through the join of the connexes (to-many), as the hand-written inner join said.
+        $naming = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->findBy(['connexes' => $thread]);
         foreach ($naming as $product) {
             if (!\in_array($product, $products, true)) {
                 $products[] = $product;

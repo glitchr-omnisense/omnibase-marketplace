@@ -72,7 +72,7 @@ class ProductCrudController extends AbstractMarketplaceCrudController
     private function stores(): array
     {
         $stores = [];
-        foreach ($this->entityManager->getRepository(Store::class)->findAll() as $store) {
+        foreach ($this->repositories->of(Store::class)->findAll() as $store) {
             $title = (string) ($store->getTitle() ?? $store->getSlug());
             // Two stores of one name: told apart by their address.
             $stores[isset($stores[$title]) ? $title.' ('.$store->getSlug().')' : $title] = $store;

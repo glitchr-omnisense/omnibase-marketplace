@@ -7,7 +7,7 @@ use Base\Database\Attribute\Cache;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Layout\Attribute\Adapter\Common\AbstractAdapter;
 use Base\Service\Model\IconizeInterface;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 #[ORM\Entity(repositoryClass: BarcodeAdapterRepository::class)]

@@ -44,14 +44,14 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
 
     public function testAPassGrantsItsRightsAndItsCredits(): void
     {
-        $rights = new Entitlements($this->entityManager);
-        $credits = new Credits($this->entityManager);
+        $rights = new Entitlements($this->unitOfWork);
+        $credits = new Credits($this->unitOfWork);
         $host = $this->user('host');
         $pass = $this->product(ProductKind::PLAN, new PlanTerms(months: 12, grants: ['events.major' => 1, 'guests' => 150, 'list' => true], credits: ['stationery' => 2000], level: 2), 'plan-c');
         $pack = $this->product(ProductKind::CREDIT_PACK, new PlanTerms(credits: ['ai' => 100]), 'pack-ai');
         $mug = $this->product(ProductKind::GOODS, new PlanTerms(), 'mug');
 
-        (new PlanPurchaseListener($this->entityManager, $rights, $credits))(new OrderPaidEvent($this->order($host, [[$pass, 1], [$pack, 3], [$mug, 2]])));
+        (new PlanPurchaseListener($this->unitOfWork, $rights, $credits))(new OrderPaidEvent($this->order($host, [[$pass, 1], [$pack, 3], [$mug, 2]])));
 
         $held = $rights->active($host);
         self::assertCount(1, $held);
@@ -69,12 +69,12 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
 
     public function testASubscriptionCarriesItsRightsAsLongAsItRuns(): void
     {
-        $rights = new Entitlements($this->entityManager);
+        $rights = new Entitlements($this->unitOfWork);
         $host = $this->user('host');
         $plan = $this->product(ProductKind::PLAN, new PlanTerms(PlanTerms::RECURRING, 'month', grants: ['ai' => true], level: 4), 'plan-d');
         $reference = 'sub_'.bin2hex(random_bytes(4));
 
-        (new PlanPurchaseListener($this->entityManager, $rights, new Credits($this->entityManager)))(new OrderPaidEvent($this->order($host, [[$plan, 1]], ['gateway' => 'stripe', 'subscription' => $reference, 'customer' => 'cus_1'])));
+        (new PlanPurchaseListener($this->unitOfWork, $rights, new Credits($this->unitOfWork)))(new OrderPaidEvent($this->order($host, [[$plan, 1]], ['gateway' => 'stripe', 'subscription' => $reference, 'customer' => 'cus_1'])));
         $this->entityManager->flush();
 
         $held = $rights->active($host);
@@ -95,7 +95,7 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
         $ended = [];
         $dispatcher = new EventDispatcher();
         $dispatcher->addListener(EntitlementEndedEvent::class, static function (EntitlementEndedEvent $e) use (&$ended): void { $ended[] = $e->entitlement->getCode(); });
-        $subscriptions = new Subscriptions($this->entityManager, new PaymentGatewayRegistry([]), $dispatcher);
+        $subscriptions = new Subscriptions($this->unitOfWork, new PaymentGatewayRegistry([]), $dispatcher);
         $subscriptions->sweep();
         $subscriptions->sweep();
         self::assertSame(1, \count(array_keys($ended, $held[0]->getCode(), true)), 'told once');
@@ -103,7 +103,7 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
 
     public function testARightAboutToEndIsAnnouncedOnce(): void
     {
-        $rights = new Entitlements($this->entityManager);
+        $rights = new Entitlements($this->unitOfWork);
         $host = $this->user('host');
         $soon = $rights->grant($host, 'pass-soon', [], new \DateTimeImmutable('+3 days'));
         $later = $rights->grant($host, 'pass-later', [], new \DateTimeImmutable('+3 months'));
@@ -111,7 +111,7 @@ final class PlanPurchaseTest extends MarketplaceKernelTestCase
         $ending = [];
         $dispatcher = new EventDispatcher();
         $dispatcher->addListener(EntitlementEndingEvent::class, static function (EntitlementEndingEvent $e) use (&$ending): void { $ending[] = $e->entitlement->getId(); });
-        $subscriptions = new Subscriptions($this->entityManager, new PaymentGatewayRegistry([]), $dispatcher, null, 7);
+        $subscriptions = new Subscriptions($this->unitOfWork, new PaymentGatewayRegistry([]), $dispatcher, null, 7);
         $subscriptions->sweep();
         $subscriptions->sweep();
 

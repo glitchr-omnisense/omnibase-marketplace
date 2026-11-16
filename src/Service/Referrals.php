@@ -17,7 +17,12 @@ use Base\Marketplace\Enum\OrderState;
 use Base\Marketplace\Enum\ReferralStatus;
 use Base\Marketplace\Event\ReferralQualifyingEvent;
 use Base\Marketplace\Event\ReferralRewardedEvent;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -45,7 +50,7 @@ class Referrals
      * @param RewardConfig $referrer
      */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly Credits $credits,
         private readonly ?EventDispatcherInterface $dispatcher = null,
         #[Autowire('%marketplace.referral.enabled%')] private readonly bool $enabled = true,
@@ -64,29 +69,29 @@ class Referrals
     /** A member's code, made the first time it is asked. */
     public function codeFor(User $member): ReferralCode
     {
-        $codes = $this->entityManager->getRepository(ReferralCode::class);
-        if ($code = $codes->findOneBy(['owner' => $member])) {
+        $codes = UnitOfWorks::repositories($this->unitOfWork)->of(ReferralCode::class);
+        if ($code = $codes->findOneBy(['owner' => Key::of($member)])) {
             return $code;
         }
         do {
             $code = new ReferralCode($member);
         } while ($codes->findOneBy(['code' => $code->getCode()]));
-        $this->entityManager->persist($code);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($code);
+        $this->unitOfWork->flush();
 
         return $code;
     }
 
     public function find(string $code): ?ReferralCode
     {
-        $found = $this->entityManager->getRepository(ReferralCode::class)->findOneBy(['code' => ReferralCode::normalize($code)]);
+        $found = UnitOfWorks::repositories($this->unitOfWork)->of(ReferralCode::class)->findOneBy(['code' => ReferralCode::normalize($code)]);
 
         return $found?->isEnabled() ? $found : null;
     }
 
     public function referralOf(User $referee): ?Referral
     {
-        return $this->entityManager->getRepository(Referral::class)->findOneBy(['referee' => $referee]);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Referral::class)->findOneBy(['referee' => Key::of($referee)]);
     }
 
     /**
@@ -116,8 +121,8 @@ class Referrals
         }
 
         $referral = new Referral($referralCode, $referee);
-        $this->entityManager->persist($referral);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($referral);
+        $this->unitOfWork->flush();
         $this->reward($referral, $referee, Reward::REFEREE, $this->referee);
 
         return $referral;
@@ -144,7 +149,7 @@ class Referrals
         } else {
             $referral->qualify($reference, $event->fingerprint);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $referral;
     }
@@ -162,12 +167,12 @@ class Referrals
         $before = $now->modify(sprintf('-%d days', $this->coolingDays));
         $rewarded = $rejected = 0;
         /** @var Referral $referral */
-        foreach ($this->entityManager->getRepository(Referral::class)->findBy(['status' => ReferralStatus::QUALIFIED], ['qualifiedAt' => 'ASC']) as $referral) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork)->of(Referral::class)->findBy(['status' => ReferralStatus::QUALIFIED], ['qualifiedAt' => 'ASC']) as $referral) {
             if ($referral->getQualifiedAt() > $before) {
                 continue;
             }
             $referrer = $referral->getReferrer();
-            $order = $this->entityManager->getRepository(Order::class)->findOneBy(['reference' => $referral->getOrderReference()]);
+            $order = UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->findOneBy(['reference' => $referral->getOrderReference()]);
             if (!$referrer || ($order && \in_array($order->getState(), [OrderState::REFUND, OrderState::CANCEL], true))) {
                 $referral->reject('refunded');
                 ++$rejected;
@@ -180,10 +185,10 @@ class Referrals
             }
             $this->reward($referral, $referrer, Reward::REFERRER, $this->referrer, $now);
             $referral->markRewarded();
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             ++$rewarded;
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return ['rewarded' => $rewarded, 'rejected' => $rejected];
     }
@@ -193,22 +198,22 @@ class Referrals
     {
         if (ReferralStatus::REWARDED !== $referral->getStatus()) {
             $referral->reject($reason);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
     }
 
     /** @return list<Reward> */
     public function rewardsOf(User $beneficiary): array
     {
-        return $this->entityManager->getRepository(Reward::class)->findBy(['beneficiary' => $beneficiary], ['id' => 'DESC']);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Reward::class)->findBy(['beneficiary' => Key::of($beneficiary)], ['id' => 'DESC']);
     }
 
     /** @return list<Referral> those who came through this member's code */
     public function referralsBy(User $referrer): array
     {
-        $code = $this->entityManager->getRepository(ReferralCode::class)->findOneBy(['owner' => $referrer]);
+        $code = UnitOfWorks::repositories($this->unitOfWork)->of(ReferralCode::class)->findOneBy(['owner' => Key::of($referrer)]);
 
-        return $code ? $this->entityManager->getRepository(Referral::class)->findBy(['code' => $code], ['id' => 'DESC']) : [];
+        return $code ? UnitOfWorks::repositories($this->unitOfWork)->of(Referral::class)->findBy(['code' => Key::of($code)], ['id' => 'DESC']) : [];
     }
 
     /** "Lea.Martin+promo@GoogleMail.com" and "leamartin@gmail.com" are one person. */
@@ -252,8 +257,8 @@ class Referrals
             }
             $reward->setCoupon($coupon);
         }
-        $this->entityManager->persist($reward);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($reward);
+        $this->unitOfWork->flush();
         $this->dispatcher?->dispatch(new ReferralRewardedEvent($reward));
 
         return $reward;
@@ -266,8 +271,8 @@ class Referrals
      */
     private function coupon(User $owner, array $config): ?Coupon
     {
-        $scopeAdapter = $this->entityManager->getRepository(AbstractScopeAdapter::class)->findOneBy(['code' => $config['scope'] ?? 'scope-user']);
-        $actionAdapter = $this->entityManager->getRepository(AbstractActionAdapter::class)->findOneBy(['code' => $config['action'] ?? '']);
+        $scopeAdapter = UnitOfWorks::repositories($this->unitOfWork)->of(AbstractScopeAdapter::class)->findOneBy(['code' => $config['scope'] ?? 'scope-user']);
+        $actionAdapter = UnitOfWorks::repositories($this->unitOfWork)->of(AbstractActionAdapter::class)->findOneBy(['code' => $config['action'] ?? '']);
         if (!$scopeAdapter || !$actionAdapter) {
             return null;
         }
@@ -285,7 +290,7 @@ class Referrals
         $coupon->setQuota(1);
         $coupon->setQuotaPerCustomer(1);
         $coupon->setOwner($owner);
-        $this->entityManager->persist($coupon);
+        $this->unitOfWork->persist($coupon);
 
         return $coupon;
     }
@@ -301,8 +306,10 @@ class Referrals
             return 0;
         }
 
-        return (int) $this->entityManager->createQuery('SELECT COUNT(o.id) FROM '.Order::class.' o WHERE o.customer = :c AND o.paidAt IS NOT NULL')
-            ->setParameter('c', $customer)->getSingleScalarResult();
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Order::class)->count([
+            'customer' => Key::of($customer),
+            Group::of(Parser::SEPARATOR_AND, Criterion::of('paidAt', null, Parser::OPTION_NOT_NULL)),
+        ]);
     }
 
     /** What the order was paid with, when its transaction's details say (a "fingerprint" key). */
@@ -324,8 +331,7 @@ class Referrals
         if (null === $member?->getId()) {
             return false;
         }
-        $transactions = $this->entityManager->createQuery('SELECT t FROM '.Transaction::class.' t JOIN t.order o WHERE o.customer = :c')
-            ->setParameter('c', $member)->getResult();
+        $transactions = UnitOfWorks::repositories($this->unitOfWork)->of(Transaction::class)->findBy(['order.customer' => $member]);
         foreach ($transactions as $transaction) {
             if (($transaction->getDetails()['fingerprint'] ?? null) === $fingerprint) {
                 return true;
@@ -339,7 +345,10 @@ class Referrals
     {
         $from = $month->modify('first day of this month')->setTime(0, 0);
 
-        return (int) $this->entityManager->createQuery('SELECT COUNT(r.id) FROM '.Reward::class.' r WHERE r.beneficiary = :b AND r.role = :role AND r.grantedAt >= :from')
-            ->setParameter('b', $referrer)->setParameter('role', Reward::REFERRER)->setParameter('from', $from)->getSingleScalarResult();
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Reward::class)->count([
+            'beneficiary' => Key::of($referrer),
+            'role' => Reward::REFERRER,
+            Group::of(Parser::SEPARATOR_AND, Criterion::of('grantedAt', $from, Parser::OPTION_GREATER_EQUAL)),
+        ]);
     }
 }

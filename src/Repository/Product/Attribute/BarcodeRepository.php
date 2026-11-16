@@ -3,7 +3,7 @@
 namespace Base\Marketplace\Repository\Product\Attribute;
 
 use Base\Marketplace\Entity\Product\Attribute\Barcode;
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
 
 /**
  * @method Barcode|null find($id, $lockMode = null, $lockVersion = null)

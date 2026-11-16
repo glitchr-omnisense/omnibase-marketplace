@@ -5,7 +5,7 @@ namespace Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Model\ConsentStatement;
 use Base\Marketplace\Repository\Order\ConsentRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A statement its buyer made before paying an order (Service\Consents, Model\ConsentStatement):

@@ -11,7 +11,7 @@ use Base\Service\Model\IconizeInterface;
 use Base\Service\Model\LinkableInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[ORM\Entity(repositoryClass: ShipmentRepository::class)]

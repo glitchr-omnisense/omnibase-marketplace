@@ -16,7 +16,7 @@ use Base\Service\Model\LinkableInterface;
 use Base\Validator\Constraints as AssertBase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -54,8 +54,8 @@ class Review extends Thread implements IconizeInterface, AutocompleteInterface, 
         $identifierName = camel2snake(strtolower(str_replace(['App\\', '\\'], ['', '/'], static::class)));
 
         // omnibridge's Views (TwigViews under Symfony); without a host that renders views, the review's title.
-        if (\Omnibridge\Runtime::has(\Omnibridge\Contract\Views::class)) {
-            return \Omnibridge\Runtime::views()->render($identifierName . '.html.twig', ['review' => $this]);
+        if (\Base\Contract\Runtime::has(\Base\Contract\Views::class)) {
+            return \Base\Contract\Runtime::views()->render($identifierName . '.html.twig', ['review' => $this]);
         }
 
         return (string) $this;

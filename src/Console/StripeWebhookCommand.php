@@ -7,7 +7,8 @@ use Base\Marketplace\Payment\Omnitrade\OmnitradeGateway;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
 use Base\Marketplace\Payment\PaymentGatewayRegistry;
 use Base\Service\SettingBagInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -57,7 +58,7 @@ final class StripeWebhookCommand extends Command
     private const API = 'https://api.stripe.com/v1/webhook_endpoints';
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly UrlGeneratorInterface $urls,
         private readonly HttpClientInterface $http,
         private readonly SettingBagInterface $settings,
@@ -80,7 +81,7 @@ final class StripeWebhookCommand extends Command
         $dry = (bool) $input->getOption('dry-run');
 
         $methods = [];
-        foreach ($this->entityManager->getRepository(PaymentMethod::class)->findAll() as $method) {
+        foreach (UnitOfWorks::repositories($this->unitOfWork)->of(PaymentMethod::class)->findAll() as $method) {
             $bridge = $this->gateways->get($method->getGatewayFactory());
             if ($bridge instanceof OmnitradeGateway && 'stripe' === $bridge->provider()) {
                 $methods[] = [$method, $bridge];

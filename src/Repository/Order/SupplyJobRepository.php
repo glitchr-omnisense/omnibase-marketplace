@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository\Order;
 
 use Base\Marketplace\Entity\Order\SupplyJob;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<SupplyJob> */
 class SupplyJobRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, SupplyJob::class);
+        parent::__construct($finders, SupplyJob::class);
     }
 }

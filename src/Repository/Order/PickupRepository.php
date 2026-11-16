@@ -5,8 +5,12 @@ namespace Base\Marketplace\Repository\Order;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Pickup;
 use Base\Marketplace\Enum\PickupStatus;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /**
  * The hand-overs: an order's, a tracking page's (by its token), a day's.
@@ -15,14 +19,14 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PickupRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Pickup::class);
+        parent::__construct($finders, Pickup::class);
     }
 
     public function of(Order $order): ?Pickup
     {
-        return null === $order->getId() ? null : $this->findOneBy(['order' => $order]);
+        return null === $order->getId() ? null : $this->findOneBy(['order' => Key::of($order)]);
     }
 
     /** @return list<Pickup> the orders made together, oldest first */
@@ -39,10 +43,10 @@ class PickupRepository extends ServiceEntityRepository
      */
     public function onDay(\DateTimeImmutable $day): array
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.day = :day')->setParameter('day', $day->setTime(0, 0), 'date_immutable')
-            ->andWhere('p.status != :checkout')->setParameter('checkout', PickupStatus::CHECKOUT)
-            ->orderBy('p.slot', 'ASC')->addOrderBy('p.id', 'ASC')
-            ->getQuery()->getResult();
+        // The day is bound with the mapping's type (date_immutable), as the hand-written query bound it.
+        return $this->findBy([
+            'day' => $day->setTime(0, 0),
+            Group::of(Parser::SEPARATOR_AND, Criterion::of('status', PickupStatus::CHECKOUT, Parser::OPTION_NOT_EQUAL)),
+        ], ['slot' => 'ASC', 'id' => 'ASC']);
     }
 }

@@ -3,7 +3,8 @@
 namespace Base\Marketplace\Invoice\Transmission\Entity;
 
 use Base\Marketplace\Entity\Invoice;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Marketplace\Repository\Invoice\InvoiceFlowRepository;
+use Base\Mapping as ORM;
 
 /**
  * Where an invoice stands on the omnisense/omnibill gateway it went through:
@@ -14,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Mapped only when omnisense/omnibill is installed (MarketplaceExtension):
  * a site without the family has no table for it, and needs none.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: InvoiceFlowRepository::class)]
 #[ORM\Table(name: 'marketplace_invoice_flow')]
 #[ORM\UniqueConstraint(name: 'marketplace_invoice_flow_invoice', columns: ['invoice_id'])]
 #[ORM\Index(name: 'marketplace_invoice_flow_reference', columns: ['reference'])]

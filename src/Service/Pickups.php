@@ -8,7 +8,7 @@ use Base\Marketplace\Enum\PickupMode;
 use Base\Marketplace\Enum\PickupStatus;
 use Base\Marketplace\Event\PickupChangedEvent;
 use Base\Marketplace\Repository\Order\PickupRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -32,7 +32,7 @@ class Pickups
      * @param array{from: string, to: string, step: int} $slots
      */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly PickupRepository $pickups,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly UrlGeneratorInterface $router,
@@ -155,7 +155,7 @@ class Pickups
         }
         if (!$pickup) {
             $pickup = new Pickup($order, $day, $mode, $details['token'] ?? null);
-            $this->entityManager->persist($pickup);
+            $this->unitOfWork->persist($pickup);
         }
         $pickup->setMode($mode)->setDay($day)
             ->setContactName($details['contactName'] ?? null)
@@ -171,7 +171,7 @@ class Pickups
         if ($order->isPaid()) {
             $pickup->setStatus(PickupStatus::RECEIVED);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         $this->dispatcher->dispatch(new PickupChangedEvent($pickup));
 
         return $pickup;
@@ -186,7 +186,7 @@ class Pickups
         }
         $pickup->setStatus($status);
         if ($flush) {
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
         $this->dispatcher->dispatch(new PickupChangedEvent($pickup, $previous));
 

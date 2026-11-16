@@ -8,7 +8,9 @@ use Base\Marketplace\Invoice\Transmission\Entity\InvoiceFlow;
 use Base\Marketplace\Invoice\Transmission\Entity\InvoiceInbox;
 use Base\Marketplace\Service\CompanyRegistry;
 use Base\Marketplace\Twig\InvoiceTwigExtension;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
 use Omnibill\Email\EmailGatewayFactory;
 use Omnibill\Email\StatusStoreInterface;
 use Omnibill\Exception\InvalidConfigException;
@@ -100,7 +102,7 @@ class InvoiceTransmission
     public const SEARCH_DELAY = 'PT10M';
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?Registry $registry = null,
         private readonly ?MailerInterface $mailer = null,
@@ -165,7 +167,7 @@ class InvoiceTransmission
     /** Where the invoice stands on the gateway, if it went through one. */
     public function flowOf(Invoice $invoice): ?InvoiceFlow
     {
-        return null === $invoice->getId() ? null : $this->entityManager->getRepository(InvoiceFlow::class)->findOneBy(['invoice' => $invoice]);
+        return null === $invoice->getId() ? null : UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceFlow::class)->findOneBy(['invoice' => Key::of($invoice)]);
     }
 
     /** Its latest lifecycle status, in words ("Rejetée : ..."), with the gateway; null when it went through none. */
@@ -302,10 +304,10 @@ class InvoiceTransmission
             // asked at once by its number; not found yet, it is asked again before any new submission.
             if (null === $row) {
                 $row = new InvoiceFlow($invoice, $name, '');
-                $this->entityManager->persist($row);
+                $this->unitOfWork->persist($row);
             }
             $row->outcomeUnknown($name)->routed($platform ? ($routing['rule'] ?? null) : null, $platform ? ($routing['buyer_address']['id'] ?? null) : null, $bill->sha256());
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             try {
                 $flow = $this->lookUp($row);
             } catch (TransmissionException) {
@@ -319,7 +321,7 @@ class InvoiceTransmission
         }
         if (null === $row) {
             $row = new InvoiceFlow($invoice, $name, $flow->reference);
-            $this->entityManager->persist($row);
+            $this->unitOfWork->persist($row);
         } elseif ($row->isOutcomeUnknown()) {
             $row->found($flow->reference);
         } else {
@@ -327,7 +329,7 @@ class InvoiceTransmission
         }
         $row->routed($platform ? ($routing['rule'] ?? null) : null, $platform ? ($routing['buyer_address']['id'] ?? null) : null, $bill->sha256());
         $this->reflect($row, $flow);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         $this->paidWithTheOrder($row);
 
         return $row;
@@ -385,7 +387,7 @@ class InvoiceTransmission
             if ($row->isLookupInconclusive()) {
                 // An answer at last: no longer a person's to settle.
                 $row->lookedUp();
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
             }
 
             return $flow;
@@ -395,7 +397,7 @@ class InvoiceTransmission
         } catch (ProviderException|InvalidConfigException|NotSupportedException $e) {
             // Asked, and no answer to rely on: a person settles it (confirmDeposit()).
             $row->lookupInconclusive($e->getMessage());
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             throw new TransmissionException($e->getMessage(), 0, $e);
         } catch (OmnibillException $e) {
             throw new TransmissionException($e->getMessage(), 0, $e);
@@ -451,8 +453,8 @@ class InvoiceTransmission
         }
         if (!$deposited) {
             $this->logger?->notice('The invoice {number} is not on the platform, a person says: deposited again.', ['number' => $invoice->getNumber()]);
-            $this->entityManager->remove($row);
-            $this->entityManager->flush();
+            $this->unitOfWork->remove($row);
+            $this->unitOfWork->flush();
 
             return null;
         }
@@ -476,7 +478,7 @@ class InvoiceTransmission
             $invoice->markSent();
         }
         $this->logger?->notice('The invoice {number} is on the platform under {reference}, a person says.', ['number' => $invoice->getNumber(), 'reference' => $reference]);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         $this->paidWithTheOrder($row);
 
         return $row;
@@ -487,7 +489,7 @@ class InvoiceTransmission
     {
         $row->found($flow->reference);
         $this->reflect($row, $flow);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 
     /** An invoice is deposited on an approved platform once: a correction is a credit note and a new invoice. */
@@ -527,7 +529,7 @@ class InvoiceTransmission
         } catch (OmnibillException $e) {
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $row;
     }
@@ -555,22 +557,20 @@ class InvoiceTransmission
         $amount = LifecycleStatus::PAID === $status ? self::decimal($invoice->getTotal(), $invoice->getCurrency()) : null;
         $index = $row->declare($status->value, $at ?? new \DateTimeImmutable(), $amount, $reason);
         $this->send($row, $index);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 
     /** Sends again the statuses declared and not taken: how many went. */
     public function sendPending(): int
     {
         $sent = 0;
-        $rows = $this->entityManager->getRepository(InvoiceFlow::class)->createQueryBuilder('f')
-            ->where('f.declared LIKE :unsent')->setParameter('unsent', '%false%')
-            ->getQuery()->getResult();
+        $rows = UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceFlow::class)->withUnsentDeclarations();
         foreach ($rows as $row) {
             foreach (array_keys($row->pending()) as $index) {
                 $sent += (int) $this->send($row, $index);
             }
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $sent;
     }
@@ -597,13 +597,13 @@ class InvoiceTransmission
                 $row->setHistory([...$row->getHistory(), $entry]);
                 $this->settle($row);
             }
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
 
             return true;
         }
         $row->declaredRetried($index);
         $sent = $this->send($row, $index);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $sent;
     }
@@ -629,10 +629,10 @@ class InvoiceTransmission
         if (!$gateway->supports(Receive::class)) {
             return 0;
         }
-        $inbox = $this->entityManager->getRepository(InvoiceInbox::class)->findOneBy(['gateway' => $name]);
+        $inbox = UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceInbox::class)->findOneBy(['gateway' => $name]);
         if (null === $inbox) {
             $inbox = new InvoiceInbox($name);
-            $this->entityManager->persist($inbox);
+            $this->unitOfWork->persist($inbox);
         }
         $taken = 0;
         try {
@@ -643,7 +643,7 @@ class InvoiceTransmission
                     if (null === $change || Direction::IN !== $item->flow->direction || null === $change->invoiceNumber) {
                         continue;
                     }
-                    $invoice = $this->entityManager->getRepository(Invoice::class)->findOneBy(['number' => $change->invoiceNumber]);
+                    $invoice = UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->findOneBy(['number' => $change->invoiceNumber]);
                     $row = null !== $invoice ? $this->flowOf($invoice) : null;
                     if (null === $row || $row->getGateway() !== $name) {
                         continue;
@@ -656,13 +656,13 @@ class InvoiceTransmission
                     }
                 }
                 $inbox->advance($page->cursor);
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
                 if (!$page->more) {
                     break;
                 }
             }
         } catch (OmnibillException $e) {
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
             throw new TransmissionException($e->getMessage(), 0, $e);
         }
 
@@ -703,8 +703,8 @@ class InvoiceTransmission
 
             return null;
         }
-        $row = $this->entityManager->getRepository(InvoiceFlow::class)->findOneBy(['reference' => $flow->reference]);
-        if (null === $row && null !== $flow->invoiceNumber && null !== ($invoice = $this->entityManager->getRepository(Invoice::class)->findOneBy(['number' => $flow->invoiceNumber]))) {
+        $row = UnitOfWorks::repositories($this->unitOfWork)->of(InvoiceFlow::class)->findOneBy(['reference' => $flow->reference]);
+        if (null === $row && null !== $flow->invoiceNumber && null !== ($invoice = UnitOfWorks::repositories($this->unitOfWork)->of(Invoice::class)->findOneBy(['number' => $flow->invoiceNumber]))) {
             $row = $this->flowOf($invoice);
         }
         if (null === $row) {
@@ -715,7 +715,7 @@ class InvoiceTransmission
             $row->found($flow->reference);
         }
         $this->reflect($row, $flow);
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $row->getInvoice();
     }

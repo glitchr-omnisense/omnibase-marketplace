@@ -8,7 +8,8 @@ use Base\Marketplace\Supply\Model\SupplyOrder;
 use Base\Marketplace\Supply\Model\SupplyProduct;
 use Base\Marketplace\Supply\Model\SupplyQuote;
 use Base\Marketplace\Supply\Model\SupplyResult;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\UriSigner;
@@ -34,7 +35,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class OfflineSupplier implements SupplierInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly UrlGeneratorInterface $urls,
         private readonly UriSigner $signer,
         private readonly ?MailerInterface $mailer = null,
@@ -93,7 +94,7 @@ class OfflineSupplier implements SupplierInterface
     /** What the workshop last said on its page: kept on the job. */
     public function fetch(string $reference): SupplyResult
     {
-        $job = $this->entityManager->getRepository(SupplyJob::class)->findOneBy(['supplier' => 'offline', 'reference' => $reference]);
+        $job = UnitOfWorks::repositories($this->unitOfWork)->of(SupplyJob::class)->findOneBy(['supplier' => 'offline', 'reference' => $reference]);
         if (!$job) {
             throw new SupplyException('offline', sprintf('No job "%s".', $reference));
         }

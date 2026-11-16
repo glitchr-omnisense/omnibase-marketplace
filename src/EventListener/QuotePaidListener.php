@@ -4,14 +4,16 @@ namespace Base\Marketplace\EventListener;
 
 use Base\Marketplace\Entity\Quote;
 use Base\Marketplace\Event\OrderPaidEvent;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 /** A quote's order is paid: the quote is marked paid, the order named on it. */
 #[AsEventListener]
 final class QuotePaidListener
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly UnitOfWork $unitOfWork)
     {
     }
 
@@ -21,8 +23,8 @@ final class QuotePaidListener
         if (!$order->isQuoted()) {
             return;
         }
-        $quote = $this->entityManager->getRepository(Quote::class)->findOneBy(['order' => $order])
-            ?? $this->entityManager->getRepository(Quote::class)->findOneBy(['reference' => $order->getQuoteReference()]);
+        $quote = UnitOfWorks::repositories($this->unitOfWork)->of(Quote::class)->findOneBy(['order' => Key::of($order)])
+            ?? UnitOfWorks::repositories($this->unitOfWork)->of(Quote::class)->findOneBy(['reference' => $order->getQuoteReference()]);
         if ($quote instanceof Quote) {
             $quote->markPaid((string) $order->getReference());
         }

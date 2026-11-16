@@ -7,7 +7,7 @@ use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Product;
 use Base\Marketplace\Enum\SubscriptionStatus;
 use Base\Marketplace\Repository\Order\SubscriptionRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A plan paid by subscription: who subscribes, to which plan, through which

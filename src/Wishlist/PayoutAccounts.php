@@ -5,7 +5,9 @@ namespace Base\Marketplace\Wishlist;
 use Base\Entity\User;
 use Base\Marketplace\Entity\Wishlist\PayoutAccount;
 use Base\Marketplace\Payment\Omnitrade\OmnitradeGateways;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
+use Base\Database\Repository\Finder\Key;
 use Omnitrade\GatewayInterface;
 use Omnitrade\Model\Account;
 use Omnitrade\Request\CreateAccount;
@@ -20,7 +22,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class PayoutAccounts
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly OmnitradeGateways $gateways,
         #[Autowire('%marketplace.wishlist.payout_gateway%')] private readonly string $gateway = 'stripe',
     ) {
@@ -34,7 +36,7 @@ class PayoutAccounts
 
     public function for(User $owner): ?PayoutAccount
     {
-        return $this->entityManager->getRepository(PayoutAccount::class)->findOneBy(['owner' => $owner, 'gateway' => $this->gateway]);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(PayoutAccount::class)->findOneBy(['owner' => Key::of($owner), 'gateway' => $this->gateway]);
     }
 
     /** The owner's account, opened at the provider when they have none yet. */
@@ -46,8 +48,8 @@ class PayoutAccounts
         $remote = $this->provider()->createAccount($country, $owner->getEmail(), metadata: ['owner' => (string) $owner->getId()]);
         $account = new PayoutAccount($owner, $this->gateway, $remote->reference, $country);
         $this->apply($account, $remote);
-        $this->entityManager->persist($account);
-        $this->entityManager->flush();
+        $this->unitOfWork->persist($account);
+        $this->unitOfWork->flush();
 
         return $account;
     }
@@ -62,7 +64,7 @@ class PayoutAccounts
     public function refresh(PayoutAccount $account): PayoutAccount
     {
         $this->apply($account, $this->provider($account)->fetchAccount($account->getReference()));
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $account;
     }
@@ -70,10 +72,10 @@ class PayoutAccounts
     /** The provider's account, as a webhook carries it: applied to ours when we know it. */
     public function applyRemote(string $gateway, Account $remote): ?PayoutAccount
     {
-        $account = $this->entityManager->getRepository(PayoutAccount::class)->findOneBy(['gateway' => $gateway, 'reference' => $remote->reference]);
+        $account = UnitOfWorks::repositories($this->unitOfWork)->of(PayoutAccount::class)->findOneBy(['gateway' => $gateway, 'reference' => $remote->reference]);
         if ($account) {
             $this->apply($account, $remote);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $account;

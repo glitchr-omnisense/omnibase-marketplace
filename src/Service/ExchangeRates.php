@@ -8,7 +8,8 @@ use Base\Marketplace\Entity\Sales\Region;
 use Base\Marketplace\Entity\Store;
 use Base\Service\SettingBagInterface;
 use Base\Service\TradingInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -58,7 +59,7 @@ final class ExchangeRates implements ResetInterface
     private bool $loaded = false;
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly TradingInterface $trading,
         private readonly HttpClientInterface $http,
         #[Autowire('%marketplace.default_currency%')]
@@ -81,7 +82,7 @@ final class ExchangeRates implements ResetInterface
         $this->loaded = true;
 
         try {
-            $rates = $this->entityManager->getRepository(Forex::class)->findAll();
+            $rates = UnitOfWorks::repositories($this->unitOfWork)->of(Forex::class)->findAll();
         } catch (\Throwable) {
             return; // no table yet (before the migration), no database
         }
@@ -101,7 +102,7 @@ final class ExchangeRates implements ResetInterface
     /** @return Forex[] the rates from the store's currency, by target */
     public function rates(): array
     {
-        return $this->entityManager->getRepository(Forex::class)->findBy(['source' => $this->currency], ['target' => 'ASC']);
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Forex::class)->findBy(['source' => $this->currency], ['target' => 'ASC']);
     }
 
     /** The rate from the store's currency to $target, from the table; null when there is none. */
@@ -110,7 +111,7 @@ final class ExchangeRates implements ResetInterface
         if ($target === $this->currency) {
             return 1.0;
         }
-        $forex = $this->entityManager->getRepository(Forex::class)->findOneBy(['source' => $this->currency, 'target' => $target]);
+        $forex = UnitOfWorks::repositories($this->unitOfWork)->of(Forex::class)->findOneBy(['source' => $this->currency, 'target' => $target]);
 
         return $forex?->getRate() ?: null;
     }
@@ -148,15 +149,15 @@ final class ExchangeRates implements ResetInterface
         }
         $targets = array_values(array_filter($targets, fn (string $target) => !empty($fromEuro[$target])));
 
-        $repository = $this->entityManager->getRepository(Forex::class);
+        $repository = UnitOfWorks::repositories($this->unitOfWork)->of(Forex::class);
         $written = [];
-        $this->entityManager->wrapInTransaction(function () use ($repository, $targets, $fromEuro, $provider, &$written) {
+        $this->unitOfWork->transactional(function () use ($repository, $targets, $fromEuro, $provider, &$written) {
             foreach ($targets as $target) {
                 $forex = $repository->findOneBy(['source' => $this->currency, 'target' => $target])
                     ?? (new Forex())->setSource($this->currency)->setTarget($target);
                 // Both rates are from the euro: the pair's is their ratio.
                 $forex->setRate($fromEuro[$target] / $fromEuro[$this->currency], $provider);
-                $this->entityManager->persist($forex);
+                $this->unitOfWork->persist($forex);
                 $written[] = $forex;
             }
         });
@@ -193,7 +194,7 @@ final class ExchangeRates implements ResetInterface
         $currencies = [];
         foreach ([Store::class, Region::class, Product::class] as $class) {
             try {
-                $found = $this->entityManager->createQuery(sprintf('SELECT DISTINCT e.currency FROM %s e WHERE e.currency IS NOT NULL', $class))->getSingleColumnResult();
+                $found = UnitOfWorks::repositories($this->unitOfWork)->of($class)->currencies();
             } catch (\Throwable) {
                 continue;
             }

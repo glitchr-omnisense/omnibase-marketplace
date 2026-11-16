@@ -16,7 +16,8 @@ use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Enum\Barcode;
 use Base\Marketplace\Enum\ProductAvailability;
 use Base\Marketplace\Repository\Catalogue\PlatformLinkRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Omnitrade\GatewayInterface;
 use Omnitrade\Model\Product as RemoteProduct;
 use Omnitrade\Model\ProductVariant as RemoteVariant;
@@ -59,7 +60,7 @@ class PlatformSynchronizer
 
     /** @param list<string> $ownedFields */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly PlatformLinkRepository $links,
         private readonly ?Registry $registry = null,
         #[Autowire('%marketplace.catalogue.store%')] private readonly ?string $storeSlug = null,
@@ -120,7 +121,7 @@ class PlatformSynchronizer
                 }
             }
             if (!$dryRun) {
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
             }
             $cursor = $page->next;
         } while (null !== $cursor);
@@ -132,7 +133,7 @@ class PlatformSynchronizer
                 }
             }
             if (!$dryRun) {
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
             }
         }
 
@@ -220,7 +221,7 @@ class PlatformSynchronizer
 
     public function flush(): void
     {
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
     }
 
     /** What a variant's owned fields hash to: the same as last time, nothing is written. */
@@ -279,8 +280,8 @@ class PlatformSynchronizer
 
         $link ??= new PlatformLink($product, $gatewayName, $remote->reference, $variant->reference);
         $link->setRemoteItem($variant->stock?->item)->setSku($variant->sku)->synced($fingerprint, $remote->updatedAt);
-        $this->entityManager->persist($product);
-        $this->entityManager->persist($link);
+        $this->unitOfWork->persist($product);
+        $this->unitOfWork->persist($link);
 
         ++$this->stats[$created ? 'created' : 'updated'];
 
@@ -365,7 +366,7 @@ class PlatformSynchronizer
             $attribute = new Attribute($adapter, $value);
             $attribute->setProduct($product);
             $product->addAttribute($attribute);
-            $this->entityManager->persist($attribute);
+            $this->unitOfWork->persist($attribute);
         }
     }
 
@@ -376,7 +377,7 @@ class PlatformSynchronizer
         $code = strtolower(preg_replace('/^(?:.*\.|pa_)/', '', trim($key)));
         $code = trim((string) preg_replace('/[^a-z0-9_]+/', '_', $code), '_');
         if (!\array_key_exists($code, $this->adapters)) {
-            $this->adapters[$code] = '' === $code ? false : ($this->entityManager->getRepository(AbstractAdapter::class)->findOneBy(['code' => $code]) ?? false);
+            $this->adapters[$code] = '' === $code ? false : (UnitOfWorks::repositories($this->unitOfWork)->of(AbstractAdapter::class)->findOneBy(['code' => $code]) ?? false);
         }
 
         return $this->adapters[$code] ?: null;
@@ -384,11 +385,11 @@ class PlatformSynchronizer
 
     private function brand(string $name): Brand
     {
-        $repository = $this->entityManager->getRepository(Brand::class);
+        $repository = UnitOfWorks::repositories($this->unitOfWork)->of(Brand::class);
         $brand = method_exists($repository, 'findOneByName') ? $repository->findOneByName($name) : null;
         if (!$brand) {
             $brand = new Brand($name);
-            $this->entityManager->persist($brand);
+            $this->unitOfWork->persist($brand);
         }
 
         return $brand;
@@ -412,7 +413,7 @@ class PlatformSynchronizer
 
     private function store(): ?Store
     {
-        return null === $this->storeSlug ? null : $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => $this->storeSlug]);
+        return null === $this->storeSlug ? null : UnitOfWorks::repositories($this->unitOfWork)->of(Store::class)->findOneBy(['slug' => $this->storeSlug]);
     }
 
     /** A product already sold here under this SKU: linked, not duplicated. */
@@ -421,7 +422,7 @@ class PlatformSynchronizer
         if (null === $sku || '' === trim($sku)) {
             return null;
         }
-        $barcode = $this->entityManager->getRepository(BarcodeAttribute::class)->findOneBy(['value' => Barcode::SKU.' '.str_replace(' ', '', $sku)]);
+        $barcode = UnitOfWorks::repositories($this->unitOfWork)->of(BarcodeAttribute::class)->findOneBy(['value' => Barcode::SKU.' '.str_replace(' ', '', $sku)]);
 
         return $barcode?->getIdentifier()?->getProduct();
     }
@@ -430,7 +431,7 @@ class PlatformSynchronizer
     private function uniqueSlug(string $handle, string $reference, Product $product): string
     {
         $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($handle)), '-');
-        $existing = $this->entityManager->getRepository(Product::class)->findOneBy(['slug' => $slug]);
+        $existing = UnitOfWorks::repositories($this->unitOfWork)->of(Product::class)->findOneBy(['slug' => $slug]);
         if (null === $existing || $existing === $product) {
             return $slug;
         }
@@ -449,7 +450,7 @@ class PlatformSynchronizer
             $identifier = new Identifier();
             $identifier->setProduct($product);
             $product->getIdentifiers()->add($identifier);
-            $this->entityManager->persist($identifier);
+            $this->unitOfWork->persist($identifier);
         }
         foreach ($wanted as $standard => $value) {
             if ($existing = $identifier->getBarcode($standard)) {
@@ -458,9 +459,9 @@ class PlatformSynchronizer
             }
             $adapter = new BarcodeAdapter();
             $adapter->setStandard($standard);
-            $this->entityManager->persist($adapter);
+            $this->unitOfWork->persist($adapter);
             $identifier->addBarcode($barcode = new BarcodeAttribute($adapter, $value));
-            $this->entityManager->persist($barcode);
+            $this->unitOfWork->persist($barcode);
         }
     }
 
@@ -477,7 +478,7 @@ class PlatformSynchronizer
     /** @param list<string> $tags */
     private function applyTags(Product $product, array $tags): void
     {
-        $repository = $this->entityManager->getRepository(Feature::class);
+        $repository = UnitOfWorks::repositories($this->unitOfWork)->of(Feature::class);
         foreach ($tags as $label) {
             $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower(trim($label))), '-');
             if ('' === $slug || self::UNMANAGED_TAG === $slug) {
@@ -488,7 +489,7 @@ class PlatformSynchronizer
                 $feature = new Feature();
                 $feature->setLabel($label);
                 $feature->setSlug($slug);
-                $this->entityManager->persist($feature);
+                $this->unitOfWork->persist($feature);
             }
             $product->addFeature($feature);
         }

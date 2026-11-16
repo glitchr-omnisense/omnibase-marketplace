@@ -3,14 +3,14 @@
 namespace Base\Marketplace\Repository;
 
 use Base\Marketplace\Entity\Usage;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finders;
 
 /** @extends ServiceEntityRepository<Usage> */
 class UsageRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Finders $finders)
     {
-        parent::__construct($registry, Usage::class);
+        parent::__construct($finders, Usage::class);
     }
 }

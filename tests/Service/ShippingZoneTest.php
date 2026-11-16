@@ -3,11 +3,11 @@
 namespace Tests\Base\Marketplace\Service;
 
 use Base\Marketplace\Entity\Order;
+use Base\Contract\UnitOfWork;
 use Base\Marketplace\Entity\Sales\Region;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Service\Shipping;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 
 /** The shop's parcels go where its regions say; elsewhere is a quote. */
@@ -37,7 +37,7 @@ final class ShippingZoneTest extends TestCase
 
     public function testFranceAndTheEuButNotJapan(): void
     {
-        $shipping = new Shipping($this->createMock(EntityManagerInterface::class));
+        $shipping = new Shipping($this->createMock(UnitOfWork::class));
         $order = $this->order([$this->region(['FR']), $this->region(['DE', 'BE', 'IT'])]);
 
         self::assertTrue($shipping->deliversTo($order, 'fr'));
@@ -48,7 +48,7 @@ final class ShippingZoneTest extends TestCase
 
     public function testNoCountryListedGoesEverywhereAndAQuoteGoesWhereItSays(): void
     {
-        $shipping = new Shipping($this->createMock(EntityManagerInterface::class));
+        $shipping = new Shipping($this->createMock(UnitOfWork::class));
         self::assertTrue($shipping->deliversTo($this->order([$this->region([])]), 'JP'));
         self::assertTrue($shipping->deliversTo($this->order([$this->region(['FR'], enabled: false)]), 'JP'), 'a region switched off lists nothing');
         $quoted = $this->order([$this->region(['FR'])], quoted: true);

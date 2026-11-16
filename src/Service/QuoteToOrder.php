@@ -13,8 +13,9 @@ use Base\Marketplace\Entity\Quote\QuoteLine;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Enum\OrderState;
 use Base\Marketplace\Enum\QuoteStatus;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\UnitOfWorks;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -30,11 +31,16 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class QuoteToOrder
 {
     public function __construct(
-        protected readonly EntityManagerInterface $entityManager,
+        protected readonly UnitOfWork $unitOfWork,
         protected readonly ?Pricing $pricing = null,
         protected readonly ?RegionResolver $regions = null,
         #[Autowire('%marketplace.quotes.store%')] protected readonly ?string $storeSlug = null,
     ) {
+    }
+
+    protected function unitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
     }
 
     /** @throws \DomainException quote.error.not_acceptable */
@@ -51,11 +57,12 @@ class QuoteToOrder
 
         // The quote's row locked and read again: a double click (or two
         // tabs) made two orders, the client paid twice.
-        $this->entityManager->beginTransaction();
-        try {
+        $order = $this->unitOfWork()->transactional(function () use ($quote, $client): Order {
             if (null !== $quote->getId()) {
-                $this->entityManager->lock($quote, LockMode::PESSIMISTIC_WRITE);
-                $this->entityManager->refresh($quote);
+                // Its row locked and read again (SELECT ... FOR UPDATE).
+                $quotes = UnitOfWorks::repositories($this->unitOfWork())->of($quote::class);
+                \assert($quotes instanceof ServiceEntityRepository);
+                $quotes->lockOneBy(['id' => $quote->getId()]);
             }
             // Its order again when one waits for its money; else a new one.
             $order = $quote->getOrder();
@@ -68,13 +75,9 @@ class QuoteToOrder
                 $quote->setClient($quote->getClient() ?? $client);
                 $quote->accept();
             }
-            $this->entityManager->flush();
-            $this->entityManager->commit();
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
 
-            throw $e;
-        }
+            return $order;
+        });
 
         return $order;
     }
@@ -90,7 +93,7 @@ class QuoteToOrder
                 return $store;
             }
         }
-        $store = $this->storeSlug ? $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => $this->storeSlug]) : null;
+        $store = $this->storeSlug ? UnitOfWorks::repositories($this->unitOfWork())->of(Store::class)->findOneBy(['slug' => $this->storeSlug]) : null;
 
         return $store ?? throw new \LogicException('A quote needs a store for its order: set it on the quote, or marketplace.quotes.store.');
     }
@@ -122,7 +125,7 @@ class QuoteToOrder
         }
         $order->setCurrency($quote->getCurrency());
         $order->setQuoteReference($quote->getReference());
-        $this->entityManager->persist($order);
+        $this->unitOfWork()->persist($order);
 
         foreach ($this->itemsOf($quote) as [$line, $quantity, $unitPrice, $comment]) {
             $product = $line->getProduct() ?? $this->oneOff($line, $quote);
@@ -131,7 +134,7 @@ class QuoteToOrder
             $item->setUnitPrice($unitPrice, $quote->getCurrency());
             $item->setComment(trim($line->getLabel().($comment ? ' ('.$comment.')' : '')));
             $order->addItem($item);
-            $this->entityManager->persist($item);
+            $this->unitOfWork()->persist($item);
         }
 
         $address = new ShippingAddress($quote->getCompanyName() ?? $quote->getContactName());
@@ -143,9 +146,9 @@ class QuoteToOrder
         $address->setCountry($quote->getCountry() ?? 'FR');
         $address->setOrder($order);
         $order->setShippingAddress($address);
-        $this->entityManager->persist($address);
+        $this->unitOfWork()->persist($address);
 
-        $this->entityManager->flush();
+        $this->unitOfWork()->flush();
         $this->pricing?->reprice($order);
 
         return $order;
@@ -157,7 +160,7 @@ class QuoteToOrder
         $product = new Product(null, null, $line->getLotPrice(), $quote->getCurrency());
         $product->setTitle($line->getLabel() ?: $quote->getReference());
         $product->setSlug(strtolower($quote->getReference()).'-'.substr(hash('crc32b', $quote->getToken().$line->getPosition()), 0, 6));
-        $this->entityManager->persist($product);
+        $this->unitOfWork()->persist($product);
 
         return $product;
     }

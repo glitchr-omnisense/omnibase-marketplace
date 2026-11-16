@@ -7,7 +7,7 @@ use Base\Marketplace\Enum\ContributionStatus;
 use Base\Marketplace\Enum\WishlistItemKind;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A wish: an object from any shop - its page's address, what an omnitrade

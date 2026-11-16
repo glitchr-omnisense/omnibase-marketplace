@@ -15,7 +15,8 @@ use Base\Marketplace\Entity\Sales\Attribute\Scope\TaxonAdapter;
 use Base\Marketplace\Entity\Sales\Region;
 use Base\Marketplace\Entity\Sales\Tax\Vat;
 use Base\Marketplace\Pricing\VatExemptionInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\UnitOfWorks;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Contracts\Service\ResetInterface;
 
@@ -58,7 +59,7 @@ final class Pricing implements ResetInterface
 
     /** @param iterable<VatExemptionInterface> $exemptions */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         #[AutowireIterator('marketplace.vat_exemption')] private readonly iterable $exemptions = [],
     ) {
     }
@@ -175,7 +176,7 @@ final class Pricing implements ResetInterface
 
     private function vatRate(?object $product, ?object $region): float
     {
-        $this->vats ??= $this->entityManager->getRepository(Vat::class)->findAll();
+        $this->vats ??= UnitOfWorks::repositories($this->unitOfWork)->of(Vat::class)->findAll();
 
         $best = null;
         $bestRank = -1;
@@ -224,7 +225,7 @@ final class Pricing implements ResetInterface
     public function applyCoupon(Order $order, string $code, ?object $customer): Coupon
     {
         $code = trim($code);
-        $coupon = '' === $code ? null : $this->entityManager->getRepository(Coupon::class)->findOneBy(['code' => $code]);
+        $coupon = '' === $code ? null : UnitOfWorks::repositories($this->unitOfWork)->of(Coupon::class)->findOneBy(['code' => $code]);
         if (!$coupon instanceof Coupon) {
             throw new CartException('coupon.error.unknown', ['{code}' => $code]);
         }
@@ -265,7 +266,7 @@ final class Pricing implements ResetInterface
     /** @return Promotion[] running now, highest priority first */
     private function promotions(\DateTimeImmutable $now): array
     {
-        $promotions = $this->entityManager->getRepository(Promotion::class)->findBy([], ['priority' => 'DESC']);
+        $promotions = UnitOfWorks::repositories($this->unitOfWork)->of(Promotion::class)->findBy([], ['priority' => 'DESC']);
 
         return array_values(array_filter($promotions, fn (Promotion $promotion) => $this->isRunning($promotion, $now)));
     }

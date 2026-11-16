@@ -6,8 +6,15 @@ use Base\Marketplace\Entity\Wishlist\Item;
 use Base\Marketplace\Entity\Wishlist\Reservation;
 use Base\Marketplace\Enum\ReservationStatus;
 use Base\Marketplace\Enum\WishlistItemKind;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Database\Attribute\Backend\Backends;
+use Base\Database\Backend\RowLocks;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
+use Base\Database\UnitOfWorks;
+use Base\Marketplace\Repository\Wishlist\ReservationRepository;
+use Base\Contract\UnitOfWork;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -20,7 +27,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class Reservations
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         #[Autowire('%marketplace.wishlist.reservation_days%')] private readonly int $days = 30,
     ) {
     }
@@ -41,9 +48,8 @@ class Reservations
         $quantity = max(1, $quantity);
         $token = bin2hex(random_bytes(24));
 
-        $this->entityManager->beginTransaction();
-        try {
-            $this->entityManager->lock($item, LockMode::PESSIMISTIC_WRITE);
+        // The item's row locked while what is left is read: two givers cannot take the last one both.
+        $reservation = Backends::of($this->unitOfWork, RowLocks::class)->locked($item, function () use ($item, $quantity, $name, $email, $token, $giverReference, $message): Reservation {
             $left = $item->getQuantity() - $this->held($item);
             if ($left < $quantity) {
                 throw new WishlistException('wishlist.error.taken', ['{left}' => max(0, $left)]);
@@ -51,21 +57,18 @@ class Reservations
             $reservation = new Reservation($item, $quantity, $name, $email, hash('sha256', $token), new \DateTimeImmutable(sprintf('+%d days', $this->days)));
             $reservation->setGiverReference($giverReference)->setMessage($message);
             $item->getReservations()->add($reservation);
-            $this->entityManager->persist($reservation);
-            $this->entityManager->flush();
-            $this->entityManager->commit();
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
+            $this->unitOfWork->persist($reservation);
+            $this->unitOfWork->flush();
 
-            throw $e;
-        }
+            return $reservation;
+        });
 
         return ['reservation' => $reservation, 'token' => $token];
     }
 
     public function find(string $token): ?Reservation
     {
-        return $this->entityManager->getRepository(Reservation::class)->findOneBy(['tokenHash' => hash('sha256', $token)]);
+        return $this->repository()->findOneBy(['tokenHash' => hash('sha256', $token)]);
     }
 
     /** By its author: the object goes back on the list. */
@@ -74,7 +77,7 @@ class Reservations
         $reservation = $this->find($token);
         if ($reservation && $reservation->getStatus()->holds()) {
             $reservation->setStatus(ReservationStatus::CANCELLED);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $reservation;
@@ -85,7 +88,7 @@ class Reservations
     {
         if (ReservationStatus::HELD === $reservation->getStatus()) {
             $reservation->setStatus(ReservationStatus::CONFIRMED);
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
         }
 
         return $reservation;
@@ -94,16 +97,26 @@ class Reservations
     /** The promises that lapsed, marked so; their objects are back on their lists. */
     public function expire(?\DateTimeImmutable $now = null): int
     {
-        return (int) $this->entityManager->createQuery('UPDATE '.Reservation::class.' r SET r.status = :expired WHERE r.status = :held AND r.expiresAt <= :now')
-            ->setParameter('expired', ReservationStatus::EXPIRED)->setParameter('held', ReservationStatus::HELD)->setParameter('now', $now ?? new \DateTimeImmutable())
-            ->execute();
+        return $this->repository()->expire($now ?? new \DateTimeImmutable());
     }
 
     /** How many of the item are promised or bought, as the database has it now. */
     private function held(Item $item): int
     {
-        return (int) $this->entityManager->createQuery('SELECT COALESCE(SUM(r.quantity), 0) FROM '.Reservation::class.' r WHERE r.item = :item AND (r.status = :confirmed OR (r.status = :held AND r.expiresAt > :now))')
-            ->setParameter('item', $item)->setParameter('confirmed', ReservationStatus::CONFIRMED)->setParameter('held', ReservationStatus::HELD)->setParameter('now', new \DateTimeImmutable())
-            ->getSingleScalarResult();
+        return (int) $this->repository()->sumOfQuantityBy([
+            'item' => Key::of($item),
+            Group::of(Parser::SEPARATOR_OR,
+                Criterion::of('status', ReservationStatus::CONFIRMED),
+                Group::of(Parser::SEPARATOR_AND,
+                    Criterion::of('status', ReservationStatus::HELD),
+                    Criterion::of('expiresAt', new \DateTimeImmutable(), Parser::OPTION_GREATER),
+                ),
+            ),
+        ]);
+    }
+
+    private function repository(): ReservationRepository
+    {
+        return UnitOfWorks::repositories($this->unitOfWork)->of(Reservation::class);
     }
 }

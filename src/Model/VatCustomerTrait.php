@@ -2,7 +2,7 @@
 
 namespace Base\Marketplace\Model;
 
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * VatCustomerInterface on an app's User entity: the number, when VIES

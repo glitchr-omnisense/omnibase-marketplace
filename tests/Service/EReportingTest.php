@@ -96,9 +96,9 @@ final class EReportingTest extends MarketplaceKernelTestCase
             'flow_url' => 'https://api.flow.pa.example/flow-service', 'token_url' => 'https://auth.pa.example/token', 'client_id' => 'shop', 'client_secret' => 'secret',
         ]]]);
         $c = self::getContainer();
-        $transmission = new InvoiceTransmission($this->entityManager, $c->get('translator'), $registry, null, null, 'platform');
+        $transmission = new InvoiceTransmission($this->unitOfWork, $c->get('translator'), $registry, null, null, 'platform');
 
-        return new EReporting($this->entityManager, $c->get(InvoiceComposer::class), $transmission, $registry, $writer, 'normal_monthly', $operation, false, 'platform', ['siren' => '123456789']);
+        return new EReporting($this->unitOfWork, $c->get(InvoiceComposer::class), $transmission, $registry, $writer, 'normal_monthly', $operation, false, 'platform', ['siren' => '123456789']);
     }
 
     private function order(\DateTimeImmutable $paidAt, int $price = 1000): Order

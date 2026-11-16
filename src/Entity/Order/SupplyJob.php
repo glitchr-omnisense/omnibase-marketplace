@@ -5,7 +5,7 @@ namespace Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Enum\SupplyStatus;
 use Base\Marketplace\Repository\Order\SupplyJobRepository;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * Part of a paid order handed to a supplier to be made and sent: the lines

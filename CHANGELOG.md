@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+omnibase/marketplace 1.0.0: the shop of omnibase sites (catalogue, cart, checkout, orders, quotes, invoices,
+entitlements, wishlists) on the agnostic persistence. Its repositories extend
+`Base\Database\Repository\ServiceEntityRepository` and query in omnibase's finder language, the bulk updates
+(`updateBy()`), the rows read for update (`lockOneBy()`) and the LIKE on a JSON field included, each query written once
+and compiled by the engine of the persistence chosen (omnibridge/doctrine or omnibridge/eloquent); its services write
+through `Base\Contract\UnitOfWork` and lock rows through `RowLocks`. The code names `Base\` and its own
+`Base\Marketplace\` only. Requires omnisense/omnibase and the omnibridge bridges `^1.0`.
+
 ## [1.1.2] - 2026-11-14
 
 ### Changed

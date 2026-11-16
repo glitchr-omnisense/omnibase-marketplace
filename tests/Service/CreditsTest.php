@@ -11,7 +11,7 @@ final class CreditsTest extends MarketplaceKernelTestCase
 {
     public function testGrantedSpentAndRefused(): void
     {
-        $credits = new Credits($this->entityManager);
+        $credits = new Credits($this->unitOfWork);
         $host = $this->user('host');
         self::assertSame(0, $credits->balance($host, 'ai'));
 
@@ -41,7 +41,7 @@ final class CreditsTest extends MarketplaceKernelTestCase
 
     public function testWhatAnExpiredGrantHadLeftIsLost(): void
     {
-        $credits = new Credits($this->entityManager);
+        $credits = new Credits($this->unitOfWork);
         $host = $this->user('host');
         $credits->grant($host, 'ai', 10, 'plan', new \DateTimeImmutable('+1 month'));
         $credits->grant($host, 'ai', 5, 'pack');
