@@ -652,16 +652,16 @@ class Order implements IconizeInterface, LinkableInterface
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeInterface
      */
     public function getArrivingTime()
     {
         // Not ??= on the field: reading an estimate must not mark an unpaid order paid.
         $delay = $this->getShippingMethod()->getShippingDelay() + $this->getShippingMethod()->getDeliveryTime();
         $arrivingTime = $this->paidAt ? clone $this->paidAt : \DateTime::createFromImmutable(Utc::now());
-        $arrivingTime->modify('+' . $delay . ' days');
 
-        return $arrivingTime;
+        // Assigned: paidAt is read as a \DateTimeImmutable since omnibridge/doctrine 4.0, whose modify() returns the new moment.
+        return $arrivingTime->modify('+' . $delay . ' days');
     }
 
     #[ORM\Column(type: 'text')]

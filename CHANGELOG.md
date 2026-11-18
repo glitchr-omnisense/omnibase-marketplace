@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- omnibridge/doctrine `^3.0|^4.0`. `Order::getArrivingTime()` adds the delivery delay to the moment it returns: with
+  omnibridge/doctrine 4.0 `paidAt` is read as a `\DateTimeImmutable`, whose `modify()` left the copy unchanged (the
+  estimate was the payment's moment); its PHPDoc says `\DateTimeInterface`.
+
 ## [2.0.0]
 
 omnibase/marketplace 2.0.0: the shop of omnibase sites (catalogue, cart, checkout, orders, quotes, invoices,

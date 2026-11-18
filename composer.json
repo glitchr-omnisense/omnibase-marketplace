@@ -37,7 +37,7 @@
         "dompdf/dompdf": "^3.1",
         "horstoeko/zugferd": "^1.0.132",
         "omnibase/admin": "^2.0",
-        "omnibridge/doctrine": "^3.0",
+        "omnibridge/doctrine": "^3.0|^4.0",
         "omnibridge/symfony": "^3.0",
         "omnisense/omnibase": "^7.0",
         "omnisense/omnistate": "^1.0",
