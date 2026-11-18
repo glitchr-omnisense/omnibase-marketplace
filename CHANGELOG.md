@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.1]
 
 - omnibridge/doctrine `^3.0|^4.0`. `Order::getArrivingTime()` adds the delivery delay to the moment it returns: with
   omnibridge/doctrine 4.0 `paidAt` is read as a `\DateTimeImmutable`, whose `modify()` left the copy unchanged (the
